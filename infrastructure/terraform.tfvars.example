@@ -1,0 +1,7 @@
+aws_region         = "us-east-1"
+db_instance_class  = "db.t3.micro"
+db_username        = "postgres"
+db_password        = "CHANGE_ME_SECURE_PASSWORD"
+frontend_bucket_name = "pulsegrid-frontend-UNIQUE_ID"
+ses_from_email     = "noreply@yourdomain.com"
+
