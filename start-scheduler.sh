@@ -1,13 +1,18 @@
 #!/bin/bash
 
-# Start the health check scheduler
-# This runs health checks for all active services automatically
+# Start PulseGrid Health Check Scheduler
+# This script starts the scheduler that performs health checks on your services
 
-echo "Starting PulseGrid Health Check Scheduler..."
-echo "This will check all active services every 10 seconds"
-echo "Press Ctrl+C to stop"
+cd "$(dirname "$0")/backend" || exit 1
+
+echo "🔄 Starting PulseGrid Health Check Scheduler..."
+echo "📍 This will check your services every 10 seconds"
 echo ""
 
-cd backend
-go run cmd/scheduler/main.go
+# Check if .env file exists
+if [ ! -f .env ]; then
+    echo "⚠️  Warning: .env file not found. Make sure to configure your environment variables."
+fi
 
+# Run the scheduler
+go run cmd/scheduler/main.go
