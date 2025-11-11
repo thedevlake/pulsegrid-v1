@@ -127,7 +127,11 @@ func (r *HealthCheckRepository) GetStatsByServiceID(serviceID uuid.UUID, since t
 			ORDER BY checked_at DESC
 			LIMIT 1
 		`
-		r.db.QueryRow(lastCheckQuery, serviceID).Scan(&stats.Status)
+		err = r.db.QueryRow(lastCheckQuery, serviceID).Scan(&stats.Status)
+		if err != nil {
+			// If no status found, default to unknown
+			stats.Status = "unknown"
+		}
 	} else {
 		// No health checks yet - status is unknown
 		stats.Status = "unknown"

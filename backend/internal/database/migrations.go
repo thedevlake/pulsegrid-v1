@@ -14,6 +14,7 @@ migrations := []string{
 	createAlertsTable,
 	createAlertSubscriptionsTable,
 	createIndexes,
+	addLatencyThresholdColumn, // Add latency_threshold_ms if it doesn't exist
 }
 	for _, migration := range migrations {
 		if _, err := db.Exec(migration); err != nil {
@@ -117,5 +118,10 @@ CREATE INDEX IF NOT EXISTS idx_health_checks_checked_at ON health_checks(checked
 CREATE INDEX IF NOT EXISTS idx_alerts_service_id ON alerts(service_id);
 CREATE INDEX IF NOT EXISTS idx_alerts_is_resolved ON alerts(is_resolved);
 CREATE INDEX IF NOT EXISTS idx_alert_subscriptions_organization_id ON alert_subscriptions(organization_id);
+`
+
+const addLatencyThresholdColumn = `
+ALTER TABLE services 
+ADD COLUMN IF NOT EXISTS latency_threshold_ms INTEGER DEFAULT NULL;
 `
 

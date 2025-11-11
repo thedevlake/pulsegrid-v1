@@ -47,7 +47,9 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 
 		// Set user info in context
 		c.Set("user_id", claims["user_id"])
-		c.Set("organization_id", claims["organization_id"])
+		if orgID, ok := claims["organization_id"]; ok && orgID != nil {
+			c.Set("organization_id", orgID)
+		}
 		c.Set("role", claims["role"])
 
 		c.Next()

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 	"time"
 
@@ -57,20 +58,45 @@ func (h *StatsHandler) GetServiceStats(c *gin.Context) {
 
 func (h *StatsHandler) GetOverview(c *gin.Context) {
 	orgID, exists := c.Get("organization_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Organization ID not found"})
+	if !exists || orgID == nil {
+		log.Printf("GetOverview: No organization_id in context")
+		// Return empty overview if no organization
+		c.JSON(http.StatusOK, gin.H{
+			"average_uptime": 0,
+			"total_services": 0,
+			"services":       []interface{}{},
+		})
 		return
 	}
 
-	orgUUID, err := uuid.Parse(orgID.(string))
+	orgIDStr, ok := orgID.(string)
+	if !ok || orgIDStr == "" {
+		log.Printf("GetOverview: Invalid organization_id type or empty: %v", orgID)
+		// Return empty overview if organization ID is invalid
+		c.JSON(http.StatusOK, gin.H{
+			"average_uptime": 0,
+			"total_services": 0,
+			"services":       []interface{}{},
+		})
+		return
+	}
+
+	log.Printf("GetOverview: Parsing organization_id: %s", orgIDStr)
+	orgUUID, err := uuid.Parse(orgIDStr)
 	if err != nil {
+		log.Printf("GetOverview: Failed to parse organization_id: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid organization ID"})
 		return
 	}
 
 	services, err := h.serviceRepo.ListByOrganization(orgUUID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch services"})
+		// Log the actual error for debugging
+		log.Printf("Error fetching services for org %s: %v", orgUUID, err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch services",
+			"details": err.Error(),
+		})
 		return
 	}
 
