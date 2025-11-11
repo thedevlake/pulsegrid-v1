@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../lib/api";
+import PageTransition from "../components/PageTransition";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 
@@ -74,88 +75,95 @@ export default function Alerts() {
   };
 
   return (
-    <div className="space-y-8 pb-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-semibold text-white tracking-tight">
-            Alerts
-          </h1>
-          <p className="text-white/70 mt-1.5 text-sm">
-            Service downtime and incident notifications
-          </p>
+    <PageTransition animationType="slideLeft">
+      <div className="space-y-6 sm:space-y-8 pb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-white tracking-tight">
+              Alerts
+            </h1>
+            <p className="text-white/70 mt-1.5 text-xs sm:text-sm">
+              Service downtime and incident notifications
+            </p>
+          </div>
+          <Link
+            to="/alerts/subscriptions"
+            className="inline-flex items-center justify-center px-4 py-2 bg-white/10 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/20 transition-colors w-full sm:w-auto"
+          >
+            Manage Subscriptions
+          </Link>
         </div>
-        <Link
-          to="/alerts/subscriptions"
-          className="inline-flex items-center px-4 py-2 bg-white/10 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/20 transition-colors"
-        >
-          Manage Subscriptions
-        </Link>
-      </div>
 
-      {alerts.length === 0 ? (
-        <div className="text-center py-12 bg-white/10 backdrop-blur-xl rounded-xl border border-white/20">
-          <CheckCircle className="mx-auto h-12 w-12 text-green-400" />
-          <h3 className="mt-2 text-sm font-medium text-white">No alerts</h3>
-          <p className="mt-1 text-sm text-white/70">
-            All services are healthy.
-          </p>
-        </div>
-      ) : (
-        <div className="bg-white/10 backdrop-blur-xl rounded-xl overflow-hidden border border-white/20">
-          <ul className="divide-y divide-white/20">
-            {alerts.map((alert) => (
-              <li key={alert.id} className="hover:bg-white/5 transition-colors">
-                <div className="px-4 py-4 sm:px-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0">
-                        {alert.is_resolved ? (
-                          <CheckCircle className="h-6 w-6 text-green-400" />
-                        ) : (
-                          <AlertCircle className="h-6 w-6 text-red-400" />
-                        )}
-                      </div>
-                      <div className="ml-4 flex-1">
-                        <div className="flex items-center">
-                          <p className="text-sm font-medium text-white">
-                            {alert.message}
-                          </p>
-                          <span
-                            className={`ml-2 inline-flex px-2 py-1 text-xs font-medium rounded-full ${getSeverityColor(
-                              alert.severity
-                            )}`}
-                          >
-                            {alert.severity.toUpperCase()}
-                          </span>
-                          {alert.is_resolved && (
-                            <span className="ml-2 inline-flex px-2 py-1 text-xs font-medium rounded-full text-green-400 bg-green-500/20">
-                              RESOLVED
-                            </span>
+        {alerts.length === 0 ? (
+          <div className="text-center py-12 bg-white/10 backdrop-blur-xl rounded-xl border border-white/20">
+            <CheckCircle className="mx-auto h-12 w-12 text-green-400" />
+            <h3 className="mt-2 text-sm font-medium text-white">No alerts</h3>
+            <p className="mt-1 text-sm text-white/70">
+              All services are healthy.
+            </p>
+          </div>
+        ) : (
+          <div className="bg-white/10 backdrop-blur-xl rounded-xl overflow-hidden border border-white/20">
+            <ul className="divide-y divide-white/20">
+              {alerts.map((alert) => (
+                <li
+                  key={alert.id}
+                  className="hover:bg-white/5 transition-colors"
+                >
+                  <div className="px-4 py-4 sm:px-6">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                      <div className="flex items-start flex-1 min-w-0">
+                        <div className="flex-shrink-0">
+                          {alert.is_resolved ? (
+                            <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-400" />
+                          ) : (
+                            <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 text-red-400" />
                           )}
                         </div>
-                        <p className="mt-1 text-sm text-white/70">
-                          {format(
-                            new Date(alert.created_at),
-                            "MMM dd, yyyy HH:mm:ss"
-                          )}
-                        </p>
+                        <div className="ml-3 sm:ml-4 flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-sm font-medium text-white break-words">
+                              {alert.message}
+                            </p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span
+                                className={`inline-flex px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${getSeverityColor(
+                                  alert.severity
+                                )}`}
+                              >
+                                {alert.severity.toUpperCase()}
+                              </span>
+                              {alert.is_resolved && (
+                                <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full text-green-400 bg-green-500/20 whitespace-nowrap">
+                                  RESOLVED
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <p className="mt-1.5 text-xs sm:text-sm text-white/70">
+                            {format(
+                              new Date(alert.created_at),
+                              "MMM dd, yyyy HH:mm:ss"
+                            )}
+                          </p>
+                        </div>
                       </div>
+                      {!alert.is_resolved && (
+                        <button
+                          onClick={() => handleResolve(alert.id)}
+                          className="inline-flex items-center justify-center px-4 py-2 bg-white/10 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/20 transition-colors w-full sm:w-auto sm:ml-4 flex-shrink-0"
+                        >
+                          Resolve
+                        </button>
+                      )}
                     </div>
-                    {!alert.is_resolved && (
-                      <button
-                        onClick={() => handleResolve(alert.id)}
-                        className="ml-4 inline-flex items-center px-4 py-2 bg-white/10 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/20 transition-colors"
-                      >
-                        Resolve
-                      </button>
-                    )}
                   </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </PageTransition>
   );
 }

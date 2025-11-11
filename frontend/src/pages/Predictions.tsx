@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../lib/api";
+import PageTransition from "../components/PageTransition";
 import {
   Brain,
   AlertTriangle,
@@ -81,7 +82,8 @@ export default function Predictions() {
   }
 
   return (
-    <div className="space-y-8 pb-8">
+    <PageTransition animationType="fade">
+      <div className="space-y-8 pb-8">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -207,7 +209,8 @@ export default function Predictions() {
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </PageTransition>
   );
 }
 

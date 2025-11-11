@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../lib/api";
+import PageTransition from "../components/PageTransition";
 import {
   Bell,
   Mail,
@@ -132,7 +133,8 @@ export default function AlertSubscriptions() {
   }
 
   return (
-    <div className="space-y-8 pb-8">
+    <PageTransition animationType="slideDown">
+      <div className="space-y-8 pb-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-semibold text-white tracking-tight">
@@ -342,7 +344,8 @@ export default function AlertSubscriptions() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </PageTransition>
   );
 }
 

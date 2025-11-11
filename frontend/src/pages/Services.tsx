@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../lib/api'
-import { Plus, Server, Trash2 } from 'lucide-react'
+import PageTransition from '../components/PageTransition'
+import { Plus, Server, Trash2, Pencil, AlertTriangle } from 'lucide-react'
 
 interface Service {
   id: string
@@ -12,12 +13,17 @@ interface Service {
   timeout: number
   is_active: boolean
   created_at: string
+  latency_threshold_ms?: number | null
 }
 
 export default function Services() {
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [editingService, setEditingService] = useState<Service | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     url: '',
@@ -50,29 +56,91 @@ export default function Services() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validate URL based on type
+    if (formData.type === 'tcp' || formData.type === 'ping') {
+      // For TCP/Ping, allow hostname:port or hostname format
+      const tcpPattern = /^[\w\.-]+(:\d+)?$/
+      if (!tcpPattern.test(formData.url.trim())) {
+        alert('Invalid format. For TCP use: hostname:port (e.g., 8.8.8.8:53). For Ping use: hostname (e.g., google.com)')
+        return
+      }
+    } else {
+      // For HTTP, validate it's a proper URL
+      try {
+        new URL(formData.url)
+      } catch {
+        alert('Invalid URL. Please include http:// or https:// (e.g., https://example.com)')
+        return
+      }
+    }
+    
     try {
-      console.log('Creating service:', formData)
-      const response = await api.post('/services', formData)
-      console.log('Service created:', response.data)
+      if (editingService) {
+        // Update existing service
+        console.log('Updating service:', editingService.id, formData)
+        const response = await api.put(`/services/${editingService.id}`, formData)
+        console.log('Service updated:', response.data)
+      } else {
+        // Create new service
+        console.log('Creating service:', formData)
+        const response = await api.post('/services', formData)
+        console.log('Service created:', response.data)
+      }
       setShowModal(false)
+      setEditingService(null)
       setFormData({ name: '', url: '', type: 'http', check_interval: 60, timeout: 10, latency_threshold_ms: undefined })
       fetchServices()
     } catch (error: any) {
-      console.error('Failed to create service:', error)
-      const errorMsg = error.response?.data?.error || error.message || 'Failed to create service'
+      console.error('Failed to save service:', error)
+      const errorMsg = error.response?.data?.error || error.message || (editingService ? 'Failed to update service' : 'Failed to create service')
       alert(errorMsg)
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this service?')) return
+  const handleEdit = (service: Service) => {
+    setEditingService(service)
+    setFormData({
+      name: service.name,
+      url: service.url,
+      type: service.type,
+      check_interval: service.check_interval,
+      timeout: service.timeout,
+      latency_threshold_ms: service.latency_threshold_ms || undefined,
+    })
+    setShowModal(true)
+  }
 
+  const handleCloseModal = () => {
+    setShowModal(false)
+    setEditingService(null)
+    setFormData({ name: '', url: '', type: 'http', check_interval: 60, timeout: 10, latency_threshold_ms: undefined })
+  }
+
+  const handleDeleteClick = (service: Service) => {
+    setServiceToDelete(service)
+    setShowDeleteModal(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!serviceToDelete) return
+
+    setDeleting(true)
     try {
-      await api.delete(`/services/${id}`)
+      await api.delete(`/services/${serviceToDelete.id}`)
       fetchServices()
+      setShowDeleteModal(false)
+      setServiceToDelete(null)
     } catch (error) {
       alert('Failed to delete service')
+    } finally {
+      setDeleting(false)
     }
+  }
+
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false)
+    setServiceToDelete(null)
   }
 
   if (loading) {
@@ -85,15 +153,20 @@ export default function Services() {
   }
 
   return (
-    <div className="space-y-8 pb-8">
-      <div className="flex items-center justify-between">
+    <PageTransition animationType="slideRight">
+      <div className="space-y-6 sm:space-y-8 pb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-semibold text-white tracking-tight">Services</h1>
-          <p className="text-white/70 mt-1.5 text-sm">Manage and monitor your endpoints</p>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-white tracking-tight">Services</h1>
+          <p className="text-white/70 mt-1.5 text-xs sm:text-sm">Manage and monitor your endpoints</p>
         </div>
         <button
-          onClick={() => setShowModal(true)}
-          className="inline-flex items-center px-4 py-2 bg-white/10 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/20 transition-colors"
+          onClick={() => {
+            setEditingService(null)
+            setFormData({ name: '', url: '', type: 'http', check_interval: 60, timeout: 10, latency_threshold_ms: undefined })
+            setShowModal(true)
+          }}
+          className="inline-flex items-center justify-center px-4 py-2 bg-white/10 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/20 transition-colors w-full sm:w-auto"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Service
@@ -114,28 +187,35 @@ export default function Services() {
             {services.map((service) => (
               <li key={service.id} className="hover:bg-white/5 transition-colors">
                 <div className="px-4 py-4 sm:px-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                    <div className="flex items-start sm:items-center flex-1 min-w-0">
                       <div className="flex-shrink-0">
-                        <Server className="h-8 w-8 text-white/60" />
+                        <Server className="h-6 w-6 sm:h-8 sm:w-8 text-white/60" />
                       </div>
-                      <div className="ml-4">
+                      <div className="ml-3 sm:ml-4 flex-1 min-w-0">
                         <Link
                           to={`/services/${service.id}`}
-                          className="text-lg font-medium text-white hover:text-white/80 transition-colors"
+                          className="text-base sm:text-lg font-medium text-white hover:text-white/80 transition-colors block truncate"
                         >
                           {service.name}
                         </Link>
-                        <p className="text-sm text-white/70">{service.url}</p>
-                        <p className="text-xs text-white/50 mt-1">
-                          Type: {service.type.toUpperCase()} | Interval: {service.check_interval}s
-                          | Timeout: {service.timeout}s
-                        </p>
+                        <p className="text-xs sm:text-sm text-white/70 truncate mt-0.5">{service.url}</p>
+                        <div className="flex flex-wrap gap-x-2 gap-y-1 mt-1.5">
+                          <span className="text-xs text-white/50">
+                            Type: {service.type.toUpperCase()}
+                          </span>
+                          <span className="text-xs text-white/50">
+                            Interval: {service.check_interval}s
+                          </span>
+                          <span className="text-xs text-white/50">
+                            Timeout: {service.timeout}s
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center justify-between sm:justify-end space-x-2 sm:flex-shrink-0">
                       <span
-                        className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${
+                        className={`inline-flex items-center px-2 sm:px-2.5 py-1 text-xs font-medium rounded-full whitespace-nowrap ${
                           service.is_active
                             ? 'text-green-400 bg-green-500/20'
                             : 'text-white/60 bg-white/10'
@@ -146,12 +226,22 @@ export default function Services() {
                         }`}></span>
                         {service.is_active ? 'Active' : 'Inactive'}
                       </span>
-                      <button
-                        onClick={() => handleDelete(service.id)}
-                        className="text-red-400 hover:text-red-300 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => handleEdit(service)}
+                          className="text-blue-400 hover:text-blue-300 transition-colors p-1 sm:p-0"
+                          aria-label="Edit service"
+                        >
+                          <Pencil className="w-4 h-4 sm:w-4 sm:h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(service)}
+                          className="text-red-400 hover:text-red-300 transition-colors p-1 sm:p-0"
+                          aria-label="Delete service"
+                        >
+                          <Trash2 className="w-4 h-4 sm:w-4 sm:h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -161,20 +251,20 @@ export default function Services() {
         </div>
       )}
 
-      {/* Add Service Modal */}
+      {/* Add/Edit Service Modal */}
       {showModal && (
         <div className="fixed z-50 inset-0 overflow-y-auto" onClick={(e) => {
           if (e.target === e.currentTarget) {
-            setShowModal(false)
+            handleCloseModal()
           }
         }}>
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={() => setShowModal(false)}></div>
-            <div className="inline-block align-bottom bg-white/10 backdrop-blur-xl rounded-xl text-left overflow-hidden border border-white/20 transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={handleCloseModal}></div>
+            <div className="inline-block align-bottom bg-white/10 backdrop-blur-xl rounded-xl text-left overflow-hidden border border-white/20 transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full max-w-[calc(100%-2rem)] mx-4" onClick={(e) => e.stopPropagation()}>
               <form onSubmit={handleSubmit}>
                 <div className="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                   <h3 className="text-lg leading-6 font-medium text-white mb-4">
-                    Add New Service
+                    {editingService ? 'Edit Service' : 'Add New Service'}
                   </h3>
                   <div className="space-y-4">
                     <div>
@@ -189,15 +279,30 @@ export default function Services() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-white/80">URL</label>
+                      <label className="block text-sm font-medium text-white/80">
+                        URL {formData.type === 'tcp' || formData.type === 'ping' ? '(hostname:port)' : ''}
+                      </label>
                       <input
-                        type="url"
+                        type={formData.type === 'tcp' || formData.type === 'ping' ? 'text' : 'url'}
                         required
                         className="mt-1 block w-full bg-white/10 border border-white/20 rounded-md py-2 px-3 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30"
-                        placeholder="https://example.com"
+                        placeholder={
+                          formData.type === 'tcp' 
+                            ? '8.8.8.8:53 or hostname:port'
+                            : formData.type === 'ping'
+                            ? 'google.com or 8.8.8.8'
+                            : 'https://example.com'
+                        }
                         value={formData.url}
                         onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                       />
+                      {(formData.type === 'tcp' || formData.type === 'ping') && (
+                        <p className="mt-1 text-xs text-white/50">
+                          {formData.type === 'tcp' 
+                            ? 'Format: hostname:port (e.g., 8.8.8.8:53, google.com:80)'
+                            : 'Format: hostname or IP address (e.g., google.com, 8.8.8.8)'}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-white/80">Type</label>
@@ -211,7 +316,7 @@ export default function Services() {
                         <option value="ping">Ping</option>
                       </select>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-white/80">
                           Check Interval (seconds)
@@ -261,17 +366,17 @@ export default function Services() {
                     </div>
                   </div>
                 </div>
-                <div className="bg-white/5 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-white/10">
+                <div className="bg-white/5 px-4 py-3 sm:px-6 flex flex-col-reverse sm:flex-row sm:flex-row-reverse gap-3 border-t border-white/10">
                   <button
                     type="submit"
-                    className="w-full inline-flex justify-center rounded-md border border-white/20 shadow-sm px-4 py-2 bg-white/10 text-base font-medium text-white hover:bg-white/20 sm:ml-3 sm:w-auto sm:text-sm transition-colors"
+                    className="w-full inline-flex justify-center rounded-md border border-white/20 shadow-sm px-4 py-2 bg-white/10 text-sm font-medium text-white hover:bg-white/20 sm:ml-3 sm:w-auto transition-colors"
                   >
-                    Create
+                    {editingService ? 'Update' : 'Create'}
                   </button>
                   <button
                     type="button"
-                    onClick={() => setShowModal(false)}
-                    className="mt-3 w-full inline-flex justify-center rounded-md border border-white/20 shadow-sm px-4 py-2 bg-white/10 text-base font-medium text-white hover:bg-white/20 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors"
+                    onClick={handleCloseModal}
+                    className="w-full inline-flex justify-center rounded-md border border-white/20 shadow-sm px-4 py-2 bg-white/10 text-sm font-medium text-white hover:bg-white/20 sm:mt-0 sm:ml-3 sm:w-auto transition-colors"
                   >
                     Cancel
                   </button>
@@ -281,6 +386,64 @@ export default function Services() {
           </div>
         </div>
       )}
-    </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && serviceToDelete && (
+        <div className="fixed z-50 inset-0 overflow-y-auto" onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            handleDeleteCancel()
+          }
+        }}>
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={handleDeleteCancel}></div>
+            <div className="inline-block align-bottom bg-white/10 backdrop-blur-xl rounded-xl text-left overflow-hidden border border-white/20 transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full max-w-[calc(100%-2rem)] mx-4" onClick={(e) => e.stopPropagation()}>
+              <div className="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-500/20 sm:mx-0 sm:h-10 sm:w-10">
+                    <AlertTriangle className="h-6 w-6 text-red-400" aria-hidden="true" />
+                  </div>
+                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
+                    <h3 className="text-lg leading-6 font-medium text-white">
+                      Delete Service
+                    </h3>
+                    <div className="mt-2">
+                      <p className="text-sm text-white/70">
+                        Are you sure you want to delete <span className="font-semibold text-white">{serviceToDelete.name}</span>? This action cannot be undone and all associated health check data will be permanently deleted.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white/5 px-4 py-3 sm:px-6 flex flex-col-reverse sm:flex-row sm:flex-row-reverse gap-3 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={handleDeleteConfirm}
+                  disabled={deleting}
+                  className="w-full inline-flex justify-center items-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {deleting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Deleting...
+                    </>
+                  ) : (
+                    'Delete'
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteCancel}
+                  disabled={deleting}
+                  className="w-full inline-flex justify-center rounded-md border border-white/20 shadow-sm px-4 py-2 bg-white/10 text-sm font-medium text-white hover:bg-white/20 sm:mt-0 sm:w-auto transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      </div>
+    </PageTransition>
   )
 }

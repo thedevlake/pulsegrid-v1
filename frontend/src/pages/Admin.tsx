@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../lib/api";
+import PageTransition from "../components/PageTransition";
 import {
   Users,
   Building2,
@@ -235,553 +236,751 @@ export default function Admin() {
   }
 
   return (
-    <div className="space-y-8 pb-8">
-      {/* Notification */}
-      {notification && (
-        <div
-          className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg backdrop-blur-xl border ${
-            notification.type === "success"
-              ? "bg-green-500/20 border-green-500/30 text-green-300"
-              : "bg-red-500/20 border-red-500/30 text-red-300"
-          }`}
-        >
-          <div className="flex items-center space-x-2">
-            <span>{notification.message}</span>
+    <PageTransition animationType="blur">
+      <div className="space-y-8 pb-8">
+        {/* Notification */}
+        {notification && (
+          <div
+            className={`fixed top-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-auto z-50 p-4 rounded-xl shadow-lg backdrop-blur-xl border ${
+              notification.type === "success"
+                ? "bg-green-500/20 border-green-500/30 text-green-300"
+                : "bg-red-500/20 border-red-500/30 text-red-300"
+            }`}
+          >
+            <div className="flex items-center space-x-2">
+              <span className="text-sm flex-1">{notification.message}</span>
+              <button
+                onClick={() => setNotification(null)}
+                className="ml-4 text-white/60 hover:text-white flex-shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-white tracking-tight">
+              Admin Panel
+            </h1>
+            <p className="text-white/70 mt-1.5 text-xs sm:text-sm">
+              System administration and user management
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+            {(!metrics || users.length === 0) && (
+              <div className="text-xs text-yellow-400/80 bg-yellow-500/10 px-3 py-1.5 rounded-lg border border-yellow-500/20 text-center sm:text-left">
+                Backend server may need restart
+              </div>
+            )}
             <button
-              onClick={() => setNotification(null)}
-              className="ml-4 text-white/60 hover:text-white"
+              onClick={fetchData}
+              className="inline-flex items-center justify-center px-4 py-2 bg-white/10 backdrop-blur-xl text-white text-sm font-medium rounded-xl hover:bg-white/15 transition-all border border-white/20 w-full sm:w-auto"
             >
-              <X className="w-4 h-4" />
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
             </button>
           </div>
         </div>
-      )}
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-semibold text-white tracking-tight">
-            Admin Panel
-          </h1>
-          <p className="text-white/70 mt-1.5 text-sm">
-            System administration and user management
-          </p>
-        </div>
-        <div className="flex items-center space-x-3">
-          {(!metrics || users.length === 0) && (
-            <div className="text-xs text-yellow-400/80 bg-yellow-500/10 px-3 py-1.5 rounded-lg border border-yellow-500/20">
-              Backend server may need restart
-            </div>
-          )}
-          <button
-            onClick={fetchData}
-            className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-xl text-white text-sm font-medium rounded-xl hover:bg-white/15 transition-all border border-white/20"
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="border-b border-white/20">
-        <nav className="-mb-px flex space-x-8">
-          <button
-            onClick={() => setActiveTab("overview")}
-            className={`${
-              activeTab === "overview"
-                ? "border-blue-400 text-blue-400"
-                : "border-transparent text-white/70 hover:text-white hover:border-white/30"
-            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
-          >
-            Overview
-          </button>
-          <button
-            onClick={() => setActiveTab("users")}
-            className={`${
-              activeTab === "users"
-                ? "border-blue-400 text-blue-400"
-                : "border-transparent text-white/70 hover:text-white hover:border-white/30"
-            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
-          >
-            Users
-          </button>
-          <button
-            onClick={() => setActiveTab("organizations")}
-            className={`${
-              activeTab === "organizations"
-                ? "border-blue-400 text-blue-400"
-                : "border-transparent text-white/70 hover:text-white hover:border-white/30"
-            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
-          >
-            Organizations
-          </button>
-        </nav>
-      </div>
-
-      {/* Overview Tab */}
-      {activeTab === "overview" && metrics && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-            <div className="bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 shadow-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <Users className="h-6 w-6 text-white/60" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-white/70 truncate">
-                        Total Users
-                      </dt>
-                      <dd className="text-lg font-medium text-white">
-                        {metrics.total_users}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 shadow-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <Building2 className="h-6 w-6 text-white/60" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-white/70 truncate">
-                        Organizations
-                      </dt>
-                      <dd className="text-lg font-medium text-white">
-                        {metrics.total_organizations}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 shadow-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <Server className="h-6 w-6 text-white/60" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-white/70 truncate">
-                        Services
-                      </dt>
-                      <dd className="text-lg font-medium text-white">
-                        {metrics.active_services} / {metrics.total_services}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 shadow-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <TrendingUp className="h-6 w-6 text-green-400" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-white/70 truncate">
-                        System Uptime
-                      </dt>
-                      <dd className="text-lg font-medium text-white">
-                        {metrics.system_uptime.toFixed(2)}%
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 shadow-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <Activity className="h-6 w-6 text-blue-400" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-white/70 truncate">
-                        Health Checks
-                      </dt>
-                      <dd className="text-lg font-medium text-white">
-                        {metrics.total_health_checks.toLocaleString()}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 shadow-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <AlertTriangle className="h-6 w-6 text-yellow-400" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-white/70 truncate">
-                        Total Alerts
-                      </dt>
-                      <dd className="text-lg font-medium text-white">
-                        {metrics.total_alerts}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 shadow-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <AlertTriangle className="h-6 w-6 text-red-400" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-white/70 truncate">
-                        Unresolved Alerts
-                      </dt>
-                      <dd className="text-lg font-medium text-white">
-                        {metrics.unresolved_alerts}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Users Tab */}
-      {activeTab === "users" && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-medium text-white">All Users</h2>
+        {/* Tabs */}
+        <div className="border-b border-white/20 overflow-x-auto">
+          <nav className="-mb-px flex space-x-4 sm:space-x-8 min-w-max sm:min-w-0">
             <button
-              onClick={() => {
-                resetForm();
-                setShowCreateModal(true);
-              }}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition-all"
+              onClick={() => setActiveTab("overview")}
+              className={`${
+                activeTab === "overview"
+                  ? "border-blue-400 text-blue-400"
+                  : "border-transparent text-white/70 hover:text-white hover:border-white/30"
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Create User
+              Overview
             </button>
-          </div>
+            <button
+              onClick={() => setActiveTab("users")}
+              className={`${
+                activeTab === "users"
+                  ? "border-blue-400 text-blue-400"
+                  : "border-transparent text-white/70 hover:text-white hover:border-white/30"
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
+            >
+              Users
+            </button>
+            <button
+              onClick={() => setActiveTab("organizations")}
+              className={`${
+                activeTab === "organizations"
+                  ? "border-blue-400 text-blue-400"
+                  : "border-transparent text-white/70 hover:text-white hover:border-white/30"
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
+            >
+              Organizations
+            </button>
+          </nav>
+        </div>
 
-          <div className="bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 shadow-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-white/10">
-                <thead>
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                      Role
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                      Created
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-white/70 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/10">
-                  {users.map((user) => (
-                    <tr
-                      key={user.id}
-                      className="hover:bg-white/5 transition-colors"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
-                        {user.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white/80">
-                        {user.email}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                            user.role === "admin"
-                              ? "text-purple-300 bg-purple-500/20"
-                              : "text-white/70 bg-white/10"
-                          }`}
-                        >
-                          {user.role.toUpperCase()}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white/80">
+        {/* Overview Tab */}
+        {activeTab === "overview" && metrics && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div className="bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 shadow-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <Users className="h-6 w-6 text-white/60" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-white/70 truncate">
+                          Total Users
+                        </dt>
+                        <dd className="text-lg font-medium text-white">
+                          {metrics.total_users}
+                        </dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 shadow-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <Building2 className="h-6 w-6 text-white/60" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-white/70 truncate">
+                          Organizations
+                        </dt>
+                        <dd className="text-lg font-medium text-white">
+                          {metrics.total_organizations}
+                        </dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 shadow-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <Server className="h-6 w-6 text-white/60" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-white/70 truncate">
+                          Services
+                        </dt>
+                        <dd className="text-lg font-medium text-white">
+                          {metrics.active_services} / {metrics.total_services}
+                        </dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 shadow-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <TrendingUp className="h-6 w-6 text-green-400" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-white/70 truncate">
+                          System Uptime
+                        </dt>
+                        <dd className="text-lg font-medium text-white">
+                          {metrics.system_uptime.toFixed(2)}%
+                        </dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div className="bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 shadow-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <Activity className="h-6 w-6 text-blue-400" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-white/70 truncate">
+                          Health Checks
+                        </dt>
+                        <dd className="text-lg font-medium text-white">
+                          {metrics.total_health_checks.toLocaleString()}
+                        </dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 shadow-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <AlertTriangle className="h-6 w-6 text-yellow-400" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-white/70 truncate">
+                          Total Alerts
+                        </dt>
+                        <dd className="text-lg font-medium text-white">
+                          {metrics.total_alerts}
+                        </dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 shadow-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <AlertTriangle className="h-6 w-6 text-red-400" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-white/70 truncate">
+                          Unresolved Alerts
+                        </dt>
+                        <dd className="text-lg font-medium text-white">
+                          {metrics.unresolved_alerts}
+                        </dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Users Tab */}
+        {activeTab === "users" && (
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <h2 className="text-base sm:text-lg font-medium text-white">
+                All Users
+              </h2>
+              <button
+                onClick={() => {
+                  resetForm();
+                  setShowCreateModal(true);
+                }}
+                className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition-all w-full sm:w-auto"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create User
+              </button>
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 shadow-lg overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-white/10">
+                  <thead>
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+                        Role
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+                        Created
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-white/70 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/10">
+                    {users.map((user) => (
+                      <tr
+                        key={user.id}
+                        className="hover:bg-white/5 transition-colors"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
+                          {user.name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white/80">
+                          {user.email}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                              user.role === "admin"
+                                ? "text-purple-300 bg-purple-500/20"
+                                : "text-white/70 bg-white/10"
+                            }`}
+                          >
+                            {user.role.toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white/80">
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex items-center justify-end space-x-2">
+                            <button
+                              onClick={() => openEditModal(user)}
+                              className="text-blue-400 hover:text-blue-300 p-2 rounded-lg hover:bg-white/10 transition-colors"
+                              title="Edit user"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => openDeleteModal(user)}
+                              className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-white/10 transition-colors"
+                              title="Delete user"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 shadow-lg overflow-hidden">
+              <div className="divide-y divide-white/10">
+                {users.map((user) => (
+                  <div
+                    key={user.id}
+                    className="px-4 py-4 hover:bg-white/5 transition-colors"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-medium text-white truncate">
+                          {user.name}
+                        </h3>
+                        <p className="text-xs text-white/70 truncate mt-0.5">
+                          {user.email}
+                        </p>
+                      </div>
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ml-2 flex-shrink-0 ${
+                          user.role === "admin"
+                            ? "text-purple-300 bg-purple-500/20"
+                            : "text-white/70 bg-white/10"
+                        }`}
+                      >
+                        {user.role.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-white/60">
+                        Created:{" "}
                         {new Date(user.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex items-center justify-end space-x-2">
-                          <button
-                            onClick={() => openEditModal(user)}
-                            className="text-blue-400 hover:text-blue-300 p-2 rounded-lg hover:bg-white/10 transition-colors"
-                            title="Edit user"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => openDeleteModal(user)}
-                            className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-white/10 transition-colors"
-                            title="Delete user"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </span>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => openEditModal(user)}
+                          className="text-blue-400 hover:text-blue-300 p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                          title="Edit user"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => openDeleteModal(user)}
+                          className="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                          title="Delete user"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Organizations Tab */}
-      {activeTab === "organizations" && (
-        <div className="bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 shadow-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <h2 className="text-lg font-medium text-white mb-4">
-              All Organizations
-            </h2>
-            <div className="overflow-hidden">
-              <table className="min-w-full divide-y divide-white/10">
-                <thead>
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                      Slug
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                      Created
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/10">
-                  {organizations.map((org) => (
-                    <tr
-                      key={org.id}
-                      className="hover:bg-white/5 transition-colors"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
-                        {org.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white/80">
-                        {org.slug}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white/80">
-                        {new Date(org.created_at).toLocaleDateString()}
-                      </td>
+        {/* Organizations Tab */}
+        {activeTab === "organizations" && (
+          <div className="bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 shadow-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <h2 className="text-base sm:text-lg font-medium text-white mb-4">
+                All Organizations
+              </h2>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-hidden">
+                <table className="min-w-full divide-y divide-white/10">
+                  <thead>
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+                        Slug
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+                        Created
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-white/10">
+                    {organizations.map((org) => (
+                      <tr
+                        key={org.id}
+                        className="hover:bg-white/5 transition-colors"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
+                          {org.name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white/80">
+                          {org.slug}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white/80">
+                          {new Date(org.created_at).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="md:hidden divide-y divide-white/10">
+                {organizations.map((org) => (
+                  <div
+                    key={org.id}
+                    className="px-4 py-4 hover:bg-white/5 transition-colors"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-medium text-white truncate">
+                          {org.name}
+                        </h3>
+                        <p className="text-xs text-white/60 truncate mt-0.5">
+                          Slug: {org.slug}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-xs text-white/60">
+                      Created: {new Date(org.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Create User Modal */}
-      {showCreateModal && (
-        <div
-          className="fixed z-50 inset-0 overflow-y-auto"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowCreateModal(false);
-          }}
-        >
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div
-              className="fixed inset-0 bg-black/70 transition-opacity backdrop-blur-sm"
-              onClick={() => setShowCreateModal(false)}
-            ></div>
-            <div
-              className="inline-block align-bottom bg-white/10 backdrop-blur-xl rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-white/20"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <form onSubmit={handleCreateUser}>
-                <div className="px-6 pt-6 pb-4">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-semibold text-white">
-                      Create New User
-                    </h3>
+        {/* Create User Modal */}
+        {showCreateModal && (
+          <div
+            className="fixed z-50 inset-0 overflow-y-auto"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowCreateModal(false);
+            }}
+          >
+            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              <div
+                className="fixed inset-0 bg-black/70 transition-opacity backdrop-blur-sm"
+                onClick={() => setShowCreateModal(false)}
+              ></div>
+              <div
+                className="inline-block align-bottom bg-white/10 backdrop-blur-xl rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-white/20"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <form onSubmit={handleCreateUser}>
+                  <div className="px-6 pt-6 pb-4">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-xl font-semibold text-white">
+                        Create New User
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => setShowCreateModal(false)}
+                        className="text-white/60 hover:text-white"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-white/90 mb-2">
+                          <User className="w-4 h-4 inline mr-2" />
+                          Full Name
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          className="block w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all"
+                          placeholder="John Doe"
+                          value={formData.name}
+                          onChange={(e) =>
+                            setFormData({ ...formData, name: e.target.value })
+                          }
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-white/90 mb-2">
+                          <Mail className="w-4 h-4 inline mr-2" />
+                          Email
+                        </label>
+                        <input
+                          type="email"
+                          required
+                          className="block w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all"
+                          placeholder="user@example.com"
+                          value={formData.email}
+                          onChange={(e) =>
+                            setFormData({ ...formData, email: e.target.value })
+                          }
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-white/90 mb-2">
+                          <Lock className="w-4 h-4 inline mr-2" />
+                          Password
+                        </label>
+                        <input
+                          type="password"
+                          required
+                          minLength={8}
+                          className="block w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all"
+                          placeholder="Minimum 8 characters"
+                          value={formData.password}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              password: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-white/90 mb-2">
+                          <Shield className="w-4 h-4 inline mr-2" />
+                          Role
+                        </label>
+                        <select
+                          required
+                          className="block w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all"
+                          value={formData.role}
+                          onChange={(e) =>
+                            setFormData({ ...formData, role: e.target.value })
+                          }
+                        >
+                          <option value="user">User</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-white/90 mb-2">
+                          <Building2 className="w-4 h-4 inline mr-2" />
+                          Organization (Optional)
+                        </label>
+                        <select
+                          className="block w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all"
+                          value={formData.org_id}
+                          onChange={(e) =>
+                            setFormData({ ...formData, org_id: e.target.value })
+                          }
+                        >
+                          <option value="">None</option>
+                          {organizations.map((org) => (
+                            <option key={org.id} value={org.id}>
+                              {org.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="px-6 py-4 bg-white/10 border-t border-white/20 flex justify-end space-x-3">
                     <button
                       type="button"
-                      onClick={() => setShowCreateModal(false)}
-                      className="text-white/60 hover:text-white"
+                      onClick={() => {
+                        setShowCreateModal(false);
+                        resetForm();
+                      }}
+                      className="px-4 py-2 text-sm font-medium text-white/70 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
                     >
-                      <X className="w-5 h-5" />
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Create User
                     </button>
                   </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-white/90 mb-2">
-                        <User className="w-4 h-4 inline mr-2" />
-                        Full Name
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        className="block w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all"
-                        placeholder="John Doe"
-                        value={formData.name}
-                        onChange={(e) =>
-                          setFormData({ ...formData, name: e.target.value })
-                        }
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-white/90 mb-2">
-                        <Mail className="w-4 h-4 inline mr-2" />
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        className="block w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all"
-                        placeholder="user@example.com"
-                        value={formData.email}
-                        onChange={(e) =>
-                          setFormData({ ...formData, email: e.target.value })
-                        }
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-white/90 mb-2">
-                        <Lock className="w-4 h-4 inline mr-2" />
-                        Password
-                      </label>
-                      <input
-                        type="password"
-                        required
-                        minLength={8}
-                        className="block w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all"
-                        placeholder="Minimum 8 characters"
-                        value={formData.password}
-                        onChange={(e) =>
-                          setFormData({ ...formData, password: e.target.value })
-                        }
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-white/90 mb-2">
-                        <Shield className="w-4 h-4 inline mr-2" />
-                        Role
-                      </label>
-                      <select
-                        required
-                        className="block w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all"
-                        value={formData.role}
-                        onChange={(e) =>
-                          setFormData({ ...formData, role: e.target.value })
-                        }
-                      >
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-white/90 mb-2">
-                        <Building2 className="w-4 h-4 inline mr-2" />
-                        Organization (Optional)
-                      </label>
-                      <select
-                        className="block w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all"
-                        value={formData.org_id}
-                        onChange={(e) =>
-                          setFormData({ ...formData, org_id: e.target.value })
-                        }
-                      >
-                        <option value="">None</option>
-                        {organizations.map((org) => (
-                          <option key={org.id} value={org.id}>
-                            {org.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="px-6 py-4 bg-white/10 border-t border-white/20 flex justify-end space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowCreateModal(false);
-                      resetForm();
-                    }}
-                    className="px-4 py-2 text-sm font-medium text-white/70 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Create User
-                  </button>
-                </div>
-              </form>
+                </form>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Edit User Modal */}
-      {showEditModal && selectedUser && (
-        <div
-          className="fixed z-50 inset-0 overflow-y-auto"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowEditModal(false);
-          }}
-        >
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div
-              className="fixed inset-0 bg-black/70 transition-opacity backdrop-blur-sm"
-              onClick={() => setShowEditModal(false)}
-            ></div>
-            <div
-              className="inline-block align-bottom bg-white/10 backdrop-blur-xl rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-white/20"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <form onSubmit={handleEditUser}>
-                <div className="px-6 pt-6 pb-4">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-semibold text-white">
-                      Edit User
-                    </h3>
+        {/* Edit User Modal */}
+        {showEditModal && selectedUser && (
+          <div
+            className="fixed z-50 inset-0 overflow-y-auto"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowEditModal(false);
+            }}
+          >
+            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              <div
+                className="fixed inset-0 bg-black/70 transition-opacity backdrop-blur-sm"
+                onClick={() => setShowEditModal(false)}
+              ></div>
+              <div
+                className="inline-block align-bottom bg-white/10 backdrop-blur-xl rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-white/20"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <form onSubmit={handleEditUser}>
+                  <div className="px-6 pt-6 pb-4">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-xl font-semibold text-white">
+                        Edit User
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowEditModal(false);
+                          setSelectedUser(null);
+                        }}
+                        className="text-white/60 hover:text-white"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-white/90 mb-2">
+                          <User className="w-4 h-4 inline mr-2" />
+                          Full Name
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          className="block w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all"
+                          value={formData.name}
+                          onChange={(e) =>
+                            setFormData({ ...formData, name: e.target.value })
+                          }
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-white/90 mb-2">
+                          <Mail className="w-4 h-4 inline mr-2" />
+                          Email
+                        </label>
+                        <input
+                          type="email"
+                          required
+                          className="block w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all"
+                          value={formData.email}
+                          onChange={(e) =>
+                            setFormData({ ...formData, email: e.target.value })
+                          }
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-white/90 mb-2">
+                          <Shield className="w-4 h-4 inline mr-2" />
+                          Role
+                        </label>
+                        <select
+                          required
+                          className="block w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all"
+                          value={formData.role}
+                          onChange={(e) =>
+                            setFormData({ ...formData, role: e.target.value })
+                          }
+                        >
+                          <option value="user">User</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="px-6 py-4 bg-white/10 border-t border-white/20 flex justify-end space-x-3">
                     <button
                       type="button"
                       onClick={() => {
                         setShowEditModal(false);
+                        setSelectedUser(null);
+                      }}
+                      className="px-4 py-2 text-sm font-medium text-white/70 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Update User
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete User Modal */}
+        {showDeleteModal && selectedUser && (
+          <div
+            className="fixed z-50 inset-0 overflow-y-auto"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowDeleteModal(false);
+            }}
+          >
+            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              <div
+                className="fixed inset-0 bg-black/70 transition-opacity backdrop-blur-sm"
+                onClick={() => setShowDeleteModal(false)}
+              ></div>
+              <div
+                className="inline-block align-bottom bg-white/10 backdrop-blur-xl rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-white/20"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="px-6 pt-6 pb-4">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-semibold text-white">
+                      Delete User
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowDeleteModal(false);
                         setSelectedUser(null);
                       }}
                       className="text-white/60 hover:text-white"
@@ -790,56 +989,18 @@ export default function Admin() {
                     </button>
                   </div>
 
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-white/90 mb-2">
-                        <User className="w-4 h-4 inline mr-2" />
-                        Full Name
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        className="block w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all"
-                        value={formData.name}
-                        onChange={(e) =>
-                          setFormData({ ...formData, name: e.target.value })
-                        }
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-white/90 mb-2">
-                        <Mail className="w-4 h-4 inline mr-2" />
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        className="block w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all"
-                        value={formData.email}
-                        onChange={(e) =>
-                          setFormData({ ...formData, email: e.target.value })
-                        }
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-white/90 mb-2">
-                        <Shield className="w-4 h-4 inline mr-2" />
-                        Role
-                      </label>
-                      <select
-                        required
-                        className="block w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all"
-                        value={formData.role}
-                        onChange={(e) =>
-                          setFormData({ ...formData, role: e.target.value })
-                        }
-                      >
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    </div>
+                  <div className="mb-6">
+                    <p className="text-white/80 mb-4">
+                      Are you sure you want to delete user{" "}
+                      <span className="font-semibold text-white">
+                        {selectedUser.name}
+                      </span>
+                      ?
+                    </p>
+                    <p className="text-sm text-white/60">
+                      This action cannot be undone. All data associated with
+                      this user will be permanently deleted.
+                    </p>
                   </div>
                 </div>
 
@@ -847,7 +1008,7 @@ export default function Admin() {
                   <button
                     type="button"
                     onClick={() => {
-                      setShowEditModal(false);
+                      setShowDeleteModal(false);
                       setSelectedUser(null);
                     }}
                     className="px-4 py-2 text-sm font-medium text-white/70 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
@@ -855,90 +1016,18 @@ export default function Admin() {
                     Cancel
                   </button>
                   <button
-                    type="submit"
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Update User
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete User Modal */}
-      {showDeleteModal && selectedUser && (
-        <div
-          className="fixed z-50 inset-0 overflow-y-auto"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowDeleteModal(false);
-          }}
-        >
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div
-              className="fixed inset-0 bg-black/70 transition-opacity backdrop-blur-sm"
-              onClick={() => setShowDeleteModal(false)}
-            ></div>
-            <div
-              className="inline-block align-bottom bg-white/10 backdrop-blur-xl rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-white/20"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="px-6 pt-6 pb-4">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-semibold text-white">
-                    Delete User
-                  </h3>
-                  <button
                     type="button"
-                    onClick={() => {
-                      setShowDeleteModal(false);
-                      setSelectedUser(null);
-                    }}
-                    className="text-white/60 hover:text-white"
+                    onClick={handleDeleteUser}
+                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
                   >
-                    <X className="w-5 h-5" />
+                    Delete User
                   </button>
                 </div>
-
-                <div className="mb-6">
-                  <p className="text-white/80 mb-4">
-                    Are you sure you want to delete user{" "}
-                    <span className="font-semibold text-white">
-                      {selectedUser.name}
-                    </span>
-                    ?
-                  </p>
-                  <p className="text-sm text-white/60">
-                    This action cannot be undone. All data associated with this
-                    user will be permanently deleted.
-                  </p>
-                </div>
-              </div>
-
-              <div className="px-6 py-4 bg-white/10 border-t border-white/20 flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowDeleteModal(false);
-                    setSelectedUser(null);
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-white/70 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDeleteUser}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  Delete User
-                </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </PageTransition>
   );
 }
