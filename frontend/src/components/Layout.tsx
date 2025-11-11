@@ -1,5 +1,6 @@
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
+import { useThemeStore } from "../store/themeStore";
 import {
   LogOut,
   LayoutDashboard,
@@ -11,6 +12,9 @@ import {
   LucideIcon,
 } from "lucide-react";
 import Particles from "./Particles";
+import GlassSurface from "./GlassSurface";
+import CardNav, { CardNavItem } from "./CardNav";
+import ThemeToggle from "./ThemeToggle";
 
 interface NavLinkProps {
   to: string;
@@ -47,6 +51,7 @@ function NavLink({ to, icon: Icon, label, isActive }: NavLinkProps) {
 
 export default function Layout() {
   const { user, token, logout } = useAuthStore();
+  const { theme } = useThemeStore();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -67,12 +72,67 @@ export default function Layout() {
     );
   }
 
+  // Create logo SVG data URL
+  const logo = `data:image/svg+xml,${encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>'
+  )}`;
+
+  // Navigation items for CardNav
+  const navItems: CardNavItem[] = [
+    {
+      label: "Monitoring",
+      bgColor: "rgba(30, 27, 75, 0.85)", // indigo-900 with opacity
+      textColor: "#fff",
+      links: [
+        {
+          label: "Dashboard",
+          href: "/dashboard",
+          ariaLabel: "Go to Dashboard",
+        },
+        { label: "Services", href: "/services", ariaLabel: "View Services" },
+      ],
+    },
+    {
+      label: "Alerts & Insights",
+      bgColor: "rgba(124, 45, 18, 0.85)", // red-900 with opacity
+      textColor: "#fff",
+      links: [
+        { label: "Alerts", href: "/alerts", ariaLabel: "View Alerts" },
+        {
+          label: "Predictions",
+          href: "/predictions",
+          ariaLabel: "AI Predictions",
+        },
+      ],
+    },
+    ...(user?.role === "admin" || user?.role === "super_admin"
+      ? [
+          {
+            label: "Admin",
+            bgColor: "rgba(88, 28, 135, 0.85)", // purple-900 with opacity
+            textColor: "#fff",
+            links: [
+              {
+                label: "Admin Panel",
+                href: "/admin",
+                ariaLabel: "Admin Panel",
+              },
+            ],
+          },
+        ]
+      : []),
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-800 via-black to-red-900 relative">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-800 via-black to-red-900 dark:from-purple-950 dark:via-indigo-950 dark:to-pink-950 relative transition-colors duration-300">
       {/* Particles Background */}
       <div className="fixed inset-0 w-full h-full z-0 pointer-events-none">
         <Particles
-          particleColors={["black", "black"]}
+          particleColors={
+            theme === "dark"
+              ? ["#a855f7", "#ec4899", "#6366f1"]
+              : ["black", "black"]
+          }
           particleCount={200}
           particleSpread={10}
           speed={0.1}
@@ -85,91 +145,132 @@ export default function Layout() {
 
       {/* Content */}
       <div className="relative z-10">
-        <nav className="bg-white/10 backdrop-blur-xl border-b border-white/20">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <div className="flex items-center justify-between h-20">
-              {/* Brand Section - Enhanced */}
-              <Link
-                to="/dashboard"
-                className="flex items-center space-x-3 group relative"
-              >
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-400/20 to-red-400/20 rounded-lg blur-md group-hover:blur-lg transition-all duration-300"></div>
-                  <div className="relative w-9 h-9 bg-gradient-to-br from-indigo-400 to-red-400 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                    <Activity className="w-5 h-5 text-white" />
-                  </div>
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold bg-gradient-to-r from-white via-white to-white/80 bg-clip-text text-transparent group-hover:from-white group-hover:via-indigo-200 group-hover:to-red-200 transition-all duration-300 tracking-tight">
-                    PulseGrid
-                  </h1>
-                  <div className="h-0.5 w-0 bg-gradient-to-r from-indigo-400 to-red-400 group-hover:w-full transition-all duration-300 mt-0.5"></div>
-                </div>
-              </Link>
+        {/* Mobile/Tablet Navigation - CardNav */}
+        <div className="md:hidden fixed top-0 left-0 right-0 z-50">
+          <CardNav
+            logo={logo}
+            logoAlt="PulseGrid Logo"
+            items={navItems}
+            baseColor="rgba(255, 255, 255, 0.1)" // glassy white with low opacity
+            menuColor="#fff"
+            buttonBgColor="#7c2d12" // red-900
+            buttonTextColor="#fff"
+            buttonLabel="Logout"
+            onButtonClick={handleLogout}
+            ease="power3.out"
+          />
+        </div>
 
-              {/* Navigation Links - Enhanced with Active States */}
-              <div className="hidden md:flex items-center space-x-2">
-                <NavLink
+        {/* Desktop Navigation */}
+        <nav className="relative w-full hidden md:block">
+          <GlassSurface
+            width="100%"
+            height={80}
+            displace={15}
+            distortionScale={-150}
+            redOffset={5}
+            greenOffset={15}
+            blueOffset={25}
+            brightness={60}
+            opacity={0.8}
+            mixBlendMode="screen"
+            className="border-b border-white/20"
+            style={{ borderRadius: 0 }}
+          >
+            <div className="max-w-7xl mx-auto px-6 lg:px-8 w-full h-full">
+              <div className="flex items-center justify-between h-20">
+                {/* Brand Section - Enhanced */}
+                <Link
                   to="/dashboard"
-                  icon={LayoutDashboard}
-                  label="Dashboard"
-                  isActive={
-                    location.pathname === "/dashboard" ||
-                    location.pathname === "/"
-                  }
-                />
-                <NavLink
-                  to="/services"
-                  icon={Server}
-                  label="Services"
-                  isActive={location.pathname.startsWith("/services")}
-                />
-                <NavLink
-                  to="/alerts"
-                  icon={Bell}
-                  label="Alerts"
-                  isActive={location.pathname === "/alerts"}
-                />
-                <NavLink
-                  to="/predictions"
-                  icon={Brain}
-                  label="Predictions"
-                  isActive={location.pathname === "/predictions"}
-                />
-                {(user?.role === "admin" || user?.role === "super_admin") && (
-                  <NavLink
-                    to="/admin"
-                    icon={Users}
-                    label="Admin"
-                    isActive={location.pathname === "/admin"}
-                  />
-                )}
-              </div>
+                  className="flex items-center space-x-3 group relative"
+                >
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-400/20 to-red-400/20 rounded-lg blur-md group-hover:blur-lg transition-all duration-300"></div>
+                    <div className="relative w-9 h-9 bg-gradient-to-br from-indigo-400 to-red-400 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                      <Activity className="w-5 h-5 text-white" />
+                    </div>
+                  </div>
+                  <div>
+                    <h1 className="text-xl font-bold bg-gradient-to-r from-white via-white to-white/80 bg-clip-text text-transparent group-hover:from-white group-hover:via-indigo-200 group-hover:to-red-200 transition-all duration-300 tracking-tight">
+                      PulseGrid
+                    </h1>
+                    <div className="h-0.5 w-0 bg-gradient-to-r from-indigo-400 to-red-400 group-hover:w-full transition-all duration-300 mt-0.5"></div>
+                  </div>
+                </Link>
 
-              {/* User Section - Enhanced */}
-              <div className="flex items-center space-x-4">
-                <div className="hidden sm:block text-right pr-4 border-r border-white/10">
-                  <p className="text-sm font-semibold text-white">
-                    {user?.name || user?.email}
-                  </p>
-                  {user?.role && (
-                    <p className="text-xs text-white/50 capitalize font-medium">
-                      {user.role}
-                    </p>
+                {/* Navigation Links - Enhanced with Active States */}
+                <div className="flex items-center space-x-2">
+                  <NavLink
+                    to="/dashboard"
+                    icon={LayoutDashboard}
+                    label="Dashboard"
+                    isActive={
+                      location.pathname === "/dashboard" ||
+                      location.pathname === "/"
+                    }
+                  />
+                  <NavLink
+                    to="/services"
+                    icon={Server}
+                    label="Services"
+                    isActive={location.pathname.startsWith("/services")}
+                  />
+                  <NavLink
+                    to="/alerts"
+                    icon={Bell}
+                    label="Alerts"
+                    isActive={location.pathname === "/alerts"}
+                  />
+                  <NavLink
+                    to="/predictions"
+                    icon={Brain}
+                    label="Predictions"
+                    isActive={location.pathname === "/predictions"}
+                  />
+                  {(user?.role === "admin" || user?.role === "super_admin") && (
+                    <NavLink
+                      to="/admin"
+                      icon={Users}
+                      label="Admin"
+                      isActive={location.pathname === "/admin"}
+                    />
                   )}
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200 border border-transparent hover:border-white/20"
-                >
-                  <LogOut className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Logout</span>
-                </button>
+
+                {/* User Section - Enhanced */}
+                <div className="flex items-center space-x-4">
+                  <ThemeToggle />
+                  <div className="hidden sm:block text-right pr-4 border-r border-white/10 dark:border-white/20">
+                    <p className="text-sm font-semibold text-white dark:text-white">
+                      {user?.name
+                        ? user.name.split(" ")[0]
+                        : user?.email?.split("@")[0] || user?.email}
+                    </p>
+                    {user?.role && (
+                      <p className="text-xs text-white/50 dark:text-white/60 capitalize font-medium">
+                        {user.role}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white/70 dark:text-white/80 hover:text-white dark:hover:text-white hover:bg-white/10 dark:hover:bg-white/20 rounded-lg transition-all duration-200 border border-transparent hover:border-white/20 dark:hover:border-white/30"
+                  >
+                    <LogOut className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Logout</span>
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          </GlassSurface>
         </nav>
-        <main className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+        <main
+          className={`max-w-7xl mx-auto px-6 lg:px-8 ${
+            user?.role === "admin" || user?.role === "super_admin"
+              ? "pt-24 md:pt-8"
+              : "pt-24 md:pt-8"
+          }`}
+        >
           <Outlet />
         </main>
       </div>

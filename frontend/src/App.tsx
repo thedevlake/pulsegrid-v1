@@ -23,10 +23,10 @@ function App() {
   // Wait for auth store to hydrate from localStorage
   if (!_hasHydrated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-800 via-black to-red-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-800 via-black to-red-900 dark:from-purple-950 dark:via-indigo-950 dark:to-pink-950 flex items-center justify-center transition-colors duration-300">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white/40 mx-auto"></div>
-          <p className="mt-4 text-white/70">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white/40 dark:border-slate-400/40 mx-auto"></div>
+          <p className="mt-4 text-white/70 dark:text-slate-300/70">Loading...</p>
         </div>
       </div>
     );
