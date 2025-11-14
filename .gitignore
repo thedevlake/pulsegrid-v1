@@ -6,6 +6,8 @@ vendor/
 .env
 .env.local
 .env.*.local
+.env.bak
+backend/.env.bak
 
 # Build outputs
 dist/
@@ -15,6 +17,8 @@ build/
 *.dll
 *.so
 *.dylib
+backend/main
+backend/*.exe
 
 # Test files
 *.test
@@ -29,6 +33,11 @@ coverage/
 
 # OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
 # Terraform
@@ -36,9 +45,17 @@ Thumbs.db
 *.tfstate
 *.tfstate.*
 .terraform.lock.hcl
+*.tfplan
+*.tfplan.*
+terraform-apply.log
+terraform.tfvars  # ⚠️ Contains secrets - MUST be ignored
+# Keep example file
+!terraform.tfvars.example
 
 # AWS
 .aws-sam/
+task-details.json
+*.task-details.json
 
 # Logs
 *.log
@@ -48,6 +65,15 @@ logs/
 tmp/
 temp/
 
+# Backup files
 *.bak
 .env.bak
 backend/.env.bak
+
+# Test scripts (temporary)
+test-*.sh
+TEST_*.md
+
+# Frontend build artifacts
+frontend/dist/
+
