@@ -61,6 +61,7 @@ export default function ServiceDetail() {
       fetchHealthChecks();
       fetchStats();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   // Set up real-time updates every 5 seconds
