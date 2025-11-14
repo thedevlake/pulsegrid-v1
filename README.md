@@ -83,11 +83,9 @@ See `.env.example` files in each directory for required environment variables.
 
 ## 📚 Documentation
 
-- [Quick Start Guide](./QUICK_START.md) - ⚡ Get started in 5 minutes
 - [Docker Setup Guide](./DOCKER_SETUP.md) - 🐳 Run with Docker and Docker Compose
-- [Requirements Setup](./REQUIREMENTS_SETUP.md) - 📋 Detailed guide for all requirements
-- [Setup Guide](./SETUP.md) - 🛠️ Local development setup
-- [Deployment Guide](./DEPLOYMENT.md) - ☁️ AWS deployment instructions
+- [Docker & AWS Deployment](./DOCKER_AWS_DEPLOYMENT.md) - ☁️ Complete deployment guide
+- [Email Setup Guide](./EMAIL_SETUP.md) - 📧 Configure email notifications
 - [Infrastructure README](./infrastructure/README.md) - 🏗️ Terraform configuration details
 
 ## 🎯 Quick Start
@@ -105,11 +103,11 @@ See [DOCKER_SETUP.md](./DOCKER_SETUP.md) for detailed Docker instructions.
 
 1. **Clone the repository**
 2. **Set up the database** (PostgreSQL)
-3. **Configure backend** (see [SETUP.md](./SETUP.md))
-4. **Configure frontend** (see [SETUP.md](./SETUP.md))
+3. **Configure backend** (see Backend Setup section above)
+4. **Configure frontend** (see Frontend Setup section above)
 5. **Start backend**: `cd backend && go run cmd/api/main.go`
 6. **Start frontend**: `cd frontend && npm run dev`
-7. **Access**: Open `http://localhost:3000` in your browser
+7. **Access**: Open `http://localhost:5173` in your browser
 
 ## 🔧 What You Need to Provide
 
