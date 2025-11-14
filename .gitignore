@@ -48,3 +48,6 @@ logs/
 tmp/
 temp/
 
+*.bak
+.env.bak
+backend/.env.bak

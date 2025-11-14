@@ -243,7 +243,7 @@ export default function Admin() {
           <div
             className={`fixed top-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-auto z-50 p-4 rounded-xl shadow-lg backdrop-blur-xl border ${
               notification.type === "success"
-                ? "bg-green-500/20 border-green-500/30 text-green-300"
+                ? "bg-blue-800/20 border-blue-800/30 text-blue-500"
                 : "bg-red-500/20 border-red-500/30 text-red-300"
             }`}
           >
@@ -388,7 +388,7 @@ export default function Admin() {
                 <div className="p-5">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <TrendingUp className="h-6 w-6 text-green-400" />
+                      <TrendingUp className="h-6 w-6 text-blue-500" />
                     </div>
                     <div className="ml-5 w-0 flex-1">
                       <dl>
@@ -527,7 +527,7 @@ export default function Admin() {
                           <span
                             className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                               user.role === "admin"
-                                ? "text-purple-300 bg-purple-500/20"
+                                ? "text-blue-500 bg-blue-800/20"
                                 : "text-white/70 bg-white/10"
                             }`}
                           >
@@ -582,7 +582,7 @@ export default function Admin() {
                       <span
                         className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ml-2 flex-shrink-0 ${
                           user.role === "admin"
-                            ? "text-purple-300 bg-purple-500/20"
+                            ? "text-blue-500 bg-blue-800/20"
                             : "text-white/70 bg-white/10"
                         }`}
                       >

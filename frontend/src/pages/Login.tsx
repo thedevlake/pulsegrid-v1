@@ -7,15 +7,7 @@ import Particles from "../components/Particles";
 import CardSwap, { Card } from "../components/CardSwap";
 import ThemeToggle from "../components/ThemeToggle";
 import PageTransition from "../components/PageTransition";
-import {
-  LogIn,
-  Mail,
-  Lock,
-  Activity,
-  BarChart3,
-  Shield,
-  TrendingUp,
-} from "lucide-react";
+import { LogIn, Mail, Lock, Activity } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -50,7 +42,13 @@ export default function Login() {
 
   return (
     <PageTransition animationType="fade">
-      <div className="min-h-screen bg-gradient-to-br from-indigo-800 via-black to-red-900 dark:from-purple-950 dark:via-indigo-950 dark:to-pink-950 relative flex flex-col py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-300">
+      <div
+        className={`min-h-screen relative flex flex-col py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-300 ${
+          theme === "dark"
+            ? "bg-gradient-to-b from-slate-900 via-slate-800 to-gray-900"
+            : "bg-gradient-to-b from-black via-slate-950 to-blue-950"
+        }`}
+      >
         {/* Theme Toggle - Top Right */}
         <div className="fixed top-4 right-4 z-50">
           <ThemeToggle />
@@ -61,8 +59,8 @@ export default function Login() {
           <Particles
             particleColors={
               theme === "dark"
-                ? ["#a855f7", "#ec4899", "#6366f1"]
-                : ["black", "black"]
+                ? ["#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0"]
+                : ["#ffffff", "#ffffff"]
             }
             particleCount={200}
             particleSpread={10}
@@ -78,17 +76,23 @@ export default function Login() {
         <div className="relative z-10 w-full max-w-6xl mx-auto mb-12">
           <div className="flex flex-col items-center lg:items-start">
             <div className="flex items-center space-x-3 mb-2 mt-20">
-              <div className="w-10 h-10 bg-gradient-to-br from-indigo-400 to-red-400 rounded-lg flex items-center justify-center">
+              <div
+                className={`w-10 h-10 rounded-lg flex items-center justify-center shadow-lg ${
+                  theme === "dark"
+                    ? "bg-gradient-to-br from-slate-600 to-gray-700"
+                    : "bg-gradient-to-br from-blue-800 to-indigo-900"
+                }`}
+              >
                 <Activity className="w-6 h-6 text-white" />
               </div>
               <h1 className="text-5xl font-black text-white tracking-tight">
                 PulseGrid
               </h1>
             </div>
-            <p className="text-lg text-white/80 font-medium">
+            <p className="text-lg text-white font-medium">
               Cloud-Native Infrastructure Monitoring Platform
             </p>
-            <p className="text-sm text-white/60 mt-2 max-w-2xl text-center sm:text-left">
+            <p className="text-sm text-white/80 mt-2 max-w-2xl text-center sm:text-left">
               Monitor your services, track uptime, and receive instant alerts.
               Built for startups, businesses, and tech communities.
             </p>
@@ -109,7 +113,7 @@ export default function Login() {
                   <h2 className="text-3xl font-semibold text-white tracking-tight">
                     Sign in to PulseGrid
                   </h2>
-                  <p className="mt-2 text-sm text-white/70">
+                  <p className="mt-2 text-sm text-white/90">
                     Access your monitoring dashboard
                   </p>
                 </div>
@@ -128,13 +132,13 @@ export default function Login() {
                     <div className="space-y-2">
                       <label
                         htmlFor="email"
-                        className="text-sm font-medium text-white/90"
+                        className="text-sm font-medium text-white"
                       >
                         Email address
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <Mail className="h-5 w-5 text-white/40" />
+                          <Mail className="h-5 w-5 text-white/60" />
                         </div>
                         <input
                           id="email"
@@ -142,7 +146,11 @@ export default function Login() {
                           type="email"
                           autoComplete="email"
                           required
-                          className="block w-full pl-10 pr-3 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all sm:text-sm"
+                          className={`block w-full pl-10 pr-3 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 transition-all sm:text-sm ${
+                            theme === "dark"
+                              ? "focus:ring-slate-400/50 focus:border-slate-400/50"
+                              : "focus:ring-blue-700/50 focus:border-blue-700/50"
+                          }`}
                           placeholder="you@example.com"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
@@ -154,13 +162,13 @@ export default function Login() {
                     <div className="space-y-2">
                       <label
                         htmlFor="password"
-                        className="text-sm font-medium text-white/90"
+                        className="text-sm font-medium text-white"
                       >
                         Password
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <Lock className="h-5 w-5 text-white/40" />
+                          <Lock className="h-5 w-5 text-white/60" />
                         </div>
                         <input
                           id="password"
@@ -168,7 +176,11 @@ export default function Login() {
                           type="password"
                           autoComplete="current-password"
                           required
-                          className="block w-full pl-10 pr-3 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all sm:text-sm"
+                          className={`block w-full pl-10 pr-3 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 transition-all sm:text-sm ${
+                            theme === "dark"
+                              ? "focus:ring-slate-400/50 focus:border-slate-400/50"
+                              : "focus:ring-blue-700/50 focus:border-blue-700/50"
+                          }`}
                           placeholder="••••••••"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
@@ -182,7 +194,11 @@ export default function Login() {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg text-sm font-semibold text-white bg-white/10 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                      className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg ${
+                        theme === "dark"
+                          ? "bg-gradient-to-r from-slate-700 to-gray-800 hover:from-slate-600 hover:to-gray-700 focus:ring-slate-400 shadow-slate-800/30"
+                          : "bg-gradient-to-r from-blue-900 to-indigo-950 hover:from-blue-800 hover:to-indigo-900 focus:ring-blue-700 shadow-blue-900/30"
+                      }`}
                     >
                       {loading ? (
                         <>
@@ -216,11 +232,15 @@ export default function Login() {
 
                   {/* Sign up link */}
                   <div className="text-center">
-                    <p className="text-sm text-white/70">
+                    <p className="text-sm text-white/90">
                       Don't have an account?{" "}
                       <Link
                         to="/register"
-                        className="font-semibold text-white hover:text-white/80 transition-colors"
+                        className={`font-semibold transition-colors ${
+                          theme === "dark"
+                            ? "text-slate-300 hover:text-slate-200"
+                            : "text-blue-500 hover:text-blue-400"
+                        }`}
                       >
                         Sign up
                       </Link>
@@ -245,7 +265,19 @@ export default function Login() {
                     <Card>
                       <div className="flex flex-col items-center justify-center text-center p-8 h-full bg-white/95 backdrop-blur-xl border border-gray-200/60 shadow-lg rounded-2xl">
                         <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center mb-5 shadow-md">
-                          <TrendingUp className="w-7 h-7 text-white" />
+                          <svg
+                            className="w-7 h-7 text-white"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                            />
+                          </svg>
                         </div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-3 tracking-tight">
                           Your Dashboard Awaits
@@ -259,7 +291,19 @@ export default function Login() {
                           response times, and performance insights at a glance.
                         </p>
                         <div className="mt-auto flex items-center justify-center space-x-2 text-xs text-gray-500 bg-gray-50 px-3 py-1.5 rounded-full">
-                          <TrendingUp className="w-3.5 h-3.5 text-indigo-500" />
+                          <svg
+                            className="w-3.5 h-3.5 text-indigo-500"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                            />
+                          </svg>
                           <span>Instant access to all services</span>
                         </div>
                       </div>
@@ -267,7 +311,19 @@ export default function Login() {
                     <Card>
                       <div className="flex flex-col items-center justify-center text-center p-8 h-full bg-white/95 backdrop-blur-xl border border-gray-200/60 shadow-lg rounded-2xl">
                         <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center mb-5 shadow-md">
-                          <Activity className="w-7 h-7 text-white" />
+                          <svg
+                            className="w-7 h-7 text-white"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                            />
+                          </svg>
                         </div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-3 tracking-tight">
                           Stay Informed
@@ -290,7 +346,19 @@ export default function Login() {
                     <Card>
                       <div className="flex flex-col items-center justify-center text-center p-8 h-full bg-white/95 backdrop-blur-xl border border-gray-200/60 shadow-lg rounded-2xl">
                         <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mb-5 shadow-md">
-                          <BarChart3 className="w-7 h-7 text-white" />
+                          <svg
+                            className="w-7 h-7 text-white"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                            />
+                          </svg>
                         </div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-3 tracking-tight">
                           Historical Insights
@@ -304,7 +372,19 @@ export default function Login() {
                           data-driven decisions to improve your infrastructure.
                         </p>
                         <div className="mt-auto flex items-center justify-center space-x-2 text-xs text-gray-500 bg-gray-50 px-3 py-1.5 rounded-full">
-                          <BarChart3 className="w-3.5 h-3.5 text-purple-500" />
+                          <svg
+                            className="w-3.5 h-3.5 text-purple-500"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                            />
+                          </svg>
                           <span>Comprehensive analytics</span>
                         </div>
                       </div>
@@ -312,7 +392,19 @@ export default function Login() {
                     <Card>
                       <div className="flex flex-col items-center justify-center text-center p-8 h-full bg-white/95 backdrop-blur-xl border border-gray-200/60 shadow-lg rounded-2xl">
                         <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center mb-5 shadow-md">
-                          <Shield className="w-7 h-7 text-white" />
+                          <svg
+                            className="w-7 h-7 text-white"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                            />
+                          </svg>
                         </div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-3 tracking-tight">
                           Secure & Reliable
@@ -326,7 +418,19 @@ export default function Login() {
                           encrypted data storage.
                         </p>
                         <div className="mt-auto flex items-center justify-center space-x-2 text-xs text-gray-500 bg-gray-50 px-3 py-1.5 rounded-full">
-                          <Shield className="w-3.5 h-3.5 text-amber-500" />
+                          <svg
+                            className="w-3.5 h-3.5 text-amber-500"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                            />
+                          </svg>
                           <span>Bank-level security</span>
                         </div>
                       </div>

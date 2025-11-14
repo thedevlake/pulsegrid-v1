@@ -79,7 +79,11 @@ export default function Register() {
 
   return (
     <PageTransition animationType="scale">
-      <div className="min-h-screen bg-gradient-to-br from-indigo-800 via-black to-red-900 dark:from-purple-950 dark:via-indigo-950 dark:to-pink-950 relative flex flex-col py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-300">
+      <div className={`min-h-screen relative flex flex-col py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-300 ${
+        theme === 'dark' 
+          ? 'bg-gradient-to-b from-slate-900 via-slate-800 to-gray-900' 
+          : 'bg-gradient-to-b from-black via-slate-950 to-blue-950'
+      }`}>
         {/* Theme Toggle - Top Right */}
         <div className="fixed top-4 right-4 z-50">
           <ThemeToggle />
@@ -90,8 +94,8 @@ export default function Register() {
           <Particles
             particleColors={
               theme === "dark"
-                ? ["#a855f7", "#ec4899", "#6366f1"]
-                : ["black", "black"]
+                ? ["#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0"]
+                : ["#ffffff", "#ffffff"]
             }
             particleCount={200}
             particleSpread={10}
@@ -107,17 +111,21 @@ export default function Register() {
         <div className="relative z-10 w-full max-w-6xl mx-auto mb-12 mt-20">
           <div className="flex flex-col items-center lg:items-start">
             <div className="flex items-center space-x-3 mb-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-indigo-400 to-red-400 rounded-lg flex items-center justify-center">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center shadow-lg ${
+                theme === 'dark' 
+                  ? 'bg-gradient-to-br from-slate-600 to-gray-700' 
+                  : 'bg-gradient-to-br from-blue-800 to-indigo-900'
+              }`}>
                 <Activity className="w-6 h-6 text-white" />
               </div>
               <h1 className="text-5xl font-black text-white tracking-tight">
                 PulseGrid
               </h1>
             </div>
-            <p className="text-lg text-white/80 font-medium">
+            <p className="text-lg text-white font-medium">
               Cloud-Native Infrastructure Monitoring Platform
             </p>
-            <p className="text-sm text-white/60 mt-2 max-w-2xl text-center sm:text-left">
+            <p className="text-sm text-white/80 mt-2 max-w-2xl text-center sm:text-left">
               Monitor your services, track uptime, and receive instant alerts.
               Built for startups, businesses, and tech communities.
             </p>
@@ -138,7 +146,7 @@ export default function Register() {
                   <h2 className="text-3xl font-semibold text-white tracking-tight">
                     Create account
                   </h2>
-                  <p className="mt-2 text-sm text-white/70">
+                  <p className="mt-2 text-sm text-white/90">
                     Get started with PulseGrid monitoring
                   </p>
                 </div>
@@ -157,13 +165,13 @@ export default function Register() {
                     <div className="space-y-2">
                       <label
                         htmlFor="name"
-                        className="text-sm font-medium text-white/90"
+                        className="text-sm font-medium text-white"
                       >
                         Full Name
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <User className="h-5 w-5 text-white/40" />
+                          <User className="h-5 w-5 text-white/60" />
                         </div>
                         <input
                           id="name"
@@ -171,7 +179,11 @@ export default function Register() {
                           type="text"
                           autoComplete="name"
                           required
-                          className="block w-full pl-10 pr-3 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all sm:text-sm"
+                          className={`block w-full pl-10 pr-3 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 transition-all sm:text-sm ${
+                            theme === 'dark' 
+                              ? 'focus:ring-slate-400/50 focus:border-slate-400/50' 
+                              : 'focus:ring-blue-700/50 focus:border-blue-700/50'
+                          }`}
                           placeholder="John Doe"
                           value={formData.name}
                           onChange={(e) =>
@@ -185,13 +197,13 @@ export default function Register() {
                     <div className="space-y-2">
                       <label
                         htmlFor="email"
-                        className="text-sm font-medium text-white/90"
+                        className="text-sm font-medium text-white"
                       >
                         Email address
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <Mail className="h-5 w-5 text-white/40" />
+                          <Mail className="h-5 w-5 text-white/60" />
                         </div>
                         <input
                           id="email"
@@ -199,7 +211,11 @@ export default function Register() {
                           type="email"
                           autoComplete="email"
                           required
-                          className="block w-full pl-10 pr-3 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all sm:text-sm"
+                          className={`block w-full pl-10 pr-3 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 transition-all sm:text-sm ${
+                            theme === 'dark' 
+                              ? 'focus:ring-slate-400/50 focus:border-slate-400/50' 
+                              : 'focus:ring-blue-700/50 focus:border-blue-700/50'
+                          }`}
                           placeholder="you@example.com"
                           value={formData.email}
                           onChange={(e) =>
@@ -213,20 +229,24 @@ export default function Register() {
                     <div className="space-y-2">
                       <label
                         htmlFor="orgName"
-                        className="text-sm font-medium text-white/90"
+                        className="text-sm font-medium text-white"
                       >
                         Organization Name
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <Building2 className="h-5 w-5 text-white/40" />
+                          <Building2 className="h-5 w-5 text-white/60" />
                         </div>
                         <input
                           id="orgName"
                           name="orgName"
                           type="text"
                           required
-                          className="block w-full pl-10 pr-3 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all sm:text-sm"
+                          className={`block w-full pl-10 pr-3 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 transition-all sm:text-sm ${
+                            theme === 'dark' 
+                              ? 'focus:ring-slate-400/50 focus:border-slate-400/50' 
+                              : 'focus:ring-blue-700/50 focus:border-blue-700/50'
+                          }`}
                           placeholder="Acme Inc"
                           value={formData.orgName}
                           onChange={(e) =>
@@ -243,13 +263,13 @@ export default function Register() {
                     <div className="space-y-2">
                       <label
                         htmlFor="password"
-                        className="text-sm font-medium text-white/90"
+                        className="text-sm font-medium text-white"
                       >
                         Password
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <Lock className="h-5 w-5 text-white/40" />
+                          <Lock className="h-5 w-5 text-white/60" />
                         </div>
                         <input
                           id="password"
@@ -258,7 +278,11 @@ export default function Register() {
                           autoComplete="new-password"
                           required
                           minLength={8}
-                          className="block w-full pl-10 pr-3 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all sm:text-sm"
+                          className={`block w-full pl-10 pr-3 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 transition-all sm:text-sm ${
+                            theme === 'dark' 
+                              ? 'focus:ring-slate-400/50 focus:border-slate-400/50' 
+                              : 'focus:ring-blue-700/50 focus:border-blue-700/50'
+                          }`}
                           placeholder="Minimum 8 characters"
                           value={formData.password}
                           onChange={(e) =>
@@ -287,7 +311,11 @@ export default function Register() {
                         (formData.password.length > 0 &&
                           formData.password.length < 8)
                       }
-                      className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg text-sm font-semibold text-white bg-white/10 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                      className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg ${
+                        theme === 'dark' 
+                          ? 'bg-gradient-to-r from-slate-700 to-gray-800 hover:from-slate-600 hover:to-gray-700 focus:ring-slate-400 shadow-slate-800/30' 
+                          : 'bg-gradient-to-r from-blue-900 to-indigo-950 hover:from-blue-800 hover:to-indigo-900 focus:ring-blue-700 shadow-blue-900/30'
+                      }`}
                     >
                       {loading ? (
                         <>
@@ -321,11 +349,15 @@ export default function Register() {
 
                   {/* Sign in link */}
                   <div className="text-center">
-                    <p className="text-sm text-white/70">
+                    <p className="text-sm text-white/90">
                       Already have an account?{" "}
                       <Link
                         to="/login"
-                        className="font-semibold text-white hover:text-white/80 transition-colors"
+                        className={`font-semibold transition-colors ${
+                          theme === 'dark' 
+                            ? 'text-slate-300 hover:text-slate-200' 
+                            : 'text-blue-500 hover:text-blue-400'
+                        }`}
                       >
                         Sign in
                       </Link>

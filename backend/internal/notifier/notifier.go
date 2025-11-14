@@ -3,8 +3,10 @@ package notifier
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"net/smtp"
 	"os"
 
 	"pulsegrid/backend/internal/models"
@@ -18,22 +20,56 @@ import (
 
 // NotifierService handles sending notifications for alerts
 type NotifierService struct {
-	alertRepo *repository.AlertRepository
-	sesClient *ses.SES
-	snsClient *sns.SNS
-	fromEmail string
-	topicARN  string
+	alertRepo      *repository.AlertRepository
+	sesClient      *ses.SES
+	snsClient      *sns.SNS
+	fromEmail      string
+	topicARN       string
+	// SMTP configuration for local development
+	smtpHost       string
+	smtpPort       string
+	smtpUser       string
+	smtpPassword   string
+	smtpFromEmail  string
+	useSMTP        bool
+	useConsoleLog  bool
 }
 
 func NewNotifierService(alertRepo *repository.AlertRepository) *NotifierService {
 	sess := session.Must(session.NewSession())
 	
+	// Check if SMTP is configured
+	smtpHost := getEnv("SMTP_HOST", "")
+	smtpPort := getEnv("SMTP_PORT", "587")
+	smtpUser := getEnv("SMTP_USER", "")
+	smtpPassword := getEnv("SMTP_PASSWORD", "")
+	smtpFromEmail := getEnv("SMTP_FROM_EMAIL", getEnv("SES_FROM_EMAIL", "noreply@pulsegrid.com"))
+	useSMTP := smtpHost != "" && smtpUser != "" && smtpPassword != ""
+	
+	// Use console logging if neither AWS SES nor SMTP is configured
+	useConsoleLog := !useSMTP && (getEnv("AWS_ACCESS_KEY_ID", "") == "" || getEnv("AWS_SECRET_ACCESS_KEY", "") == "")
+	
+	if useConsoleLog {
+		log.Println("📧 Email notifications will be logged to console (no AWS SES or SMTP configured)")
+	} else if useSMTP {
+		log.Printf("📧 Email notifications configured via SMTP: %s:%s", smtpHost, smtpPort)
+	} else {
+		log.Println("📧 Email notifications configured via AWS SES")
+	}
+	
 	return &NotifierService{
-		alertRepo: alertRepo,
-		sesClient: ses.New(sess),
-		snsClient: sns.New(sess),
-		fromEmail: getEnv("SES_FROM_EMAIL", "noreply@pulsegrid.com"),
-		topicARN:  getEnv("SNS_TOPIC_ARN", ""),
+		alertRepo:     alertRepo,
+		sesClient:     ses.New(sess),
+		snsClient:     sns.New(sess),
+		fromEmail:     getEnv("SES_FROM_EMAIL", "noreply@pulsegrid.com"),
+		topicARN:      getEnv("SNS_TOPIC_ARN", ""),
+		smtpHost:      smtpHost,
+		smtpPort:      smtpPort,
+		smtpUser:      smtpUser,
+		smtpPassword:  smtpPassword,
+		smtpFromEmail: smtpFromEmail,
+		useSMTP:       useSMTP,
+		useConsoleLog: useConsoleLog,
 	}
 }
 
@@ -75,9 +111,38 @@ func (ns *NotifierService) SendAlertNotifications(alert *models.Alert) error {
 }
 
 func (ns *NotifierService) sendEmail(to, subject, body string) {
-	if ns.sesClient == nil {
-		log.Printf("SES client not initialized, skipping email to %s", to)
+	// Try SMTP first (for local development)
+	if ns.useSMTP {
+		if err := ns.sendEmailSMTP(to, subject, body); err == nil {
+			log.Printf("✅ Email sent via SMTP to %s", to)
+			return
+		} else {
+			log.Printf("⚠️ SMTP failed, trying fallback: %v", err)
+		}
+	}
+	
+	// Try AWS SES if configured
+	if ns.sesClient != nil && ns.fromEmail != "" && getEnv("AWS_ACCESS_KEY_ID", "") != "" {
+		if err := ns.sendEmailSES(to, subject, body); err == nil {
+			log.Printf("✅ Email sent via AWS SES to %s", to)
+			return
+		} else {
+			log.Printf("⚠️ AWS SES failed: %v", err)
+		}
+	}
+	
+	// Fallback to console logging for development
+	if ns.useConsoleLog || (ns.sesClient == nil && !ns.useSMTP) {
+		ns.sendEmailConsole(to, subject, body)
 		return
+	}
+	
+	log.Printf("❌ Failed to send email to %s: No email service configured", to)
+}
+
+func (ns *NotifierService) sendEmailSES(to, subject, body string) error {
+	if ns.sesClient == nil {
+		return fmt.Errorf("SES client not initialized")
 	}
 
 	input := &ses.SendEmailInput{
@@ -98,9 +163,45 @@ func (ns *NotifierService) sendEmail(to, subject, body string) {
 	}
 
 	_, err := ns.sesClient.SendEmail(input)
-	if err != nil {
-		log.Printf("Failed to send email: %v", err)
+	return err
+}
+
+func (ns *NotifierService) sendEmailSMTP(to, subject, body string) error {
+	if ns.smtpHost == "" || ns.smtpUser == "" || ns.smtpPassword == "" {
+		return fmt.Errorf("SMTP not configured")
 	}
+
+	// Setup authentication
+	auth := smtp.PlainAuth("", ns.smtpUser, ns.smtpPassword, ns.smtpHost)
+
+	// Create email message
+	msg := []byte(fmt.Sprintf("To: %s\r\n", to) +
+		fmt.Sprintf("From: %s\r\n", ns.smtpFromEmail) +
+		fmt.Sprintf("Subject: %s\r\n", subject) +
+		"\r\n" +
+		body + "\r\n")
+
+	// Send email
+	addr := fmt.Sprintf("%s:%s", ns.smtpHost, ns.smtpPort)
+	err := smtp.SendMail(addr, auth, ns.smtpFromEmail, []string{to}, msg)
+	return err
+}
+
+func (ns *NotifierService) sendEmailConsole(to, subject, body string) {
+	// Format email for console output
+	emailContent := fmt.Sprintf(`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📧 EMAIL NOTIFICATION (Console Mode - No email service configured)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+To:      %s
+From:    %s
+Subject: %s
+
+%s
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`, to, ns.smtpFromEmail, subject, body)
+	
+	log.Print(emailContent)
 }
 
 func (ns *NotifierService) sendSMS(phoneNumber, message string) {

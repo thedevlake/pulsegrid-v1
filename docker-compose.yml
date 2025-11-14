@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: pulsegrid-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-pulsegrid}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pulsegrid-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pulsegrid-backend
+    environment:
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-pulsegrid}
+      DB_SSLMODE: ${DB_SSLMODE:-disable}
+      PORT: ${PORT:-8080}
+      ENV: ${ENV:-development}
+      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-secure-random-string-in-production}
+      JWT_EXPIRY: ${JWT_EXPIRY:-24h}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      HEALTH_CHECK_INTERVAL: ${HEALTH_CHECK_INTERVAL:-60}
+      DEFAULT_TIMEOUT: ${DEFAULT_TIMEOUT:-10}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      SNS_TOPIC_ARN: ${SNS_TOPIC_ARN:-}
+      SES_FROM_EMAIL: ${SES_FROM_EMAIL:-noreply@pulsegrid.com}
+    ports:
+      - "${PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/v1/health"]
+      interval: 30s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+    networks:
+      - pulsegrid-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pulsegrid-frontend
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8080/api/v1}
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - pulsegrid-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  pulsegrid-network:
+    driver: bridge
+

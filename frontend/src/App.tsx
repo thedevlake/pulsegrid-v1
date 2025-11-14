@@ -5,6 +5,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { useAuthStore } from "./store/authStore";
+import { useThemeStore } from "./store/themeStore";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -19,11 +20,16 @@ import Layout from "./components/Layout";
 
 function App() {
   const { token, _hasHydrated } = useAuthStore();
+  const { theme } = useThemeStore();
 
   // Wait for auth store to hydrate from localStorage
   if (!_hasHydrated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-800 via-black to-red-900 dark:from-purple-950 dark:via-indigo-950 dark:to-pink-950 flex items-center justify-center transition-colors duration-300">
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${
+        theme === 'dark' 
+          ? 'bg-gradient-to-b from-slate-900 via-slate-800 to-gray-900' 
+          : 'bg-gradient-to-b from-black via-slate-950 to-blue-950'
+      }`}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white/40 dark:border-slate-400/40 mx-auto"></div>
           <p className="mt-4 text-white/70 dark:text-slate-300/70">Loading...</p>

@@ -59,7 +59,7 @@ func (s *Server) setupRoutes() {
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(userRepo, orgRepo, s.cfg)
 	serviceHandler := handlers.NewServiceHandler(serviceRepo, s.cfg)
-	healthCheckHandler := handlers.NewHealthCheckHandler(healthCheckRepo, s.cfg)
+	healthCheckHandler := handlers.NewHealthCheckHandler(healthCheckRepo, serviceRepo, s.cfg)
 	alertHandler := handlers.NewAlertHandler(alertRepo, s.cfg)
 	statsHandler := handlers.NewStatsHandler(serviceRepo, healthCheckRepo, s.cfg)
 	reportHandler := handlers.NewReportHandler(serviceRepo, healthCheckRepo, s.cfg)
@@ -88,6 +88,7 @@ func (s *Server) setupRoutes() {
 
 		// Health Checks
 		protected.GET("/services/:id/health-checks", healthCheckHandler.GetHealthChecks)
+		protected.POST("/services/:id/health-checks/trigger", healthCheckHandler.TriggerHealthCheck)
 
 		// Stats
 		protected.GET("/services/:id/stats", statsHandler.GetServiceStats)

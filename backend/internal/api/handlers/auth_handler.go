@@ -74,12 +74,31 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
+	// Determine user role:
+	// - First user in system becomes super_admin (bootstrap)
+	// - Organization creators become admin of their organization
+	// - Regular users default to "user"
+	userCount, err := h.userRepo.CountUsers()
+	if err != nil {
+		// If we can't count users, default to "user" for security
+		userCount = 1
+	}
+
+	var userRole string
+	if userCount == 0 {
+		// First user in the entire system becomes super_admin
+		userRole = "super_admin"
+	} else {
+		// Organization creator becomes admin of their organization
+		userRole = "admin"
+	}
+
 	// Create user
 	user := &models.User{
 		Email:        req.Email,
 		PasswordHash: string(hashedPassword),
 		Name:         req.Name,
-		Role:         "admin",
+		Role:         userRole,
 		OrganizationID: &org.ID,
 	}
 

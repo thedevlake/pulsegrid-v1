@@ -186,7 +186,7 @@ export default function ServiceDetail() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "up":
-        return "text-green-400 bg-green-500/20";
+        return "text-blue-500 bg-blue-800/20";
       case "down":
         return "text-red-400 bg-red-500/20";
       case "unknown":
@@ -227,7 +227,7 @@ export default function ServiceDetail() {
                   <span
                     className={`h-1.5 w-1.5 rounded-full mr-1.5 ${
                       stats.status === "up"
-                        ? "bg-green-400"
+                        ? "bg-blue-600"
                         : stats.status === "down"
                         ? "bg-red-400"
                         : "bg-white/40"
@@ -296,7 +296,7 @@ export default function ServiceDetail() {
             </div>
             {chartData.length > 0 && (
               <div className="flex items-center space-x-2 text-sm text-white/80">
-                <div className="h-2 w-2 bg-green-400 rounded-full animate-pulse"></div>
+                <div className="h-2 w-2 bg-blue-600 rounded-full animate-pulse"></div>
                 <span>Live</span>
                 <span>•</span>
                 <span>Updates every 5s</span>
@@ -668,7 +668,7 @@ export default function ServiceDetail() {
                           <span
                             className={`h-1.5 w-1.5 rounded-full mr-1.5 ${
                               check.status === "up"
-                                ? "bg-green-400"
+                                ? "bg-blue-600"
                                 : check.status === "down"
                                 ? "bg-red-400"
                                 : "bg-white/40"

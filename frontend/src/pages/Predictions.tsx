@@ -88,9 +88,7 @@ export default function Predictions() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center space-x-3 mb-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-400 to-red-400 rounded-xl flex items-center justify-center">
-              <Brain className="w-6 h-6 text-white" />
-            </div>
+         
             <h1 className="text-4xl font-semibold text-white tracking-tight">
               AI Predictions
             </h1>

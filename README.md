@@ -37,6 +37,11 @@ PULSEGRID-V1/
 
 ### Prerequisites
 
+**For Docker (Recommended):**
+- Docker 20.10+
+- Docker Compose 2.0+
+
+**For Manual Setup:**
 - Go 1.21+
 - Node.js 18+
 - PostgreSQL 14+
@@ -79,12 +84,24 @@ See `.env.example` files in each directory for required environment variables.
 ## 📚 Documentation
 
 - [Quick Start Guide](./QUICK_START.md) - ⚡ Get started in 5 minutes
+- [Docker Setup Guide](./DOCKER_SETUP.md) - 🐳 Run with Docker and Docker Compose
 - [Requirements Setup](./REQUIREMENTS_SETUP.md) - 📋 Detailed guide for all requirements
 - [Setup Guide](./SETUP.md) - 🛠️ Local development setup
 - [Deployment Guide](./DEPLOYMENT.md) - ☁️ AWS deployment instructions
 - [Infrastructure README](./infrastructure/README.md) - 🏗️ Terraform configuration details
 
 ## 🎯 Quick Start
+
+### Option 1: Docker Compose (Recommended)
+
+1. **Clone the repository**
+2. **Create `.env` file** (see [DOCKER_SETUP.md](./DOCKER_SETUP.md))
+3. **Start all services**: `docker-compose up`
+4. **Access**: Open `http://localhost:3000` in your browser
+
+See [DOCKER_SETUP.md](./DOCKER_SETUP.md) for detailed Docker instructions.
+
+### Option 2: Manual Setup
 
 1. **Clone the repository**
 2. **Set up the database** (PostgreSQL)

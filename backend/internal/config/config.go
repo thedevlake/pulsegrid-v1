@@ -44,6 +44,14 @@ type AWSConfig struct {
 	SESFromEmail    string
 }
 
+type SMTPConfig struct {
+	Host     string
+	Port     string
+	User     string
+	Password string
+	FromEmail string
+}
+
 type HealthCheckConfig struct {
 	Interval   int
 	Timeout    int

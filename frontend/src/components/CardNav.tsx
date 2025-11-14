@@ -236,12 +236,17 @@ const CardNav: React.FC<CardNavProps> = ({
     >
       <nav
         ref={navRef}
-        className={`card-nav ${isExpanded ? 'open' : ''} block h-[60px] p-0 rounded-xl shadow-2xl relative overflow-hidden will-change-[height] backdrop-blur-2xl border border-white/30`}
+        className={`card-nav ${isExpanded ? 'open' : ''} block h-[60px] p-0 rounded-2xl shadow-2xl relative overflow-hidden will-change-[height] transition-all duration-300`}
         style={{ 
-          backgroundColor: baseColor || 'rgba(255, 255, 255, 0.15)',
-          backdropFilter: 'blur(24px) saturate(180%) brightness(1.1)',
-          WebkitBackdropFilter: 'blur(24px) saturate(180%) brightness(1.1)',
-          boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.2)',
+          background: baseColor || 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(28px) saturate(200%) brightness(1.2)',
+          WebkitBackdropFilter: 'blur(28px) saturate(200%) brightness(1.2)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          boxShadow: `
+            0 12px 40px 0 rgba(0, 0, 0, 0.5),
+            0 0 0 1px rgba(255, 255, 255, 0.15) inset,
+            0 4px 12px rgba(0, 0, 0, 0.3) inset
+          `,
         }}
       >
         <div className="card-nav-top absolute inset-x-0 top-0 h-[60px] flex items-center justify-between p-2 pl-[1.1rem] z-[2]">
@@ -294,29 +299,43 @@ const CardNav: React.FC<CardNavProps> = ({
           {(items || []).slice(0, 3).map((item, idx) => (
             <div
               key={`${item.label}-${idx}`}
-              className="nav-card select-none relative flex flex-col gap-2 p-[12px_16px] rounded-[calc(0.75rem-0.2rem)] min-w-0 flex-[1_1_auto] h-auto min-h-[60px] md:h-full md:min-h-0 md:flex-[1_1_0%] backdrop-blur-md border border-white/20 shadow-lg"
+              className="nav-card select-none relative flex flex-col gap-2 p-[12px_16px] rounded-xl min-w-0 flex-[1_1_auto] h-auto min-h-[60px] md:h-full md:min-h-0 md:flex-[1_1_0%] transition-all duration-500 hover:scale-[1.03] hover:shadow-2xl group overflow-hidden"
               ref={setCardRef(idx)}
               style={{ 
-                backgroundColor: item.bgColor,
+                background: item.bgColor,
                 color: item.textColor,
-                backdropFilter: 'blur(12px) saturate(150%)',
-                WebkitBackdropFilter: 'blur(12px) saturate(150%)',
-                boxShadow: '0 4px 16px 0 rgba(0, 0, 0, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(24px) saturate(200%) brightness(1.2)',
+                WebkitBackdropFilter: 'blur(24px) saturate(200%) brightness(1.2)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                boxShadow: `
+                  0 8px 32px 0 rgba(0, 0, 0, 0.4),
+                  0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+                  0 2px 8px rgba(0, 0, 0, 0.2) inset
+                `,
               }}
             >
-              <div className="nav-card-label font-normal tracking-[-0.5px] text-[18px] md:text-[22px]">
+              {/* Animated gradient overlay on hover */}
+              <div 
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%)',
+                  pointerEvents: 'none',
+                }}
+              />
+              <div className="nav-card-label font-semibold tracking-[-0.5px] text-[18px] md:text-[22px] relative z-10 drop-shadow-lg">
                 {item.label}
               </div>
-              <div className="nav-card-links mt-auto flex flex-col gap-[2px]">
+              <div className="nav-card-links mt-auto flex flex-col gap-[4px] relative z-10">
                 {item.links?.map((lnk, i) => (
                   <Link
                     key={`${lnk.label}-${i}`}
                     to={lnk.href}
                     onClick={handleLinkClick}
-                    className="nav-card-link inline-flex items-center gap-[6px] no-underline cursor-pointer transition-opacity duration-300 hover:opacity-75 text-[15px] md:text-[16px]"
+                    className="nav-card-link group/link inline-flex items-center gap-[8px] no-underline cursor-pointer transition-all duration-300 hover:opacity-100 hover:translate-x-1 text-[15px] md:text-[16px] font-semibold hover:drop-shadow-lg"
                     aria-label={lnk.ariaLabel}
+                    style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' }}
                   >
-                    <ArrowUpRight className="nav-card-link-icon shrink-0 w-4 h-4" aria-hidden="true" />
+                    <ArrowUpRight className="nav-card-link-icon shrink-0 w-4 h-4 transition-all duration-300 group-hover/link:translate-x-1 group-hover/link:-translate-y-1 group-hover/link:scale-110" aria-hidden="true" />
                     {lnk.label}
                   </Link>
                 ))}

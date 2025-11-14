@@ -96,7 +96,7 @@ export default function Alerts() {
 
         {alerts.length === 0 ? (
           <div className="text-center py-12 bg-white/10 backdrop-blur-xl rounded-xl border border-white/20">
-            <CheckCircle className="mx-auto h-12 w-12 text-green-400" />
+            <CheckCircle className="mx-auto h-12 w-12 text-blue-500" />
             <h3 className="mt-2 text-sm font-medium text-white">No alerts</h3>
             <p className="mt-1 text-sm text-white/70">
               All services are healthy.
@@ -115,7 +115,7 @@ export default function Alerts() {
                       <div className="flex items-start flex-1 min-w-0">
                         <div className="flex-shrink-0">
                           {alert.is_resolved ? (
-                            <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-400" />
+                            <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
                           ) : (
                             <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 text-red-400" />
                           )}
@@ -134,7 +134,7 @@ export default function Alerts() {
                                 {alert.severity.toUpperCase()}
                               </span>
                               {alert.is_resolved && (
-                                <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full text-green-400 bg-green-500/20 whitespace-nowrap">
+                                <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full text-blue-500 bg-blue-800/20 whitespace-nowrap">
                                   RESOLVED
                                 </span>
                               )}

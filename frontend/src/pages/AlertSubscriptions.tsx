@@ -115,9 +115,9 @@ export default function AlertSubscriptions() {
       case "email":
         return "text-blue-300 bg-blue-500/20";
       case "sms":
-        return "text-green-300 bg-green-500/20";
+        return "text-blue-500 bg-blue-800/20";
       case "slack":
-        return "text-purple-300 bg-purple-500/20";
+        return "text-blue-500 bg-blue-800/20";
       default:
         return "text-white/60 bg-white/10";
     }
@@ -195,7 +195,7 @@ export default function AlertSubscriptions() {
                               {subscription.channel.toUpperCase()}
                             </span>
                             {subscription.is_active ? (
-                              <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full text-green-300 bg-green-500/20">
+                              <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full text-purple-500 bg-purple-700/20">
                                 Active
                               </span>
                             ) : (
@@ -237,35 +237,46 @@ export default function AlertSubscriptions() {
       {/* Add Subscription Modal */}
       {showModal && (
         <div
-          className="fixed z-50 inset-0 overflow-y-auto"
+          className="fixed z-50 inset-0 flex items-center justify-center p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowModal(false);
             }
           }}
         >
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-              onClick={() => setShowModal(false)}
-            ></div>
-            <div
-              className="inline-block align-bottom bg-white/10 backdrop-blur-xl rounded-xl text-left overflow-hidden border border-white/20 transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
-              onClick={(e) => e.stopPropagation()}
-            >
+          <div
+            className="absolute inset-0 bg-black/10 backdrop-blur-sm transition-opacity"
+            onClick={() => setShowModal(false)}
+          ></div>
+          <div
+            className="relative bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl w-full max-w-lg mx-auto my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
               <form onSubmit={handleSubmit}>
-                <div className="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                  <h3 className="text-lg leading-6 font-medium text-white mb-4">
-                    Add Alert Subscription
-                  </h3>
-                  <div className="space-y-4">
+                <div className="px-6 pt-6 pb-4">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-semibold text-white">
+                      Add Alert Subscription
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setShowModal(false)}
+                      className="text-white/60 hover:text-white transition-colors p-1"
+                      aria-label="Close"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="space-y-5">
                     <div>
-                      <label className="block text-sm font-medium text-white/80">
-                        Channel
+                      <label className="block text-sm font-semibold text-white mb-2">
+                        Notification Channel
                       </label>
                       <select
                         required
-                        className="mt-1 block w-full bg-white/10 border border-white/20 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30"
+                        className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all"
                         value={formData.channel}
                         onChange={(e) =>
                           setFormData({ ...formData, channel: e.target.value })
@@ -276,14 +287,15 @@ export default function AlertSubscriptions() {
                         <option value="slack">Slack</option>
                       </select>
                     </div>
+
                     <div>
-                      <label className="block text-sm font-medium text-white/80">
+                      <label className="block text-sm font-semibold text-white mb-2">
                         Destination
                       </label>
                       <input
                         type="text"
                         required
-                        className="mt-1 block w-full bg-white/10 border border-white/20 rounded-md py-2 px-3 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30"
+                        className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all"
                         placeholder={
                           formData.channel === "email"
                             ? "email@example.com"
@@ -300,12 +312,14 @@ export default function AlertSubscriptions() {
                         }
                       />
                     </div>
+
                     <div>
-                      <label className="block text-sm font-medium text-white/80">
-                        Service (Optional)
+                      <label className="block text-sm font-semibold text-white mb-2">
+                        Service
+                        <span className="text-white/50 text-xs font-normal ml-2">(Optional)</span>
                       </label>
                       <select
-                        className="mt-1 block w-full bg-white/10 border border-white/20 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30"
+                        className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all"
                         value={formData.service_id}
                         onChange={(e) =>
                           setFormData({
@@ -324,26 +338,25 @@ export default function AlertSubscriptions() {
                     </div>
                   </div>
                 </div>
-                <div className="bg-white/5 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-white/10">
-                  <button
-                    type="submit"
-                    className="w-full inline-flex justify-center rounded-md border border-white/20 shadow-sm px-4 py-2 bg-white/10 text-base font-medium text-white hover:bg-white/20 sm:ml-3 sm:w-auto sm:text-sm transition-colors"
-                  >
-                    Create
-                  </button>
+                <div className="px-6 py-4 border-t border-white/20 bg-white/5 flex gap-3">
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="mt-3 w-full inline-flex justify-center rounded-md border border-white/20 shadow-sm px-4 py-2 bg-white/10 text-base font-medium text-white hover:bg-white/20 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors"
+                    className="flex-1 px-4 py-3 rounded-lg border border-white/20 bg-white/5 text-white font-medium hover:bg-white/10 transition-colors"
                   >
                     Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-3 rounded-lg bg-gradient-to-r from-blue-900 to-indigo-950 hover:from-blue-800 hover:to-indigo-900 border border-blue-800/30 text-white font-medium transition-colors shadow-lg shadow-blue-900/30"
+                  >
+                    Create Subscription
                   </button>
                 </div>
               </form>
             </div>
           </div>
-        </div>
-      )}
+        )}
       </div>
     </PageTransition>
   );

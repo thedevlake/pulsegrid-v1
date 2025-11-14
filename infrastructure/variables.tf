@@ -34,3 +34,9 @@ variable "ses_from_email" {
   default     = "noreply@pulsegrid.com"
 }
 
+variable "jwt_secret" {
+  description = "JWT secret key for authentication"
+  type        = string
+  sensitive   = true
+}
+

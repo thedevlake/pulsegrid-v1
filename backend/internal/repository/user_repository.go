@@ -95,3 +95,11 @@ func (r *UserRepository) GetDB() *sql.DB {
 	return r.db
 }
 
+// CountUsers returns the total number of users in the system
+func (r *UserRepository) CountUsers() (int, error) {
+	query := `SELECT COUNT(*) FROM users`
+	var count int
+	err := r.db.QueryRow(query).Scan(&count)
+	return count, err
+}
+

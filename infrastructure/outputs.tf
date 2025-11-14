@@ -33,3 +33,45 @@ output "sns_topic_arn" {
   value       = aws_sns_topic.alerts.arn
 }
 
+# output "alb_dns_name" {
+#   description = "Application Load Balancer DNS name"
+#   value       = aws_lb.main.dns_name
+# }
+
+# Note: ALB is disabled due to AWS account limitation
+# Use ECS task public IPs directly or contact AWS Support to enable load balancers
+output "ecs_service_note" {
+  description = "ALB disabled - use ECS task public IPs. Contact AWS Support to enable load balancers."
+  value       = "Get public IPs from ECS tasks using AWS CLI"
+}
+
+output "ecs_cluster_name" {
+  description = "ECS cluster name"
+  value       = aws_ecs_cluster.main.name
+}
+
+output "vpc_id" {
+  description = "VPC ID"
+  value       = aws_vpc.main.id
+}
+
+output "public_subnet_1_id" {
+  description = "First public subnet ID"
+  value       = aws_subnet.public[0].id
+}
+
+output "public_subnet_2_id" {
+  description = "Second public subnet ID"
+  value       = aws_subnet.public[1].id
+}
+
+output "ecs_security_group_id" {
+  description = "ECS security group ID"
+  value       = aws_security_group.ecs.id
+}
+
+output "aws_region" {
+  description = "AWS region"
+  value       = var.aws_region
+}
+

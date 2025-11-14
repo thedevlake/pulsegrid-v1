@@ -9,6 +9,7 @@ export interface GlassSurfaceProps {
   brightness?: number;
   opacity?: number;
   blur?: number;
+  padding?: number;
   displace?: number;
   backgroundOpacity?: number;
   saturation?: number;
@@ -62,7 +63,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   children,
   width = 200,
   height = 80,
-  borderRadius = 20,
+  borderRadius = 10,
   borderWidth = 0.07,
   brightness = 50,
   opacity = 0.93,
@@ -71,6 +72,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   backgroundOpacity = 0,
   saturation = 1,
   distortionScale = -180,
+  padding = 20,
   redOffset = 0,
   greenOffset = 10,
   blueOffset = 20,
@@ -156,7 +158,8 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     blueOffset,
     xChannel,
     yChannel,
-    mixBlendMode
+    mixBlendMode,
+    padding
   ]);
 
   useEffect(() => {
