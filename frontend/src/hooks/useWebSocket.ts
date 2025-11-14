@@ -4,7 +4,7 @@ import { useAuthStore } from '../store/authStore'
 export function useWebSocket(url: string, onMessage?: (data: any) => void) {
   const [connected, setConnected] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout>()
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
 
   useEffect(() => {
     const { token } = useAuthStore.getState()

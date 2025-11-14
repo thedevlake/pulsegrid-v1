@@ -282,6 +282,8 @@ export default function Galaxy({
 
     function update(t: number) {
       animateId = requestAnimationFrame(update);
+      if (!program) return;
+      
       if (!disableAnimation) {
         program.uniforms.uTime.value = t * 0.001;
         program.uniforms.uStarSpeed.value = (t * 0.001 * starSpeed) / 10.0;
