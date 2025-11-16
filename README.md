@@ -19,24 +19,26 @@ A full-stack, cloud-native monitoring platform that tracks the health, uptime, l
 <div align="center">
   
 ### Dashboard Overview
-![Dashboard](https://via.placeholder.com/800x450/1a1a2e/ffffff?text=Dashboard+Overview)
-*Real-time service monitoring dashboard with interactive charts and analytics*
+
+![Dashboard](https://file%2B.vscode-resource.vscode-cdn.net/Users/sportysofia/Desktop/Screenshot%202025-11-14%20at%2011.49.28.png?version%3D1763207564834)
+_Real-time service monitoring dashboard with interactive charts and analytics_
 
 ### Service Management
-![Services](https://via.placeholder.com/800x450/1a1a2e/ffffff?text=Service+Management)
-*Add, edit, and monitor multiple services with custom health check intervals*
+
+![Services](https://file%2B.vscode-resource.vscode-cdn.net/Users/sportysofia/Desktop/Screenshot%202025-11-15%20at%2012.53.48.png?version%3D1763207641985)
+_Add, edit, and monitor multiple services with custom health check intervals_
 
 ### Alert Configuration
-![Alerts](https://via.placeholder.com/800x450/1a1a2e/ffffff?text=Alert+Configuration)
-*Configure email, SMS, and Slack notifications for service downtime*
+
+![alert-image](https://file%2B.vscode-resource.vscode-cdn.net/Users/sportysofia/Desktop/Screenshot%202025-11-15%20at%2012.54.38.png?version%3D1763207689879)
+_Configure email, SMS, and Slack notifications for service downtime_
 
 ### Health Check Details
-![Health Checks](https://via.placeholder.com/800x450/1a1a2e/ffffff?text=Health+Check+Details)
-*Detailed health check history with response times and status codes*
+
+_Detailed health check history with response times and status codes_
+![Health-check image](https://file%2B.vscode-resource.vscode-cdn.net/Users/sportysofia/Desktop/Screenshot%202025-11-15%20at%2012.55.56.png?version%3D1763207768418)
 
 </div>
-
-> **Note**: Replace placeholder images with actual screenshots of your application
 
 ## 🚀 Features
 
@@ -61,36 +63,36 @@ graph TB
         B --> C[CloudFront CDN]
         C --> D[S3 Static Hosting]
     end
-    
+
     subgraph "Application Layer"
         E[Go API Server<br/>Gin Framework] --> F[PostgreSQL RDS]
         E --> G[JWT Authentication]
         E --> H[REST API]
     end
-    
+
     subgraph "Monitoring Layer"
         I[Health Check Scheduler] --> J[HTTP/TCP/Ping Checker]
         I --> K[EventBridge Scheduler]
         K --> L[Lambda Workers]
         L --> J
     end
-    
+
     subgraph "Notification Layer"
         M[Alert Engine] --> N[AWS SES<br/>Email]
         M --> O[AWS SNS<br/>SMS/Slack]
     end
-    
+
     subgraph "Infrastructure"
         P[Terraform] --> Q[ECS Fargate]
         P --> R[VPC]
         P --> S[Security Groups]
     end
-    
+
     B --> E
     J --> F
     J --> M
     E --> M
-    
+
     style A fill:#61DAFB
     style B fill:#61DAFB
     style E fill:#00ADD8
@@ -116,6 +118,7 @@ graph TB
 ## 💻 Tech Stack & Key Skills
 
 ### Frontend Technologies
+
 - **React 18.2** - Modern UI library with hooks and context
 - **TypeScript 5.2** - Type-safe JavaScript for better developer experience
 - **Vite** - Lightning-fast build tool and dev server
@@ -129,6 +132,7 @@ graph TB
 - **GSAP** - Animation library for smooth transitions
 
 ### Backend Technologies
+
 - **Go 1.21+** - High-performance, concurrent programming
 - **Gin Framework** - Fast HTTP web framework
 - **PostgreSQL** - Robust relational database
@@ -137,6 +141,7 @@ graph TB
 - **AWS SDK** - Cloud service integration
 
 ### DevOps & Infrastructure
+
 - **Docker** - Containerization for consistent deployments
 - **Docker Compose** - Multi-container orchestration
 - **Terraform** - Infrastructure as Code (IaC)
@@ -151,6 +156,7 @@ graph TB
 - **GitHub Actions** - CI/CD pipeline automation
 
 ### Key Skills Demonstrated
+
 - ✅ Full-stack development (React + Go)
 - ✅ RESTful API design and implementation
 - ✅ Database design and optimization
@@ -181,10 +187,12 @@ PULSEGRID-V1/
 ### Prerequisites
 
 **For Docker (Recommended):**
+
 - Docker 20.10+
 - Docker Compose 2.0+
 
 **For Manual Setup:**
+
 - Go 1.21+
 - Node.js 18+
 - PostgreSQL 14+
@@ -256,11 +264,13 @@ See [DOCKER_SETUP.md](./DOCKER_SETUP.md) for detailed Docker instructions.
 ## 🔧 What You Need to Provide
 
 ### For Local Development
+
 - PostgreSQL database instance
 - JWT secret key (generate a secure random string)
 - CORS origin (default: http://localhost:3000)
 
 ### For AWS Deployment
+
 - AWS Account with appropriate permissions
 - AWS Access Key ID and Secret Access Key
 - Verified email address in AWS SES (for email notifications)
@@ -269,11 +279,11 @@ See [DOCKER_SETUP.md](./DOCKER_SETUP.md) for detailed Docker instructions.
 - Domain name (optional, for custom CloudFront distribution)
 
 ### Manual AWS Configuration Required
+
 1. **SES Email Verification**: Verify your email address in AWS SES Console
 2. **SNS Subscriptions**: Configure SMS/Slack webhooks in SNS Console
 3. **Domain Setup** (Optional): Configure custom domain for CloudFront
 4. **SSL Certificate** (Optional): Request ACM certificate for custom domain
-
 
 ## 📋 Features Implemented
 
@@ -285,7 +295,7 @@ See [DOCKER_SETUP.md](./DOCKER_SETUP.md) for detailed Docker instructions.
 ✅ Multi-tenant data isolation  
 ✅ CSV report export  
 ✅ AWS infrastructure (Terraform)  
-✅ CI/CD pipeline (GitHub Actions)  
+✅ CI/CD pipeline (GitHub Actions)
 
 ## 🚧 Future Enhancements
 
@@ -387,6 +397,7 @@ Found a bug or have a feature request? We'd love to hear from you!
 ### Feature Requests
 
 Feature requests are welcome! Please provide:
+
 - Use case and motivation
 - Proposed solution (if you have one)
 - Alternatives considered
@@ -400,9 +411,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Sofia Ali Salahudeen**
 
-- GitHub: [@yourusername](https://github.com/yourusername)
-- LinkedIn: [Your LinkedIn](https://linkedin.com/in/yourprofile)
-- Email: your.email@example.com
+- GitHub: (https://github.com/thedevlake)
+- LinkedIn: https://www.linkedin.com/in/sofia-salahudeen/
+- Email: sofia.devx@gmail.com
 
 ## 🙏 Acknowledgments
 
@@ -413,4 +424,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## ⭐ Show Your Support
 
 If you find this project helpful or interesting, please consider giving it a star on GitHub!
-
