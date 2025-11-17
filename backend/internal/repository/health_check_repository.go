@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"time"
 
-	"pulsegrid/backend/internal/models"
 	"github.com/google/uuid"
+	"pulsegrid/backend/internal/models"
 )
 
 type HealthCheckRepository struct {
@@ -22,7 +22,7 @@ func (r *HealthCheckRepository) Create(check *models.HealthCheck) error {
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id, checked_at
 	`
-	
+
 	check.ID = uuid.New()
 	check.CheckedAt = time.Now()
 
@@ -140,7 +140,45 @@ func (r *HealthCheckRepository) GetStatsByServiceID(serviceID uuid.UUID, since t
 	return stats, nil
 }
 
+func (r *HealthCheckRepository) GetPreviousCheckBefore(serviceID uuid.UUID, before time.Time) (*models.HealthCheck, error) {
+	query := `
+		SELECT id, service_id, status, response_time_ms, status_code, error_message, checked_at
+		FROM health_checks
+		WHERE service_id = $1 AND checked_at < $2
+		ORDER BY checked_at DESC
+		LIMIT 1
+	`
+
+	var check models.HealthCheck
+	var responseTime, statusCode sql.NullInt64
+	var errorMsg sql.NullString
+
+	err := r.db.QueryRow(query, serviceID, before).Scan(
+		&check.ID, &check.ServiceID, &check.Status,
+		&responseTime, &statusCode, &errorMsg, &check.CheckedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	if responseTime.Valid {
+		rt := int(responseTime.Int64)
+		check.ResponseTimeMs = &rt
+	}
+	if statusCode.Valid {
+		sc := int(statusCode.Int64)
+		check.StatusCode = &sc
+	}
+	if errorMsg.Valid {
+		check.ErrorMessage = &errorMsg.String
+	}
+
+	return &check, nil
+}
+
 func (r *HealthCheckRepository) GetDB() *sql.DB {
 	return r.db
 }
-

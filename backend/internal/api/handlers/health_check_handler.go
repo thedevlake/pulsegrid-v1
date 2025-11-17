@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -8,6 +10,7 @@ import (
 	"pulsegrid/backend/internal/checker"
 	"pulsegrid/backend/internal/config"
 	"pulsegrid/backend/internal/models"
+	"pulsegrid/backend/internal/notifier"
 	"pulsegrid/backend/internal/repository"
 
 	"github.com/gin-gonic/gin"
@@ -17,13 +20,23 @@ import (
 type HealthCheckHandler struct {
 	healthCheckRepo *repository.HealthCheckRepository
 	serviceRepo     *repository.ServiceRepository
+	alertRepo       *repository.AlertRepository
+	notifier        *notifier.NotifierService
 	cfg             *config.Config
 }
 
-func NewHealthCheckHandler(healthCheckRepo *repository.HealthCheckRepository, serviceRepo *repository.ServiceRepository, cfg *config.Config) *HealthCheckHandler {
+func NewHealthCheckHandler(
+	healthCheckRepo *repository.HealthCheckRepository,
+	serviceRepo *repository.ServiceRepository,
+	alertRepo *repository.AlertRepository,
+	notifierService *notifier.NotifierService,
+	cfg *config.Config,
+) *HealthCheckHandler {
 	return &HealthCheckHandler{
 		healthCheckRepo: healthCheckRepo,
 		serviceRepo:     serviceRepo,
+		alertRepo:       alertRepo,
+		notifier:        notifierService,
 		cfg:             cfg,
 	}
 }
@@ -106,6 +119,82 @@ func (h *HealthCheckHandler) TriggerHealthCheck(c *gin.Context) {
 		return
 	}
 
+	// Evaluate alert conditions similar to scheduler (manual checks should also notify)
+	prevCheck, err := h.healthCheckRepo.GetPreviousCheckBefore(service.ID, healthCheck.CheckedAt)
+	if err != nil {
+		log.Printf("Failed to fetch previous health check: %v", err)
+	}
+
+	h.evaluateAlerts(service, healthCheck, prevCheck)
+
 	c.JSON(http.StatusOK, healthCheck)
 }
 
+func (h *HealthCheckHandler) evaluateAlerts(service *models.Service, currentCheck *models.HealthCheck, prevCheck *models.HealthCheck) {
+	// Downtime alert
+	if currentCheck.Status == "down" {
+		shouldAlert := prevCheck == nil || prevCheck.Status == "up"
+		if shouldAlert {
+			alert := &models.Alert{
+				ServiceID:  service.ID,
+				Type:       "downtime",
+				Message:    buildDowntimeMessage(service.Name, currentCheck.ErrorMessage),
+				Severity:   "high",
+				IsResolved: false,
+			}
+
+			if err := h.alertRepo.Create(alert); err != nil {
+				log.Printf("Failed to create downtime alert: %v", err)
+			} else {
+				h.dispatchAlert(alert)
+			}
+		}
+	}
+
+	// Latency alert
+	if service.LatencyThresholdMs != nil && currentCheck.ResponseTimeMs != nil {
+		if *currentCheck.ResponseTimeMs > *service.LatencyThresholdMs {
+			shouldAlert := true
+			if prevCheck != nil && prevCheck.ResponseTimeMs != nil {
+				if *prevCheck.ResponseTimeMs > *service.LatencyThresholdMs {
+					shouldAlert = false
+				}
+			}
+
+			if shouldAlert {
+				alert := &models.Alert{
+					ServiceID:  service.ID,
+					Type:       "latency",
+					Message:    fmt.Sprintf("Service latency threshold breached: %s (Response time: %dms, Threshold: %dms)", service.Name, *currentCheck.ResponseTimeMs, *service.LatencyThresholdMs),
+					Severity:   "medium",
+					IsResolved: false,
+				}
+				if err := h.alertRepo.Create(alert); err != nil {
+					log.Printf("Failed to create latency alert: %v", err)
+				} else {
+					h.dispatchAlert(alert)
+				}
+			}
+		}
+	}
+}
+
+func (h *HealthCheckHandler) dispatchAlert(alert *models.Alert) {
+	if h.notifier == nil {
+		return
+	}
+
+	go func() {
+		if err := h.notifier.SendAlertNotifications(alert); err != nil {
+			log.Printf("Error sending alert notifications: %v", err)
+		}
+	}()
+}
+
+func buildDowntimeMessage(serviceName string, errorMessage *string) string {
+	message := "Service is down: " + serviceName
+	if errorMessage != nil {
+		message += " - " + *errorMessage
+	}
+	return message
+}

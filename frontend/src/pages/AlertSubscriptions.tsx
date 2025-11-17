@@ -4,11 +4,9 @@ import PageTransition from "../components/PageTransition";
 import {
   Bell,
   Mail,
-  MessageSquare,
   Plus,
   Trash2,
   Server,
-  AlertCircle,
 } from "lucide-react";
 
 interface AlertSubscription {
@@ -32,7 +30,6 @@ export default function AlertSubscriptions() {
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     service_id: "",
-    channel: "email",
     destination: "",
   });
 
@@ -65,8 +62,7 @@ export default function AlertSubscriptions() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const payload: any = {
-        channel: formData.channel,
+      const payload: Record<string, string> = {
         destination: formData.destination,
       };
       if (formData.service_id) {
@@ -75,7 +71,7 @@ export default function AlertSubscriptions() {
 
       await api.post("/alerts/subscriptions", payload);
       setShowModal(false);
-      setFormData({ service_id: "", channel: "email", destination: "" });
+      setFormData({ service_id: "", destination: "" });
       fetchSubscriptions();
     } catch (error: any) {
       const errorMsg =
@@ -97,31 +93,8 @@ export default function AlertSubscriptions() {
     }
   };
 
-  const getChannelIcon = (channel: string) => {
-    switch (channel) {
-      case "email":
-        return <Mail className="w-4 h-4" />;
-      case "sms":
-        return <MessageSquare className="w-4 h-4" />;
-      case "slack":
-        return <Bell className="w-4 h-4" />;
-      default:
-        return <AlertCircle className="w-4 h-4" />;
-    }
-  };
-
-  const getChannelColor = (channel: string) => {
-    switch (channel) {
-      case "email":
-        return "text-blue-300 bg-blue-500/20";
-      case "sms":
-        return "text-blue-500 bg-blue-800/20";
-      case "slack":
-        return "text-blue-500 bg-blue-800/20";
-      default:
-        return "text-white/60 bg-white/10";
-    }
-  };
+  const channelBadgeClass =
+    "text-blue-300 bg-blue-500/20 border border-blue-500/40";
 
   if (loading) {
     return (
@@ -141,7 +114,7 @@ export default function AlertSubscriptions() {
             Alert Subscriptions
           </h1>
           <p className="text-white/70 mt-1.5 text-sm">
-            Manage notification channels for alerts
+            Manage email notifications for alerts
           </p>
         </div>
         <button
@@ -160,7 +133,7 @@ export default function AlertSubscriptions() {
             No subscriptions
           </h3>
           <p className="mt-1 text-sm text-white/70">
-            Create a subscription to receive alerts via email, SMS, or Slack.
+            Create a subscription to receive alerts via email.
           </p>
         </div>
       ) : (
@@ -178,21 +151,13 @@ export default function AlertSubscriptions() {
                   <div className="px-4 py-4 sm:px-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
-                        <div
-                          className={`w-10 h-10 rounded-lg flex items-center justify-center ${getChannelColor(
-                            subscription.channel
-                          )}`}
-                        >
-                          {getChannelIcon(subscription.channel)}
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${channelBadgeClass}`}>
+                          <Mail className="w-4 h-4" />
                         </div>
                         <div>
                           <div className="flex items-center space-x-2">
-                            <span
-                              className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${getChannelColor(
-                                subscription.channel
-                              )}`}
-                            >
-                              {subscription.channel.toUpperCase()}
+                            <span className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${channelBadgeClass}`}>
+                              EMAIL
                             </span>
                             {subscription.is_active ? (
                               <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full text-purple-500 bg-purple-700/20">
@@ -274,18 +239,20 @@ export default function AlertSubscriptions() {
                       <label className="block text-sm font-semibold text-white mb-2">
                         Notification Channel
                       </label>
-                      <select
-                        required
-                        className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all"
-                        value={formData.channel}
-                        onChange={(e) =>
-                          setFormData({ ...formData, channel: e.target.value })
-                        }
-                      >
-                        <option value="email">Email</option>
-                        <option value="sms">SMS</option>
-                        <option value="slack">Slack</option>
-                      </select>
+                      <div className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white flex items-center justify-between">
+                        <span className="flex items-center space-x-2 text-sm">
+                          <Mail className="w-4 h-4 text-white/70" />
+                          <span>Email</span>
+                        </span>
+                        <span className="text-xs text-white/60">
+                          via configured SMTP/SES
+                        </span>
+                      </div>
+                      <p className="text-xs text-white/60 mt-2">
+                        PulseGrid currently delivers alerts exclusively via
+                        email. Add the address that should receive incident
+                        notifications.
+                      </p>
                     </div>
 
                     <div>
@@ -293,16 +260,10 @@ export default function AlertSubscriptions() {
                         Destination
                       </label>
                       <input
-                        type="text"
+                        type="email"
                         required
                         className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all"
-                        placeholder={
-                          formData.channel === "email"
-                            ? "email@example.com"
-                            : formData.channel === "sms"
-                            ? "+1234567890"
-                            : "https://hooks.slack.com/services/..."
-                        }
+                        placeholder="email@example.com"
                         value={formData.destination}
                         onChange={(e) =>
                           setFormData({

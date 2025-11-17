@@ -1,6 +1,6 @@
 terraform {
   required_version = ">= 1.5"
-  
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -11,6 +11,12 @@ terraform {
 
 provider "aws" {
   region = var.aws_region
+}
+
+# Locals for IAM role ARNs
+locals {
+  ecs_task_role_arn = aws_iam_role.ecs_task.arn
+  lambda_role_arn   = aws_iam_role.lambda.arn
 }
 
 # VPC and Networking
@@ -141,7 +147,7 @@ resource "aws_db_subnet_group" "main" {
 resource "aws_db_instance" "main" {
   identifier             = "pulsegrid-db"
   engine                 = "postgres"
-  engine_version         = "14.9"
+  engine_version         = "14.20"
   instance_class         = var.db_instance_class
   allocated_storage      = 20
   storage_type           = "gp3"
@@ -226,51 +232,53 @@ resource "aws_s3_bucket_policy" "frontend" {
 }
 
 # CloudFront Distribution for Frontend
-resource "aws_cloudfront_distribution" "frontend" {
-  origin {
-    domain_name = aws_s3_bucket_website_configuration.frontend.website_endpoint
-    origin_id   = "S3-${aws_s3_bucket.frontend.bucket}"
-
-    custom_origin_config {
-      http_port              = 80
-      https_port             = 443
-      origin_protocol_policy = "http-only"
-      origin_ssl_protocols   = ["TLSv1.2"]
-    }
-  }
-
-  enabled             = true
-  is_ipv6_enabled     = true
-  default_root_object = "index.html"
-
-  default_cache_behavior {
-    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "S3-${aws_s3_bucket.frontend.bucket}"
-
-    forwarded_values {
-      query_string = false
-      cookies {
-        forward = "none"
-      }
-    }
-
-    viewer_protocol_policy = "redirect-to-https"
-    min_ttl                = 0
-    default_ttl            = 3600
-    max_ttl                = 86400
-  }
-
-  restrictions {
-    geo_restriction {
-      restriction_type = "none"
-    }
-  }
-
-  viewer_certificate {
-    cloudfront_default_certificate = true
-  }
-}
+# CloudFront Distribution - Commented out until AWS account is verified
+# Uncomment after verifying your AWS account with AWS Support
+# resource "aws_cloudfront_distribution" "frontend" {
+#   origin {
+#     domain_name = aws_s3_bucket_website_configuration.frontend.website_endpoint
+#     origin_id   = "S3-${aws_s3_bucket.frontend.bucket}"
+#
+#     custom_origin_config {
+#       http_port              = 80
+#       https_port             = 443
+#       origin_protocol_policy = "http-only"
+#       origin_ssl_protocols   = ["TLSv1.2"]
+#     }
+#   }
+#
+#   enabled             = true
+#   is_ipv6_enabled     = true
+#   default_root_object = "index.html"
+#
+#   default_cache_behavior {
+#     allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+#     cached_methods   = ["GET", "HEAD"]
+#     target_origin_id = "S3-${aws_s3_bucket.frontend.bucket}"
+#
+#     forwarded_values {
+#       query_string = false
+#       cookies {
+#         forward = "none"
+#       }
+#     }
+#
+#     viewer_protocol_policy = "redirect-to-https"
+#     min_ttl                = 0
+#     default_ttl            = 3600
+#     max_ttl                = 86400
+#   }
+#
+#   restrictions {
+#     geo_restriction {
+#       restriction_type = "none"
+#     }
+#   }
+#
+#   viewer_certificate {
+#     cloudfront_default_certificate = true
+#   }
+# }
 
 # IAM Role for ECS Tasks
 resource "aws_iam_role" "ecs_task" {
@@ -295,6 +303,42 @@ resource "aws_iam_role_policy_attachment" "ecs_task" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+# Additional IAM policy for ECS execution role to read SSM parameters
+resource "aws_iam_role_policy" "ecs_execution_ssm" {
+  name = "pulsegrid-ecs-execution-ssm-policy"
+  role = aws_iam_role.ecs_task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameters",
+          "ssm:GetParameter",
+          "ssm:GetParametersByPath"
+        ]
+        Resource = [
+          aws_ssm_parameter.db_password.arn,
+          aws_ssm_parameter.jwt_secret.arn
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt"
+        ]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "kms:ViaService" = "ssm.${var.aws_region}.amazonaws.com"
+          }
+        }
+      }
+    ]
+  })
+}
+
 # EventBridge Rule for Health Checks
 resource "aws_cloudwatch_event_rule" "health_check" {
   name                = "pulsegrid-health-check"
@@ -303,32 +347,34 @@ resource "aws_cloudwatch_event_rule" "health_check" {
 }
 
 # Lambda Function for Health Checks
-resource "aws_lambda_function" "health_check" {
-  filename         = "health_check.zip"
-  function_name    = "pulsegrid-health-check"
-  role            = aws_iam_role.lambda.arn
-  handler         = "main"
-  runtime         = "go1.x"
-  timeout         = 30
-  memory_size     = 256
+# TODO: Create health_check.zip before enabling this
+# resource "aws_lambda_function" "health_check" {
+#   filename      = "health_check.zip"
+#   function_name = "pulsegrid-health-check"
+#   role          = local.lambda_role_arn
+#   handler       = "main"
+#   runtime       = "go1.x"
+#   timeout       = 30
+#   memory_size   = 256
 
-  environment {
-    variables = {
-      DB_HOST     = aws_db_instance.main.address
-      DB_PORT     = "5432"
-      DB_USER     = var.db_username
-      DB_PASSWORD = var.db_password
-      DB_NAME     = "pulsegrid"
-      DB_SSLMODE  = "require"
-    }
-  }
+#   environment {
+#     variables = {
+#       DB_HOST     = aws_db_instance.main.address
+#       DB_PORT     = "5432"
+#       DB_USER     = var.db_username
+#       DB_PASSWORD = var.db_password
+#       DB_NAME     = "pulsegrid"
+#       DB_SSLMODE  = "require"
+#     }
+#   }
+#
+#   vpc_config {
+#     subnet_ids         = aws_subnet.private[*].id
+#     security_group_ids = [aws_security_group.ecs.id]
+#   }
+# }
 
-  vpc_config {
-    subnet_ids         = aws_subnet.private[*].id
-    security_group_ids = [aws_security_group.ecs.id]
-  }
-}
-
+# IAM Role for Lambda
 resource "aws_iam_role" "lambda" {
   name = "pulsegrid-lambda-role"
 
@@ -351,11 +397,12 @@ resource "aws_iam_role_policy_attachment" "lambda_vpc" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
 }
 
-resource "aws_cloudwatch_event_target" "health_check" {
-  rule      = aws_cloudwatch_event_rule.health_check.name
-  target_id = "TriggerHealthCheck"
-  arn       = aws_lambda_function.health_check.arn
-}
+# CloudWatch Event Target - Commented out until Lambda function is created
+# resource "aws_cloudwatch_event_target" "health_check" {
+#   rule      = aws_cloudwatch_event_rule.health_check.name
+#   target_id = "TriggerHealthCheck"
+#   arn       = aws_lambda_function.health_check.arn
+# }
 
 # SNS Topic for Alerts
 resource "aws_sns_topic" "alerts" {

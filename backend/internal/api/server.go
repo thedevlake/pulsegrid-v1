@@ -6,6 +6,7 @@ import (
 	"pulsegrid/backend/internal/api/handlers"
 	"pulsegrid/backend/internal/api/middleware"
 	"pulsegrid/backend/internal/config"
+	"pulsegrid/backend/internal/notifier"
 	"pulsegrid/backend/internal/repository"
 
 	"github.com/gin-gonic/gin"
@@ -23,7 +24,7 @@ func NewServer(cfg *config.Config, db *sql.DB) *Server {
 	}
 
 	router := gin.New()
-	
+
 	// Set trusted proxies to avoid warning
 	// In production, set this to your actual proxy IPs
 	if cfg.Server.Env == "production" {
@@ -56,11 +57,14 @@ func (s *Server) setupRoutes() {
 	healthCheckRepo := repository.NewHealthCheckRepository(s.db)
 	alertRepo := repository.NewAlertRepository(s.db)
 
+	// Initialize supporting services
+	notifierService := notifier.NewNotifierService(alertRepo)
+
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(userRepo, orgRepo, s.cfg)
 	serviceHandler := handlers.NewServiceHandler(serviceRepo, s.cfg)
-	healthCheckHandler := handlers.NewHealthCheckHandler(healthCheckRepo, serviceRepo, s.cfg)
-	alertHandler := handlers.NewAlertHandler(alertRepo, s.cfg)
+	healthCheckHandler := handlers.NewHealthCheckHandler(healthCheckRepo, serviceRepo, alertRepo, notifierService, s.cfg)
+	alertHandler := handlers.NewAlertHandler(alertRepo, serviceRepo, notifierService, s.cfg)
 	statsHandler := handlers.NewStatsHandler(serviceRepo, healthCheckRepo, s.cfg)
 	reportHandler := handlers.NewReportHandler(serviceRepo, healthCheckRepo, s.cfg)
 	adminHandler := handlers.NewAdminHandler(userRepo, orgRepo, serviceRepo, healthCheckRepo, alertRepo, s.cfg)
@@ -140,4 +144,3 @@ func (s *Server) setupRoutes() {
 func (s *Server) Start(addr string) error {
 	return s.router.Run(addr)
 }
-

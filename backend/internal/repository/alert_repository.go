@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"time"
 
-	"pulsegrid/backend/internal/models"
 	"github.com/google/uuid"
+	"pulsegrid/backend/internal/models"
 )
 
 type AlertRepository struct {
@@ -22,7 +22,7 @@ func (r *AlertRepository) Create(alert *models.Alert) error {
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id, created_at
 	`
-	
+
 	alert.ID = uuid.New()
 	alert.CreatedAt = time.Now()
 
@@ -153,7 +153,7 @@ func (r *AlertRepository) CreateSubscription(sub *models.AlertSubscription) erro
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id, created_at
 	`
-	
+
 	sub.ID = uuid.New()
 	sub.CreatedAt = time.Now()
 
@@ -173,13 +173,20 @@ func (r *AlertRepository) DeleteSubscription(id uuid.UUID) error {
 }
 
 func (r *AlertRepository) GetSubscriptionsByService(serviceID uuid.UUID) ([]*models.AlertSubscription, error) {
+	var orgID uuid.UUID
+	if err := r.db.QueryRow(`SELECT organization_id FROM services WHERE id = $1`, serviceID).Scan(&orgID); err != nil {
+		return nil, err
+	}
+
 	query := `
 		SELECT id, organization_id, service_id, channel, destination, is_active, created_at
 		FROM alert_subscriptions
-		WHERE (service_id = $1 OR service_id IS NULL) AND is_active = TRUE
+		WHERE organization_id = $1
+		  AND (service_id = $2 OR service_id IS NULL)
+		  AND is_active = TRUE
 	`
 
-	rows, err := r.db.Query(query, serviceID)
+	rows, err := r.db.Query(query, orgID, serviceID)
 	if err != nil {
 		return nil, err
 	}
@@ -212,4 +219,3 @@ func (r *AlertRepository) GetSubscriptionsByService(serviceID uuid.UUID) ([]*mod
 func (r *AlertRepository) GetDB() *sql.DB {
 	return r.db
 }
-

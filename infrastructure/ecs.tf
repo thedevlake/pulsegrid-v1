@@ -29,8 +29,8 @@ resource "aws_ecs_task_definition" "backend" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = "256"
   memory                   = "512"
-  execution_role_arn       = aws_iam_role.ecs_task.arn
-  task_role_arn            = aws_iam_role.ecs_task.arn
+  execution_role_arn       = local.ecs_task_role_arn
+  task_role_arn            = local.ecs_task_role_arn
 
   container_definitions = jsonencode([
     {
@@ -62,10 +62,6 @@ resource "aws_ecs_task_definition" "backend" {
           value = var.db_username
         },
         {
-          name  = "DB_PASSWORD"
-          value = var.db_password
-        },
-        {
           name  = "DB_NAME"
           value = "pulsegrid"
         },
@@ -74,12 +70,9 @@ resource "aws_ecs_task_definition" "backend" {
           value = "require"
         },
         {
-          name  = "JWT_SECRET"
-          value = var.jwt_secret
-        },
-        {
           name  = "CORS_ORIGIN"
-          value = "https://${aws_cloudfront_distribution.frontend.domain_name}"
+          # value = "https://${aws_cloudfront_distribution.frontend.domain_name}"  # Uncomment when CloudFront is enabled
+          value = "http://${aws_s3_bucket_website_configuration.frontend.website_endpoint}"  # Temporary: using S3 website endpoint
         },
         {
           name  = "SNS_TOPIC_ARN"
@@ -96,6 +89,18 @@ resource "aws_ecs_task_definition" "backend" {
         {
           name  = "ENV"
           value = "production"
+        }
+      ]
+
+      # Secrets from SSM Parameter Store
+      secrets = [
+        {
+          name      = "DB_PASSWORD"
+          valueFrom = aws_ssm_parameter.db_password.arn
+        },
+        {
+          name      = "JWT_SECRET"
+          valueFrom = aws_ssm_parameter.jwt_secret.arn
         }
       ]
 
@@ -245,9 +250,9 @@ resource "aws_ecs_service" "backend" {
   }
 }
 
-# IAM Policy for ECS Task Role to access SNS and SES
-resource "aws_iam_role_policy" "ecs_task_sns_ses" {
-  name = "pulsegrid-ecs-task-sns-ses-policy"
+# IAM Policy for ECS Task Role to access SNS, SES, and SSM Parameter Store
+resource "aws_iam_role_policy" "ecs_task_sns_ses_ssm" {
+  name = "pulsegrid-ecs-task-sns-ses-ssm-policy"
   role = aws_iam_role.ecs_task.id
 
   policy = jsonencode({
@@ -273,6 +278,18 @@ resource "aws_iam_role_policy" "ecs_task_sns_ses" {
             "ses:FromAddress" = var.ses_from_email
           }
         }
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameters",
+          "ssm:GetParameter",
+          "ssm:GetParametersByPath"
+        ]
+        Resource = [
+          aws_ssm_parameter.db_password.arn,
+          aws_ssm_parameter.jwt_secret.arn
+        ]
       }
     ]
   })

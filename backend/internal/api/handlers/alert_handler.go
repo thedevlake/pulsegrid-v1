@@ -1,11 +1,14 @@
 package handlers
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
 	"pulsegrid/backend/internal/config"
 	"pulsegrid/backend/internal/models"
+	"pulsegrid/backend/internal/notifier"
 	"pulsegrid/backend/internal/repository"
 
 	"github.com/gin-gonic/gin"
@@ -13,21 +16,24 @@ import (
 )
 
 type AlertHandler struct {
-	alertRepo *repository.AlertRepository
-	cfg       *config.Config
+	alertRepo   *repository.AlertRepository
+	serviceRepo *repository.ServiceRepository
+	notifier    *notifier.NotifierService
+	cfg         *config.Config
 }
 
-func NewAlertHandler(alertRepo *repository.AlertRepository, cfg *config.Config) *AlertHandler {
+func NewAlertHandler(alertRepo *repository.AlertRepository, serviceRepo *repository.ServiceRepository, notifierService *notifier.NotifierService, cfg *config.Config) *AlertHandler {
 	return &AlertHandler{
-		alertRepo: alertRepo,
-		cfg:       cfg,
+		alertRepo:   alertRepo,
+		serviceRepo: serviceRepo,
+		notifier:    notifierService,
+		cfg:         cfg,
 	}
 }
 
 type CreateSubscriptionRequest struct {
-	ServiceID   *uuid.UUID `json:"service_id"`
-	Channel     string     `json:"channel" binding:"required,oneof=email sms slack"`
-	Destination string     `json:"destination" binding:"required"`
+	ServiceID   *string `json:"service_id"`
+	Destination string  `json:"destination" binding:"required,email"`
 }
 
 func (h *AlertHandler) ListAlerts(c *gin.Context) {
@@ -114,10 +120,20 @@ func (h *AlertHandler) CreateSubscription(c *gin.Context) {
 		return
 	}
 
+	var serviceUUID *uuid.UUID
+	if req.ServiceID != nil && *req.ServiceID != "" {
+		id, err := uuid.Parse(*req.ServiceID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid service ID"})
+			return
+		}
+		serviceUUID = &id
+	}
+
 	sub := &models.AlertSubscription{
 		OrganizationID: orgUUID,
-		ServiceID:      req.ServiceID,
-		Channel:        req.Channel,
+		ServiceID:      serviceUUID,
+		Channel:        "email",
 		Destination:    req.Destination,
 		IsActive:       true,
 	}
@@ -126,6 +142,8 @@ func (h *AlertHandler) CreateSubscription(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create subscription"})
 		return
 	}
+
+	go h.sendSubscriptionConfirmation(sub)
 
 	c.JSON(http.StatusCreated, sub)
 }
@@ -167,3 +185,28 @@ func (h *AlertHandler) DeleteSubscription(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Subscription deleted successfully"})
 }
 
+func (h *AlertHandler) sendSubscriptionConfirmation(sub *models.AlertSubscription) {
+	if h.notifier == nil {
+		return
+	}
+
+	scope := "all services"
+	if sub.ServiceID != nil && h.serviceRepo != nil {
+		if service, err := h.serviceRepo.GetByID(*sub.ServiceID); err == nil {
+			scope = fmt.Sprintf("service \"%s\"", service.Name)
+		} else {
+			scope = "the selected service"
+		}
+	}
+
+	subject := "PulseGrid Alerts: Subscription Confirmed"
+	body := fmt.Sprintf(`You’re all set! This email address (%s) will now receive PulseGrid alert notifications for %s.
+
+To trigger a test alert, you can run a manual health check on a service that’s intentionally down or has a low latency threshold.
+
+If this wasn’t you, please delete the subscription from the Alert Subscriptions page.`, sub.Destination, scope)
+
+	if err := h.notifier.SendCustomEmail(sub.Destination, subject, body); err != nil {
+		log.Printf("Failed to send subscription confirmation: %v", err)
+	}
+}

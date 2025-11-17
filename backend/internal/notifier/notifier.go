@@ -20,24 +20,24 @@ import (
 
 // NotifierService handles sending notifications for alerts
 type NotifierService struct {
-	alertRepo      *repository.AlertRepository
-	sesClient      *ses.SES
-	snsClient      *sns.SNS
-	fromEmail      string
-	topicARN       string
+	alertRepo *repository.AlertRepository
+	sesClient *ses.SES
+	snsClient *sns.SNS
+	fromEmail string
+	topicARN  string
 	// SMTP configuration for local development
-	smtpHost       string
-	smtpPort       string
-	smtpUser       string
-	smtpPassword   string
-	smtpFromEmail  string
-	useSMTP        bool
-	useConsoleLog  bool
+	smtpHost      string
+	smtpPort      string
+	smtpUser      string
+	smtpPassword  string
+	smtpFromEmail string
+	useSMTP       bool
+	useConsoleLog bool
 }
 
 func NewNotifierService(alertRepo *repository.AlertRepository) *NotifierService {
 	sess := session.Must(session.NewSession())
-	
+
 	// Check if SMTP is configured
 	smtpHost := getEnv("SMTP_HOST", "")
 	smtpPort := getEnv("SMTP_PORT", "587")
@@ -45,10 +45,10 @@ func NewNotifierService(alertRepo *repository.AlertRepository) *NotifierService 
 	smtpPassword := getEnv("SMTP_PASSWORD", "")
 	smtpFromEmail := getEnv("SMTP_FROM_EMAIL", getEnv("SES_FROM_EMAIL", "noreply@pulsegrid.com"))
 	useSMTP := smtpHost != "" && smtpUser != "" && smtpPassword != ""
-	
+
 	// Use console logging if neither AWS SES nor SMTP is configured
 	useConsoleLog := !useSMTP && (getEnv("AWS_ACCESS_KEY_ID", "") == "" || getEnv("AWS_SECRET_ACCESS_KEY", "") == "")
-	
+
 	if useConsoleLog {
 		log.Println("📧 Email notifications will be logged to console (no AWS SES or SMTP configured)")
 	} else if useSMTP {
@@ -56,7 +56,7 @@ func NewNotifierService(alertRepo *repository.AlertRepository) *NotifierService 
 	} else {
 		log.Println("📧 Email notifications configured via AWS SES")
 	}
-	
+
 	return &NotifierService{
 		alertRepo:     alertRepo,
 		sesClient:     ses.New(sess),
@@ -120,7 +120,7 @@ func (ns *NotifierService) sendEmail(to, subject, body string) {
 			log.Printf("⚠️ SMTP failed, trying fallback: %v", err)
 		}
 	}
-	
+
 	// Try AWS SES if configured
 	if ns.sesClient != nil && ns.fromEmail != "" && getEnv("AWS_ACCESS_KEY_ID", "") != "" {
 		if err := ns.sendEmailSES(to, subject, body); err == nil {
@@ -130,13 +130,13 @@ func (ns *NotifierService) sendEmail(to, subject, body string) {
 			log.Printf("⚠️ AWS SES failed: %v", err)
 		}
 	}
-	
+
 	// Fallback to console logging for development
 	if ns.useConsoleLog || (ns.sesClient == nil && !ns.useSMTP) {
 		ns.sendEmailConsole(to, subject, body)
 		return
 	}
-	
+
 	log.Printf("❌ Failed to send email to %s: No email service configured", to)
 }
 
@@ -200,7 +200,7 @@ Subject: %s
 %s
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `, to, ns.smtpFromEmail, subject, body)
-	
+
 	log.Print(emailContent)
 }
 
@@ -235,8 +235,8 @@ func (ns *NotifierService) sendSMS(phoneNumber, message string) {
 
 func (ns *NotifierService) sendSlack(webhookURL, message string) {
 	payload := map[string]interface{}{
-		"text":      message,
-		"username":  "PulseGrid",
+		"text":       message,
+		"username":   "PulseGrid",
 		"icon_emoji": ":warning:",
 	}
 
@@ -261,6 +261,15 @@ func (ns *NotifierService) sendSlack(webhookURL, message string) {
 	log.Printf("Slack notification sent successfully")
 }
 
+// SendCustomEmail sends a custom email without creating an alert record (e.g., subscription confirmation)
+func (ns *NotifierService) SendCustomEmail(to, subject, body string) error {
+	if to == "" {
+		return fmt.Errorf("email destination is required")
+	}
+	ns.sendEmail(to, subject, body)
+	return nil
+}
+
 func formatAlertMessage(alert *models.Alert) string {
 	severity := "⚠️"
 	switch alert.Severity {
@@ -283,4 +292,3 @@ func getEnv(key, defaultValue string) string {
 	}
 	return defaultValue
 }
-
