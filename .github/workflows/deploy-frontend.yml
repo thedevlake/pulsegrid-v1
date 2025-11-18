@@ -7,6 +7,8 @@ on:
     paths:
       - "frontend/**"
       - ".github/workflows/deploy-frontend.yml"
+      - ".github/workflows/deploy.yml"
+      - "deploy-frontend.sh"
   workflow_dispatch:
 
 env:

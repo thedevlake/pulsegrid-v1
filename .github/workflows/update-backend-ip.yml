@@ -1,0 +1,93 @@
+name: Auto-Update Backend IP
+
+on:
+  schedule:
+    # Run every 30 minutes to check for IP changes
+    - cron: '*/30 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  update-ip:
+    name: Update Backend IP
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-north-1
+
+      - name: Get current backend IP
+        id: get-ip
+        run: |
+          TASK_ARN=$(aws ecs list-tasks --cluster pulsegrid-cluster --service-name pulsegrid-backend --region eu-north-1 --query "taskArns[0]" --output text)
+          if [ -z "$TASK_ARN" ] || [ "$TASK_ARN" == "None" ]; then
+            echo "No running tasks found"
+            exit 1
+          fi
+          
+          NETWORK_ID=$(aws ecs describe-tasks --cluster pulsegrid-cluster --tasks $TASK_ARN --region eu-north-1 --query "tasks[0].attachments[0].details[?name=='networkInterfaceId'].value" --output text)
+          CURRENT_IP=$(aws ec2 describe-network-interfaces --network-interface-ids $NETWORK_ID --region eu-north-1 --query "NetworkInterfaces[0].Association.PublicIp" --output text)
+          
+          echo "current_ip=$CURRENT_IP" >> $GITHUB_OUTPUT
+          echo "Current backend IP: $CURRENT_IP"
+
+      - name: Check if IP changed
+        id: check-ip
+        run: |
+          CURRENT_IP="${{ steps.get-ip.outputs.current_ip }}"
+          
+          # Extract IP from workflow files
+          DEPLOY_IP=$(grep -oP 'FRONTEND_API_URL: http://\K[0-9.]+' .github/workflows/deploy.yml || echo "")
+          FRONTEND_IP=$(grep -oP 'FRONTEND_API_URL: http://\K[0-9.]+' .github/workflows/deploy-frontend.yml || echo "")
+          SCRIPT_IP=$(grep -oP 'VITE_API_URL=\$\{VITE_API_URL:-http://\K[0-9.]+' deploy-frontend.sh || echo "")
+          
+          echo "Deploy workflow IP: $DEPLOY_IP"
+          echo "Frontend workflow IP: $FRONTEND_IP"
+          echo "Script IP: $SCRIPT_IP"
+          echo "Current ECS IP: $CURRENT_IP"
+          
+          if [ "$CURRENT_IP" == "$DEPLOY_IP" ] && [ "$CURRENT_IP" == "$FRONTEND_IP" ] && [ "$CURRENT_IP" == "$SCRIPT_IP" ]; then
+            echo "IP unchanged: $CURRENT_IP"
+            echo "ip_changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "IP changed! Updating from old IPs to $CURRENT_IP"
+            echo "ip_changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update IP in workflow files
+        if: steps.check-ip.outputs.ip_changed == 'true'
+        run: |
+          CURRENT_IP="${{ steps.get-ip.outputs.current_ip }}"
+          
+          # Update deploy.yml
+          sed -i "s|FRONTEND_API_URL: http://[0-9.]\+:8080/api/v1|FRONTEND_API_URL: http://$CURRENT_IP:8080/api/v1|g" .github/workflows/deploy.yml
+          
+          # Update deploy-frontend.yml
+          sed -i "s|FRONTEND_API_URL: http://[0-9.]\+:8080/api/v1|FRONTEND_API_URL: http://$CURRENT_IP:8080/api/v1|g" .github/workflows/deploy-frontend.yml
+          
+          # Update deploy-frontend.sh
+          sed -i "s|VITE_API_URL=\${VITE_API_URL:-http://[0-9.]\+:8080/api/v1|VITE_API_URL=\${VITE_API_URL:-http://$CURRENT_IP:8080/api/v1|g" deploy-frontend.sh
+          
+          echo "✅ Updated all files with new IP: $CURRENT_IP"
+
+      - name: Commit and push changes
+        if: steps.check-ip.outputs.ip_changed == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .github/workflows/deploy.yml .github/workflows/deploy-frontend.yml deploy-frontend.sh
+          git commit -m "chore: auto-update backend IP to ${{ steps.get-ip.outputs.current_ip }}" || exit 0
+          git push
+
+      - name: Trigger frontend deployment
+        if: steps.check-ip.outputs.ip_changed == 'true'
+        run: |
+          echo "🔄 IP changed - frontend will be automatically redeployed by push trigger"
+
