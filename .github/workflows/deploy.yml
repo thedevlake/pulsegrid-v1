@@ -16,6 +16,7 @@ env:
   ECR_FRONTEND_REPOSITORY: pulsegrid-frontend
   ECS_CLUSTER: pulsegrid-cluster
   ECS_SERVICE_BACKEND: pulsegrid-backend
+  S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME != '' && secrets.S3_BUCKET_NAME || 'pulsegrid-frontend-777319172038' }}
 
 jobs:
   build-and-push-backend:
@@ -123,5 +124,5 @@ jobs:
           npm run build
           
           # Sync to S3
-          aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_NAME }} --delete --region ${{ env.AWS_REGION }}
+          aws s3 sync dist/ s3://${{ env.S3_BUCKET_NAME }} --delete --region ${{ env.AWS_REGION }}
 

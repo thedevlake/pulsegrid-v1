@@ -11,6 +11,7 @@ on:
 
 env:
   AWS_REGION: eu-north-1
+  S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME != '' && secrets.S3_BUCKET_NAME || 'pulsegrid-frontend-777319172038' }}
 
 jobs:
   deploy-frontend:
@@ -42,10 +43,10 @@ jobs:
 
       - name: Deploy to S3
         run: |
-          aws s3 sync frontend/dist/ s3://${{ secrets.S3_BUCKET_NAME }} --delete --region ${{ env.AWS_REGION }}
+          aws s3 sync frontend/dist/ s3://${{ env.S3_BUCKET_NAME }} --delete --region ${{ env.AWS_REGION }}
 
       - name: Deployment complete
         run: |
           echo "✅ Frontend deployed to S3"
-          echo "🌐 URL: http://${{ secrets.S3_BUCKET_NAME }}.s3-website.${{ env.AWS_REGION }}.amazonaws.com"
+          echo "🌐 URL: http://${{ env.S3_BUCKET_NAME }}.s3-website.${{ env.AWS_REGION }}.amazonaws.com"
 
