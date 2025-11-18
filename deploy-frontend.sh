@@ -17,7 +17,7 @@ cd ..
 echo "📦 Building frontend..."
 cd frontend
 npm install
-VITE_API_URL=${VITE_API_URL:-http://51.20.31.46:8080/api/v1} npm run build
+VITE_API_URL=${VITE_API_URL:-http://13.61.174.175:8080/api/v1} npm run build
 
 echo "⬆️  Uploading to S3..."
 aws s3 sync dist/ s3://$S3_BUCKET/ --delete
