@@ -64,7 +64,16 @@ type UpdateServiceRequest struct {
 	IsActive          *bool    `json:"is_active"`
 }
 
+// CreateService creates a new service (Organization Admin and Super Admin only)
+// Standard Users cannot create services - they have read-only access
 func (h *ServiceHandler) CreateService(c *gin.Context) {
+	// Check role - only admin and super_admin can create services
+	role, exists := c.Get("role")
+	if !exists || (role != "admin" && role != "super_admin") {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only Organization Admin or Super Admin can create services"})
+		return
+	}
+
 	var req CreateServiceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -169,7 +178,16 @@ func (h *ServiceHandler) GetService(c *gin.Context) {
 	c.JSON(http.StatusOK, service)
 }
 
+// UpdateService updates an existing service (Organization Admin and Super Admin only)
+// Standard Users cannot update services - they have read-only access
 func (h *ServiceHandler) UpdateService(c *gin.Context) {
+	// Check role - only admin and super_admin can update services
+	role, exists := c.Get("role")
+	if !exists || (role != "admin" && role != "super_admin") {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only Organization Admin or Super Admin can update services"})
+		return
+	}
+
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid service ID"})
@@ -249,7 +267,16 @@ func (h *ServiceHandler) UpdateService(c *gin.Context) {
 	c.JSON(http.StatusOK, service)
 }
 
+// DeleteService deletes a service (Organization Admin and Super Admin only)
+// Standard Users cannot delete services - they have read-only access
 func (h *ServiceHandler) DeleteService(c *gin.Context) {
+	// Check role - only admin and super_admin can delete services
+	role, exists := c.Get("role")
+	if !exists || (role != "admin" && role != "super_admin") {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only Organization Admin or Super Admin can delete services"})
+		return
+	}
+
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid service ID"})

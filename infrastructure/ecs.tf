@@ -101,6 +101,10 @@ resource "aws_ecs_task_definition" "backend" {
         {
           name      = "JWT_SECRET"
           valueFrom = aws_ssm_parameter.jwt_secret.arn
+        },
+        {
+          name      = "OPENAI_API_KEY"
+          valueFrom = aws_ssm_parameter.openai_api_key.arn
         }
       ]
 
@@ -286,10 +290,11 @@ resource "aws_iam_role_policy" "ecs_task_sns_ses_ssm" {
           "ssm:GetParameter",
           "ssm:GetParametersByPath"
         ]
-        Resource = [
-          aws_ssm_parameter.db_password.arn,
-          aws_ssm_parameter.jwt_secret.arn
-        ]
+            Resource = [
+              aws_ssm_parameter.db_password.arn,
+              aws_ssm_parameter.jwt_secret.arn,
+              aws_ssm_parameter.openai_api_key.arn
+            ]
       }
     ]
   })

@@ -210,7 +210,7 @@ export default function AlertSubscriptions() {
           }}
         >
           <div
-            className="absolute inset-0 bg-black/10 backdrop-blur-sm transition-opacity"
+            className="absolute inset-0 "
             onClick={() => setShowModal(false)}
           ></div>
           <div

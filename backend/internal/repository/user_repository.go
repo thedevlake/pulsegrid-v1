@@ -103,3 +103,11 @@ func (r *UserRepository) CountUsers() (int, error) {
 	return count, err
 }
 
+// CountUsersByOrganization returns the number of users in a specific organization
+func (r *UserRepository) CountUsersByOrganization(orgID uuid.UUID) (int, error) {
+	query := `SELECT COUNT(*) FROM users WHERE organization_id = $1`
+	var count int
+	err := r.db.QueryRow(query, orgID).Scan(&count)
+	return count, err
+}
+

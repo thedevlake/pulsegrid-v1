@@ -377,7 +377,7 @@ export default function Services() {
             }}
           >
             <div
-              className="absolute inset-0 bg-black/10 backdrop-blur-sm transition-opacity"
+              className="absolute inset-0"
               onClick={handleCloseModal}
             ></div>
             <div

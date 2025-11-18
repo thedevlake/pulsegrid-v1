@@ -40,3 +40,10 @@ variable "jwt_secret" {
   sensitive   = true
 }
 
+variable "openai_api_key" {
+  description = "OpenAI API key for AI predictions (optional)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+

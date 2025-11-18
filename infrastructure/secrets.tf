@@ -67,3 +67,16 @@ resource "aws_ssm_parameter" "jwt_secret" {
 #   count       = var.smtp_password != "" ? 1 : 0
 # }
 
+# OpenAI API Key (optional)
+resource "aws_ssm_parameter" "openai_api_key" {
+  name        = "/pulsegrid/openai/api_key"
+  description = "OpenAI API key for AI predictions"
+  type        = "SecureString"
+  value       = var.openai_api_key != "" ? var.openai_api_key : "not-configured"
+  key_id      = "alias/aws/ssm"
+
+  tags = {
+    Name = "pulsegrid-openai-api-key"
+  }
+}
+

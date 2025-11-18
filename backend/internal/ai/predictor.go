@@ -1,6 +1,9 @@
 package ai
 
 import (
+	"context"
+	"fmt"
+	"log"
 	"math"
 	"time"
 
@@ -21,10 +24,14 @@ type Prediction struct {
 }
 
 // Predictor analyzes historical health check data to predict potential incidents
-type Predictor struct{}
+type Predictor struct {
+	openAIClient *OpenAIClient
+}
 
-func NewPredictor() *Predictor {
-	return &Predictor{}
+func NewPredictor(openAIClient *OpenAIClient) *Predictor {
+	return &Predictor{
+		openAIClient: openAIClient,
+	}
 }
 
 // AnalyzeService analyzes historical health check data for a service and generates predictions
@@ -195,41 +202,74 @@ func (p *Predictor) generatePrediction(
 	if failureRate > 0.3 {
 		riskLevel = "critical"
 		confidence = 0.9
-		predictedIssue = "High failure rate detected - potential service outage"
 		timeWindow = "imminent"
-		reason = "Failure rate exceeds 30% in recent checks"
-		recommendedAction = "Investigate immediately and check service logs"
 	} else if failureRate > 0.1 {
 		riskLevel = "high"
 		confidence = 0.75
-		predictedIssue = "Elevated failure rate - service degradation likely"
 		timeWindow = "within 1 hour"
-		reason = "Failure rate is above 10%"
-		recommendedAction = "Review service health and prepare for potential issues"
 	} else if responseTimeTrend == "increasing" {
 		// Increasing response times
 		riskLevel = "medium"
 		confidence = 0.65
-		predictedIssue = "Response time degradation detected"
 		timeWindow = "within 4 hours"
-		reason = "Response times are trending upward significantly"
-		recommendedAction = "Monitor response times closely and check for resource constraints"
 	} else if len(anomalies) > 3 {
 		// Multiple anomalies detected
 		riskLevel = "medium"
 		confidence = 0.6
-		predictedIssue = "Multiple anomalies detected in service metrics"
 		timeWindow = "within 6 hours"
-		reason = "Unusual patterns detected in response times and status changes"
-		recommendedAction = "Review recent changes and system load"
 	} else if statusPattern["down"] > 0 && len(recentChecks) > 10 {
 		// Some failures but not critical
 		riskLevel = "low"
 		confidence = 0.5
-		predictedIssue = "Intermittent failures detected"
 		timeWindow = "within 12 hours"
-		reason = "Occasional failures observed in recent checks"
-		recommendedAction = "Continue monitoring and investigate root cause"
+	}
+
+	// Try to use OpenAI for natural language generation if available
+	if p.openAIClient != nil && riskLevel != "low" {
+		// Aggregate metrics for OpenAI
+		metrics := aggregateMetrics(service, recentChecks, 24*time.Hour)
+		metrics.RiskLevel = riskLevel
+		metrics.Confidence = confidence
+
+		// Call OpenAI to generate natural language descriptions
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		openAIResponse, err := p.openAIClient.GeneratePredictionText(ctx, metrics)
+		if err != nil {
+			// Log warning but fall back to default descriptions
+			log.Printf("Warning: OpenAI prediction generation failed: %v. Falling back to default descriptions.", err)
+		} else {
+			// Use OpenAI-generated descriptions
+			predictedIssue = openAIResponse.PredictedIssue
+			reason = openAIResponse.Reason
+			recommendedAction = openAIResponse.RecommendedAction
+		}
+	}
+
+	// Fallback to default descriptions if OpenAI wasn't used or failed
+	if predictedIssue == "No issues predicted" {
+		if failureRate > 0.3 {
+			predictedIssue = "High failure rate detected - potential service outage"
+			reason = "Failure rate exceeds 30% in recent checks"
+			recommendedAction = "Investigate immediately and check service logs"
+		} else if failureRate > 0.1 {
+			predictedIssue = "Elevated failure rate - service degradation likely"
+			reason = "Failure rate is above 10%"
+			recommendedAction = "Review service health and prepare for potential issues"
+		} else if responseTimeTrend == "increasing" {
+			predictedIssue = "Response time degradation detected"
+			reason = "Response times are trending upward significantly"
+			recommendedAction = "Monitor response times closely and check for resource constraints"
+		} else if len(anomalies) > 3 {
+			predictedIssue = "Multiple anomalies detected in service metrics"
+			reason = "Unusual patterns detected in response times and status changes"
+			recommendedAction = "Review recent changes and system load"
+		} else if statusPattern["down"] > 0 && len(recentChecks) > 10 {
+			predictedIssue = "Intermittent failures detected"
+			reason = "Occasional failures observed in recent checks"
+			recommendedAction = "Continue monitoring and investigate root cause"
+		}
 	}
 
 	return &Prediction{
@@ -270,5 +310,71 @@ func standardDeviation(values []float64, mean float64) float64 {
 	
 	variance := sumSquaredDiff / float64(len(values))
 	return math.Sqrt(variance)
+}
+
+// aggregateMetrics aggregates health check data into structured metrics for OpenAI
+func aggregateMetrics(service *models.Service, checks []*models.HealthCheck, timeWindow time.Duration) AggregatedMetrics {
+	now := time.Now()
+	cutoff := now.Add(-timeWindow)
+	
+	var recentChecks []*models.HealthCheck
+	for _, check := range checks {
+		if check.CheckedAt.After(cutoff) {
+			recentChecks = append(recentChecks, check)
+		}
+	}
+	
+	// Calculate aggregated metrics
+	totalChecks := len(recentChecks)
+	failureRate := calculateFailureRate(recentChecks)
+	statusBreakdown := analyzeStatusPattern(recentChecks)
+	responseTimeTrend := analyzeResponseTimeTrend(recentChecks)
+	anomalies := detectAnomalies(recentChecks)
+	
+	// Calculate average response time
+	var responseTimes []float64
+	for _, check := range recentChecks {
+		if check.ResponseTimeMs != nil {
+			responseTimes = append(responseTimes, float64(*check.ResponseTimeMs))
+		}
+	}
+	avgResponseTime := average(responseTimes)
+	
+	// Format time window
+	timeWindowStr := formatTimeWindow(timeWindow)
+	
+	// Format anomaly details (limit to 5 most recent)
+	anomalyDetails := anomalies
+	if len(anomalyDetails) > 5 {
+		anomalyDetails = anomalyDetails[len(anomalyDetails)-5:]
+	}
+	
+	return AggregatedMetrics{
+		ServiceName:        service.Name,
+		ServiceType:        service.Type,
+		ServiceURL:         service.URL,
+		TimeWindow:         timeWindowStr,
+		TotalChecks:        totalChecks,
+		FailureRate:        failureRate,
+		AverageResponseTime: avgResponseTime,
+		ResponseTimeTrend:   responseTimeTrend,
+		StatusBreakdown:     statusBreakdown,
+		AnomalyCount:        len(anomalies),
+		AnomalyDetails:      anomalyDetails,
+	}
+}
+
+// formatTimeWindow formats a duration into a human-readable string
+func formatTimeWindow(window time.Duration) string {
+	hours := int(window.Hours())
+	if hours < 1 {
+		minutes := int(window.Minutes())
+		return fmt.Sprintf("Last %d minutes", minutes)
+	} else if hours < 24 {
+		return fmt.Sprintf("Last %d hours", hours)
+	} else {
+		days := hours / 24
+		return fmt.Sprintf("Last %d days", days)
+	}
 }
 

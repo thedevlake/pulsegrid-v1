@@ -15,6 +15,7 @@ type Config struct {
 	AWS         AWSConfig
 	HealthCheck HealthCheckConfig
 	CORS        CORSConfig
+	OpenAI      OpenAIConfig
 }
 
 type ServerConfig struct {
@@ -61,6 +62,13 @@ type CORSConfig struct {
 	Origin string
 }
 
+type OpenAIConfig struct {
+	APIKey  string
+	Model   string
+	Enabled bool
+	Timeout time.Duration
+}
+
 func Load() (*Config, error) {
 	// Load .env file if it exists
 	_ = godotenv.Load()
@@ -103,6 +111,7 @@ func Load() (*Config, error) {
 		CORS: CORSConfig{
 			Origin: getEnv("CORS_ORIGIN", "http://localhost:3000"),
 		},
+		OpenAI: LoadOpenAIConfig(),
 	}
 
 	return cfg, nil
@@ -122,5 +131,28 @@ func getEnvInt(key string, defaultValue int) int {
 		}
 	}
 	return defaultValue
+}
+
+// LoadOpenAIConfig loads OpenAI configuration from environment variables
+// In production (ECS), the OPENAI_API_KEY is automatically injected from SSM Parameter Store
+// by ECS task definition. In local development, it reads from .env file.
+func LoadOpenAIConfig() OpenAIConfig {
+	apiKey := getEnv("OPENAI_API_KEY", "")
+	model := getEnv("OPENAI_MODEL", "gpt-3.5-turbo")
+	timeoutStr := getEnv("OPENAI_TIMEOUT", "10s")
+	
+	timeout, err := time.ParseDuration(timeoutStr)
+	if err != nil {
+		timeout = 10 * time.Second
+	}
+
+	enabled := apiKey != ""
+
+	return OpenAIConfig{
+		APIKey:  apiKey,
+		Model:   model,
+		Enabled: enabled,
+		Timeout: timeout,
+	}
 }
 

@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"net/http"
+	"strings"
 	"time"
 
 	"pulsegrid/backend/internal/config"
@@ -66,87 +67,194 @@ type UpdateUserRequest struct {
 	Email string `json:"email"`
 }
 
+// GetSystemMetrics returns system-wide metrics for Super Admin,
+// or organization-scoped metrics for Organization Admin
+// Standard Users cannot access this endpoint (requires admin role)
 func (h *AdminHandler) GetSystemMetrics(c *gin.Context) {
+	role, _ := c.Get("role")
+	orgID, orgExists := c.Get("organization_id")
+	
+	isSuperAdmin := role == "super_admin" // Super Admin: all organizations
+	// Organization Admin: their organization only
+	
+	var orgUUID *uuid.UUID
+	
+	// For admin role, filter by their organization
+	if !isSuperAdmin && orgExists {
+		if orgIDStr, ok := orgID.(string); ok && orgIDStr != "" {
+			parsed, err := uuid.Parse(orgIDStr)
+			if err == nil {
+				orgUUID = &parsed
+			}
+		}
+	}
+
 	// Get total users
-	userCountQuery := `SELECT COUNT(*) FROM users`
 	var totalUsers int
-	if err := h.userRepo.GetDB().QueryRow(userCountQuery).Scan(&totalUsers); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user count"})
-		return
+	var userCountQuery string
+	if isSuperAdmin {
+		userCountQuery = `SELECT COUNT(*) FROM users`
+		if err := h.userRepo.GetDB().QueryRow(userCountQuery).Scan(&totalUsers); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user count"})
+			return
+		}
+	} else if orgUUID != nil {
+		userCountQuery = `SELECT COUNT(*) FROM users WHERE organization_id = $1`
+		if err := h.userRepo.GetDB().QueryRow(userCountQuery, orgUUID).Scan(&totalUsers); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user count"})
+			return
+		}
+	} else {
+		totalUsers = 0
 	}
 
 	// Get total organizations
-	orgCountQuery := `SELECT COUNT(*) FROM organizations`
 	var totalOrgs int
-	if err := h.orgRepo.GetDB().QueryRow(orgCountQuery).Scan(&totalOrgs); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch organization count"})
-		return
+	if isSuperAdmin {
+		orgCountQuery := `SELECT COUNT(*) FROM organizations`
+		if err := h.orgRepo.GetDB().QueryRow(orgCountQuery).Scan(&totalOrgs); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch organization count"})
+			return
+		}
+	} else {
+		// Admin only sees their own organization
+		totalOrgs = 1
 	}
 
 	// Get total services
-	serviceCountQuery := `SELECT COUNT(*) FROM services`
 	var totalServices int
-	if err := h.serviceRepo.GetDB().QueryRow(serviceCountQuery).Scan(&totalServices); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch service count"})
-		return
+	var serviceCountQuery string
+	if isSuperAdmin {
+		serviceCountQuery = `SELECT COUNT(*) FROM services`
+		if err := h.serviceRepo.GetDB().QueryRow(serviceCountQuery).Scan(&totalServices); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch service count"})
+			return
+		}
+	} else if orgUUID != nil {
+		serviceCountQuery = `SELECT COUNT(*) FROM services WHERE organization_id = $1`
+		if err := h.serviceRepo.GetDB().QueryRow(serviceCountQuery, orgUUID).Scan(&totalServices); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch service count"})
+			return
+		}
+	} else {
+		totalServices = 0
 	}
 
 	// Get active services
-	activeServiceQuery := `SELECT COUNT(*) FROM services WHERE is_active = TRUE`
 	var activeServices int
-	if err := h.serviceRepo.GetDB().QueryRow(activeServiceQuery).Scan(&activeServices); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch active service count"})
-		return
+	if isSuperAdmin {
+		activeServiceQuery := `SELECT COUNT(*) FROM services WHERE is_active = TRUE`
+		if err := h.serviceRepo.GetDB().QueryRow(activeServiceQuery).Scan(&activeServices); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch active service count"})
+			return
+		}
+	} else if orgUUID != nil {
+		activeServiceQuery := `SELECT COUNT(*) FROM services WHERE is_active = TRUE AND organization_id = $1`
+		if err := h.serviceRepo.GetDB().QueryRow(activeServiceQuery, orgUUID).Scan(&activeServices); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch active service count"})
+			return
+		}
+	} else {
+		activeServices = 0
 	}
 
-	// Get total health checks
-	healthCheckQuery := `SELECT COUNT(*) FROM health_checks`
+	// Get total health checks (filtered by organization services)
 	var totalHealthChecks int
-	if err := h.healthCheckRepo.GetDB().QueryRow(healthCheckQuery).Scan(&totalHealthChecks); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch health check count"})
-		return
+	if isSuperAdmin {
+		healthCheckQuery := `SELECT COUNT(*) FROM health_checks`
+		if err := h.healthCheckRepo.GetDB().QueryRow(healthCheckQuery).Scan(&totalHealthChecks); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch health check count"})
+			return
+		}
+	} else if orgUUID != nil {
+		healthCheckQuery := `
+			SELECT COUNT(*) FROM health_checks hc
+			INNER JOIN services s ON hc.service_id = s.id
+			WHERE s.organization_id = $1
+		`
+		if err := h.healthCheckRepo.GetDB().QueryRow(healthCheckQuery, orgUUID).Scan(&totalHealthChecks); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch health check count"})
+			return
+		}
+	} else {
+		totalHealthChecks = 0
 	}
 
-	// Get total alerts
-	alertQuery := `SELECT COUNT(*) FROM alerts`
+	// Get total alerts (filtered by organization services)
 	var totalAlerts int
-	if err := h.alertRepo.GetDB().QueryRow(alertQuery).Scan(&totalAlerts); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch alert count"})
-		return
+	if isSuperAdmin {
+		alertQuery := `SELECT COUNT(*) FROM alerts`
+		if err := h.alertRepo.GetDB().QueryRow(alertQuery).Scan(&totalAlerts); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch alert count"})
+			return
+		}
+	} else if orgUUID != nil {
+		alertQuery := `
+			SELECT COUNT(*) FROM alerts a
+			INNER JOIN services s ON a.service_id = s.id
+			WHERE s.organization_id = $1
+		`
+		if err := h.alertRepo.GetDB().QueryRow(alertQuery, orgUUID).Scan(&totalAlerts); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch alert count"})
+			return
+		}
+	} else {
+		totalAlerts = 0
 	}
 
-	// Get unresolved alerts
-	unresolvedQuery := `SELECT COUNT(*) FROM alerts WHERE is_resolved = FALSE`
+	// Get unresolved alerts (filtered by organization services)
 	var unresolvedAlerts int
-	if err := h.alertRepo.GetDB().QueryRow(unresolvedQuery).Scan(&unresolvedAlerts); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch unresolved alert count"})
-		return
+	if isSuperAdmin {
+		unresolvedQuery := `SELECT COUNT(*) FROM alerts WHERE is_resolved = FALSE`
+		if err := h.alertRepo.GetDB().QueryRow(unresolvedQuery).Scan(&unresolvedAlerts); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch unresolved alert count"})
+			return
+		}
+	} else if orgUUID != nil {
+		unresolvedQuery := `
+			SELECT COUNT(*) FROM alerts a
+			INNER JOIN services s ON a.service_id = s.id
+			WHERE s.organization_id = $1 AND a.is_resolved = FALSE
+		`
+		if err := h.alertRepo.GetDB().QueryRow(unresolvedQuery, orgUUID).Scan(&unresolvedAlerts); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch unresolved alert count"})
+			return
+		}
+	} else {
+		unresolvedAlerts = 0
 	}
 
 	// Calculate system uptime (last 24 hours)
 	since := time.Now().AddDate(0, 0, -1)
-	uptimeQuery := `
-		SELECT 
-			COUNT(*) as total,
-			COUNT(CASE WHEN status = 'up' THEN 1 END) as up
-		FROM health_checks
-		WHERE checked_at >= $1
-	`
 	var total, up int
-	if err := h.healthCheckRepo.GetDB().QueryRow(uptimeQuery, since).Scan(&total, &up); err == nil && total > 0 {
-		systemUptime := (float64(up) / float64(total)) * 100
-		metrics := SystemMetrics{
-			TotalUsers:         totalUsers,
-			TotalOrganizations: totalOrgs,
-			TotalServices:      totalServices,
-			ActiveServices:     activeServices,
-			TotalHealthChecks:  totalHealthChecks,
-			TotalAlerts:        totalAlerts,
-			UnresolvedAlerts:   unresolvedAlerts,
-			SystemUptime:       systemUptime,
+	if isSuperAdmin {
+		uptimeQuery := `
+			SELECT 
+				COUNT(*) as total,
+				COUNT(CASE WHEN status = 'up' THEN 1 END) as up
+			FROM health_checks
+			WHERE checked_at >= $1
+		`
+		if err := h.healthCheckRepo.GetDB().QueryRow(uptimeQuery, since).Scan(&total, &up); err != nil && total > 0 {
+			// Error handling
 		}
-		c.JSON(http.StatusOK, metrics)
-		return
+	} else if orgUUID != nil {
+		uptimeQuery := `
+			SELECT 
+				COUNT(*) as total,
+				COUNT(CASE WHEN hc.status = 'up' THEN 1 END) as up
+			FROM health_checks hc
+			INNER JOIN services s ON hc.service_id = s.id
+			WHERE s.organization_id = $1 AND hc.checked_at >= $2
+		`
+		if err := h.healthCheckRepo.GetDB().QueryRow(uptimeQuery, orgUUID, since).Scan(&total, &up); err != nil && total > 0 {
+			// Error handling
+		}
+	}
+
+	systemUptime := 0.0
+	if total > 0 {
+		systemUptime = (float64(up) / float64(total)) * 100
 	}
 
 	metrics := SystemMetrics{
@@ -157,19 +265,53 @@ func (h *AdminHandler) GetSystemMetrics(c *gin.Context) {
 		TotalHealthChecks:  totalHealthChecks,
 		TotalAlerts:        totalAlerts,
 		UnresolvedAlerts:   unresolvedAlerts,
-		SystemUptime:       0,
+		SystemUptime:       systemUptime,
 	}
 	c.JSON(http.StatusOK, metrics)
 }
 
 func (h *AdminHandler) ListUsers(c *gin.Context) {
-	query := `
-		SELECT id, email, name, role, organization_id, created_at, updated_at
-		FROM users
-		ORDER BY created_at DESC
-	`
+	role, _ := c.Get("role")
+	orgID, orgExists := c.Get("organization_id")
+	
+	isSuperAdmin := role == "super_admin"
+	
+	var query string
+	var rows *sql.Rows
+	var err error
+	
+	if isSuperAdmin {
+		// Super admin sees all users
+		query = `
+			SELECT id, email, name, role, organization_id, created_at, updated_at
+			FROM users
+			ORDER BY created_at DESC
+		`
+		rows, err = h.userRepo.GetDB().Query(query)
+	} else if orgExists {
+		// Admin sees only users in their organization
+		orgIDStr, ok := orgID.(string)
+		if !ok || orgIDStr == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Organization ID not found"})
+			return
+		}
+		orgUUID, err := uuid.Parse(orgIDStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid organization ID"})
+			return
+		}
+		query = `
+			SELECT id, email, name, role, organization_id, created_at, updated_at
+			FROM users
+			WHERE organization_id = $1
+			ORDER BY created_at DESC
+		`
+		rows, err = h.userRepo.GetDB().Query(query, orgUUID)
+	} else {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Organization ID not found"})
+		return
+	}
 
-	rows, err := h.userRepo.GetDB().Query(query)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
 		return
@@ -208,10 +350,75 @@ func (h *AdminHandler) CreateUser(c *gin.Context) {
 		return
 	}
 
+	role, _ := c.Get("role")
+	orgID, orgExists := c.Get("organization_id")
+	isSuperAdmin := role == "super_admin"
+
 	// Check if user exists
 	_, err := h.userRepo.GetByEmail(req.Email)
 	if err == nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "User already exists"})
+		return
+	}
+
+	// Enforce organization boundaries
+	var targetOrgID *uuid.UUID
+	if req.OrgID != "" {
+		// If org_id is provided, use it (super admin can specify any org)
+		parsed, err := uuid.Parse(req.OrgID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid organization ID"})
+			return
+		}
+		targetOrgID = &parsed
+	} else if !isSuperAdmin {
+		// Organization admin must create users in their own organization
+		// Use their organization_id if no org_id was provided
+		if !orgExists {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Organization ID not found in token. Please log out and log back in to refresh your session."})
+			return
+		}
+		orgIDStr, ok := orgID.(string)
+		if !ok || orgIDStr == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Organization ID is required for organization admins. Please log out and log back in."})
+			return
+		}
+		parsed, err := uuid.Parse(orgIDStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid organization ID in token. Please log out and log back in."})
+			return
+		}
+		targetOrgID = &parsed
+	} else if isSuperAdmin {
+		// Super admin must provide org_id if they want to create a user in a specific org
+		// For now, we'll allow super admin to create users without org (they can assign later)
+		// But it's better to require org_id
+		if req.OrgID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Organization ID is required"})
+			return
+		}
+	}
+
+	// Verify organization access (admin can only create in their org)
+	if !isSuperAdmin && targetOrgID != nil && orgExists {
+		orgIDStr, ok := orgID.(string)
+		if ok && orgIDStr != "" {
+			if orgIDStr != targetOrgID.String() {
+				c.JSON(http.StatusForbidden, gin.H{"error": "You can only create users in your own organization"})
+				return
+			}
+		}
+	}
+
+	// Ensure targetOrgID is set
+	if targetOrgID == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Organization ID is required"})
+		return
+	}
+
+	// Prevent creating super_admin role (only promotion endpoint can do this)
+	if req.Role == "super_admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Cannot create super_admin users. Use promotion endpoint instead."})
 		return
 	}
 
@@ -227,13 +434,7 @@ func (h *AdminHandler) CreateUser(c *gin.Context) {
 		PasswordHash: string(hashedPassword),
 		Name:         req.Name,
 		Role:         req.Role,
-	}
-
-	if req.OrgID != "" {
-		orgUUID, err := uuid.Parse(req.OrgID)
-		if err == nil {
-			user.OrganizationID = &orgUUID
-		}
+		OrganizationID: targetOrgID,
 	}
 
 	if err := h.userRepo.Create(user); err != nil {
@@ -308,9 +509,38 @@ func (h *AdminHandler) DeleteUser(c *gin.Context) {
 }
 
 func (h *AdminHandler) ListOrganizations(c *gin.Context) {
-	query := `SELECT id, name, slug, created_at, updated_at FROM organizations ORDER BY created_at DESC`
+	role, _ := c.Get("role")
+	orgID, orgExists := c.Get("organization_id")
+	
+	isSuperAdmin := role == "super_admin"
+	
+	var query string
+	var rows *sql.Rows
+	var err error
+	
+	if isSuperAdmin {
+		// Super admin sees all organizations
+		query = `SELECT id, name, slug, created_at, updated_at FROM organizations ORDER BY created_at DESC`
+		rows, err = h.orgRepo.GetDB().Query(query)
+	} else if orgExists {
+		// Admin sees only their own organization
+		orgIDStr, ok := orgID.(string)
+		if !ok || orgIDStr == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Organization ID not found"})
+			return
+		}
+		orgUUID, err := uuid.Parse(orgIDStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid organization ID"})
+			return
+		}
+		query = `SELECT id, name, slug, created_at, updated_at FROM organizations WHERE id = $1`
+		rows, err = h.orgRepo.GetDB().Query(query, orgUUID)
+	} else {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Organization ID not found"})
+		return
+	}
 
-	rows, err := h.orgRepo.GetDB().Query(query)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch organizations"})
 		return
@@ -328,5 +558,238 @@ func (h *AdminHandler) ListOrganizations(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, orgs)
+}
+
+type UpdateOrganizationRequest struct {
+	Name string `json:"name"`
+}
+
+// UpdateOrganization updates an organization (Super Admin only, or Organization Admin for their own org)
+func (h *AdminHandler) UpdateOrganization(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid organization ID"})
+		return
+	}
+
+	var req UpdateOrganizationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	role, _ := c.Get("role")
+	orgID, orgExists := c.Get("organization_id")
+	isSuperAdmin := role == "super_admin"
+
+	// Get the organization
+	org, err := h.orgRepo.GetByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Organization not found"})
+		return
+	}
+
+	// Organization admins can only update their own organization
+	if !isSuperAdmin {
+		if !orgExists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Organization ID not found"})
+			return
+		}
+		orgIDStr, ok := orgID.(string)
+		if !ok || orgIDStr != id.String() {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You can only update your own organization"})
+			return
+		}
+	}
+
+	// Update organization name if provided
+	if req.Name != "" {
+		org.Name = req.Name
+		org.Slug = generateSlug(req.Name) // Regenerate slug
+	}
+
+	// Update in database
+	updateQuery := `
+		UPDATE organizations
+		SET name = $2, slug = $3, updated_at = $4
+		WHERE id = $1
+	`
+	_, err = h.orgRepo.GetDB().Exec(updateQuery, org.ID, org.Name, org.Slug, time.Now())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update organization"})
+		return
+	}
+
+	c.JSON(http.StatusOK, org)
+}
+
+// DeleteOrganization deletes an organization (Super Admin only)
+// This will cascade delete all related users, services, health checks, and alerts
+func (h *AdminHandler) DeleteOrganization(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid organization ID"})
+		return
+	}
+
+	// Only super admin can delete organizations
+	role, _ := c.Get("role")
+	if role != "super_admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only Super Admin can delete organizations"})
+		return
+	}
+
+	// Check if organization exists
+	_, err = h.orgRepo.GetByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Organization not found"})
+		return
+	}
+
+	// Get counts for informational purposes (CASCADE will handle deletion)
+	userCountQuery := `SELECT COUNT(*) FROM users WHERE organization_id = $1`
+	var userCount int
+	h.userRepo.GetDB().QueryRow(userCountQuery, id).Scan(&userCount)
+
+	serviceCountQuery := `SELECT COUNT(*) FROM services WHERE organization_id = $1`
+	var serviceCount int
+	h.serviceRepo.GetDB().QueryRow(serviceCountQuery, id).Scan(&serviceCount)
+
+	// Delete organization (CASCADE will automatically delete related users, services, health checks, and alerts)
+	deleteQuery := `DELETE FROM organizations WHERE id = $1`
+	result, err := h.orgRepo.GetDB().Exec(deleteQuery, id)
+	if err != nil {
+		// Check for foreign key constraint errors
+		if strings.Contains(err.Error(), "foreign key") || strings.Contains(err.Error(), "constraint") {
+			c.JSON(http.StatusConflict, gin.H{
+				"error": "Cannot delete organization due to database constraints. Please ensure all related data can be deleted.",
+				"details": err.Error(),
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to delete organization",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	// Check if any rows were actually deleted
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Organization not found or already deleted"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Organization deleted successfully",
+		"deleted_users": userCount,
+		"deleted_services": serviceCount,
+		"note": "All related users, services, health checks, and alerts have been automatically deleted.",
+	})
+}
+
+// Helper function to generate slug (moved from repository)
+func generateSlug(name string) string {
+	slug := strings.ToLower(name)
+	slug = strings.ReplaceAll(slug, " ", "-")
+	slug = strings.ReplaceAll(slug, "_", "-")
+	return slug
+}
+
+// PromoteToSuperAdmin promotes a user to Super Admin role (super_admin only)
+// Super Admin: Controls the entire platform — all organizations, all users, all data
+func (h *AdminHandler) PromoteToSuperAdmin(c *gin.Context) {
+	userID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	// Get the user to promote
+	user, err := h.userRepo.GetByID(userID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Check if already super_admin
+	if user.Role == "super_admin" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User is already a super admin"})
+		return
+	}
+
+	// Update role to super_admin
+	updateQuery := `UPDATE users SET role = $1, updated_at = $2 WHERE id = $3`
+	_, err = h.userRepo.GetDB().Exec(updateQuery, "super_admin", time.Now(), user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to promote user"})
+		return
+	}
+
+	user.Role = "super_admin"
+	user.PasswordHash = ""
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User promoted to super admin successfully",
+		"user":    user,
+	})
+}
+
+// DemoteFromSuperAdmin demotes a Super Admin to Organization Admin role (super_admin only)
+// Prevents demoting the last super_admin (safeguard)
+// Organization Admin: Manages everything inside their own organization only
+func (h *AdminHandler) DemoteFromSuperAdmin(c *gin.Context) {
+	userID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	// Get the user to demote
+	user, err := h.userRepo.GetByID(userID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Check if user is super_admin
+	if user.Role != "super_admin" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User is not a super admin"})
+		return
+	}
+
+	// Prevent demoting if this is the last super_admin
+	superAdminCountQuery := `SELECT COUNT(*) FROM users WHERE role = 'super_admin'`
+	var superAdminCount int
+	if err := h.userRepo.GetDB().QueryRow(superAdminCountQuery).Scan(&superAdminCount); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check super admin count"})
+		return
+	}
+
+	if superAdminCount <= 1 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Cannot demote the last super admin. At least one super admin must exist."})
+		return
+	}
+
+	// Determine new role: if user has organization, make them admin, otherwise user
+	newRole := "user"
+	if user.OrganizationID != nil {
+		newRole = "admin"
+	}
+
+	// Update role
+	updateQuery := `UPDATE users SET role = $1, updated_at = $2 WHERE id = $3`
+	_, err = h.userRepo.GetDB().Exec(updateQuery, newRole, time.Now(), user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to demote user"})
+		return
+	}
+
+	user.Role = newRole
+	user.PasswordHash = ""
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User demoted from super admin successfully",
+		"user":    user,
+	})
 }
 

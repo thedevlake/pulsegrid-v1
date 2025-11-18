@@ -2,7 +2,9 @@ package api
 
 import (
 	"database/sql"
+	"log"
 
+	"pulsegrid/backend/internal/ai"
 	"pulsegrid/backend/internal/api/handlers"
 	"pulsegrid/backend/internal/api/middleware"
 	"pulsegrid/backend/internal/config"
@@ -60,6 +62,23 @@ func (s *Server) setupRoutes() {
 	// Initialize supporting services
 	notifierService := notifier.NewNotifierService(alertRepo)
 
+	// Initialize OpenAI client if configured
+	var openAIClient *ai.OpenAIClient
+	if s.cfg.OpenAI.Enabled {
+		openAIClient = ai.NewOpenAIClient(
+			s.cfg.OpenAI.APIKey,
+			s.cfg.OpenAI.Model,
+			s.cfg.OpenAI.Timeout,
+		)
+		if openAIClient != nil {
+			log.Println("✅ OpenAI client initialized for AI predictions")
+		} else {
+			log.Println("⚠️ OpenAI configuration found but client initialization failed")
+		}
+	} else {
+		log.Println("ℹ️ OpenAI not configured - predictions will use statistical analysis only")
+	}
+
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(userRepo, orgRepo, s.cfg)
 	serviceHandler := handlers.NewServiceHandler(serviceRepo, s.cfg)
@@ -68,7 +87,7 @@ func (s *Server) setupRoutes() {
 	statsHandler := handlers.NewStatsHandler(serviceRepo, healthCheckRepo, s.cfg)
 	reportHandler := handlers.NewReportHandler(serviceRepo, healthCheckRepo, s.cfg)
 	adminHandler := handlers.NewAdminHandler(userRepo, orgRepo, serviceRepo, healthCheckRepo, alertRepo, s.cfg)
-	predictionHandler := handlers.NewPredictionHandler(serviceRepo, healthCheckRepo, s.cfg)
+	predictionHandler := handlers.NewPredictionHandler(serviceRepo, healthCheckRepo, s.cfg, openAIClient)
 	metricsHandler := handlers.NewMetricsHandler(healthCheckRepo, s.cfg)
 
 	// Public routes
@@ -138,6 +157,18 @@ func (s *Server) setupRoutes() {
 
 		// Organization management
 		admin.GET("/organizations", adminHandler.ListOrganizations)
+		admin.PUT("/organizations/:id", adminHandler.UpdateOrganization)
+		admin.DELETE("/organizations/:id", adminHandler.DeleteOrganization)
+	}
+
+	// Super admin routes (require super_admin role)
+	superAdmin := api.Group("/admin/super")
+	superAdmin.Use(middleware.AuthMiddleware(s.cfg.JWT.Secret))
+	superAdmin.Use(middleware.SuperAdminMiddleware())
+	{
+		// Super admin user management
+		superAdmin.POST("/users/:id/promote", adminHandler.PromoteToSuperAdmin)
+		superAdmin.POST("/users/:id/demote", adminHandler.DemoteFromSuperAdmin)
 	}
 }
 

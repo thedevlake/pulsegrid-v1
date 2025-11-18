@@ -74,23 +74,41 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Determine user role:
-	// - First user in system becomes super_admin (bootstrap)
-	// - Organization creators become admin of their organization
-	// - Regular users default to "user"
-	userCount, err := h.userRepo.CountUsers()
+	// Determine user role (Three-tier RBAC system):
+	// - Super Admin: First user in system becomes super_admin (bootstrap)
+	//   Controls the entire platform — all organizations, all users, all data
+	// - Organization Admin: First user in a new organization becomes admin of that organization
+	//   Manages everything inside their own organization only
+	// - Standard User: Subsequent users in existing organizations default to "user" role
+	//   Regular member with access only to their organization's features and resources
+	
+	// Check if this is the first user in the entire system
+	totalUserCount, err := h.userRepo.CountUsers()
 	if err != nil {
 		// If we can't count users, default to "user" for security
-		userCount = 1
+		totalUserCount = 1
 	}
 
 	var userRole string
-	if userCount == 0 {
-		// First user in the entire system becomes super_admin
+	if totalUserCount == 0 {
+		// First user in the entire system becomes super_admin (bootstrap)
 		userRole = "super_admin"
 	} else {
-		// Organization creator becomes admin of their organization
-		userRole = "admin"
+		// Check if this is the first user in this new organization
+		// Since we just created the organization, count users in it (should be 0, but check anyway)
+		orgUserCount, err := h.userRepo.CountUsersByOrganization(org.ID)
+		if err != nil {
+			// If we can't count, default to "user" for security
+			orgUserCount = 1
+		}
+		
+		if orgUserCount == 0 {
+			// First user in this new organization becomes admin
+			userRole = "admin"
+		} else {
+			// Subsequent users in existing organizations default to "user" role
+			userRole = "user"
+		}
 	}
 
 	// Create user

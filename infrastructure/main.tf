@@ -320,7 +320,8 @@ resource "aws_iam_role_policy" "ecs_execution_ssm" {
         ]
         Resource = [
           aws_ssm_parameter.db_password.arn,
-          aws_ssm_parameter.jwt_secret.arn
+          aws_ssm_parameter.jwt_secret.arn,
+          aws_ssm_parameter.openai_api_key.arn
         ]
       },
       {
