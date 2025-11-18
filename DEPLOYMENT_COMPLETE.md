@@ -13,13 +13,13 @@ http://pulsegrid-frontend-777319172038.s3-website.eu-north-1.amazonaws.com
 **Backend API**:
 
 ```
-http://51.20.252.39:8080/api/v1
+http://51.20.31.46:8080/api/v1
 ```
 
 **Health Check**:
 
 ```
-http://51.20.252.39:8080/api/v1/health
+http://51.20.31.46:8080/api/v1/health
 ```
 
 ## ✅ Deployment Checklist - ALL COMPLETE
@@ -57,7 +57,7 @@ http://51.20.252.39:8080/api/v1/health
 | Component       | Status       | URL/Endpoint                                                               |
 | --------------- | ------------ | -------------------------------------------------------------------------- |
 | **Frontend**    | ✅ Deployed  | http://pulsegrid-frontend-777319172038.s3-website.eu-north-1.amazonaws.com |
-| **Backend API** | ✅ Running   | http://51.20.252.39:8080/api/v1                                            |
+| **Backend API** | ✅ Running   | http://51.20.31.46:8080/api/v1                                            |
 | **Database**    | ✅ Available | pulsegrid-db.cxwyqsgeaqll.eu-north-1.rds.amazonaws.com:5432                |
 | **ECS Service** | ✅ Active    | pulsegrid-backend (1/1 running)                                            |
 
@@ -100,12 +100,12 @@ aws ecs update-service --cluster pulsegrid-cluster --service pulsegrid-backend -
 
 ## ⚠️ Important Notes
 
-1. **Backend IP May Change**: The public IP (`51.20.252.39`) will change if the ECS task restarts. For production:
+1. **Backend IP May Change**: The public IP (`51.20.31.46`) will change if the ECS task restarts. For production:
 
    - Consider using an Application Load Balancer (ALB) for a stable endpoint
    - Or update frontend API URL and redeploy when IP changes
 
-2. **Frontend API URL**: Currently hardcoded to `http://51.20.252.39:8080/api/v1` in the build. To update:
+2. **Frontend API URL**: Currently hardcoded to `http://51.20.31.46:8080/api/v1` in the build. To update:
 
    ```bash
    cd frontend

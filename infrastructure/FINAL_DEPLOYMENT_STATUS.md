@@ -4,16 +4,16 @@
 
 ### Backend API
 - **Status**: ✅ Running
-- **Public IP**: `51.20.252.39`
+- **Public IP**: `51.20.31.46`
 - **Port**: `8080`
-- **Health Check**: ✅ Healthy (`http://51.20.252.39:8080/api/v1/health`)
-- **API Base URL**: `http://51.20.252.39:8080/api/v1`
+- **Health Check**: ✅ Healthy (`http://51.20.31.46:8080/api/v1/health`)
+- **API Base URL**: `http://51.20.31.46:8080/api/v1`
 
 ### Frontend
 - **Status**: ✅ Deployed to S3
 - **S3 Bucket**: `pulsegrid-frontend-777319172038`
 - **Website URL**: `http://pulsegrid-frontend-777319172038.s3-website.eu-north-1.amazonaws.com`
-- **API Configured**: Points to backend at `http://51.20.252.39:8080/api/v1`
+- **API Configured**: Points to backend at `http://51.20.31.46:8080/api/v1`
 
 ### Database
 - **Status**: ✅ Available
@@ -27,12 +27,12 @@
 **URL**: http://pulsegrid-frontend-777319172038.s3-website.eu-north-1.amazonaws.com
 
 ### Backend API
-**Base URL**: http://51.20.252.39:8080/api/v1
+**Base URL**: http://51.20.31.46:8080/api/v1
 
 **Test Endpoints**:
-- Health: `http://51.20.252.39:8080/api/v1/health`
-- Register: `POST http://51.20.252.39:8080/api/v1/auth/register`
-- Login: `POST http://51.20.252.39:8080/api/v1/auth/login`
+- Health: `http://51.20.31.46:8080/api/v1/health`
+- Register: `POST http://51.20.31.46:8080/api/v1/auth/register`
+- Login: `POST http://51.20.31.46:8080/api/v1/auth/login`
 
 ## 📊 Infrastructure Summary
 
@@ -67,7 +67,7 @@ NETWORK_ID=$(aws ecs describe-tasks --cluster pulsegrid-cluster --tasks $TASK_AR
 aws ec2 describe-network-interfaces --network-interface-ids $NETWORK_ID --region eu-north-1 --query "NetworkInterfaces[0].Association.PublicIp" --output text
 
 # Test backend health
-curl http://51.20.252.39:8080/api/v1/health
+curl http://51.20.31.46:8080/api/v1/health
 ```
 
 ## ⚠️ Important Notes
@@ -108,5 +108,5 @@ curl http://51.20.252.39:8080/api/v1/health
 ## 🎉 Your PulseGrid application is live on AWS!
 
 **Frontend**: http://pulsegrid-frontend-777319172038.s3-website.eu-north-1.amazonaws.com  
-**Backend API**: http://51.20.252.39:8080/api/v1
+**Backend API**: http://51.20.31.46:8080/api/v1
 
