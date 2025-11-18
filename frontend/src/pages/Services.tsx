@@ -96,7 +96,6 @@ export default function Services() {
     try {
       if (editingService) {
         // Update existing service
-        // Update existing service
         console.log("Updating service:", editingService.id, formData);
         const response = await api.put(
           `/services/${editingService.id}`,
