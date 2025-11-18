@@ -7,6 +7,7 @@ import Particles from "../components/Particles";
 import CardSwap, { Card } from "../components/CardSwap";
 import ThemeToggle from "../components/ThemeToggle";
 import PageTransition from "../components/PageTransition";
+import BackButton from "../components/BackButton";
 import {
   UserPlus,
   Mail,
@@ -78,7 +79,7 @@ export default function Register() {
   };
 
   return (
-    <PageTransition animationType="scale">
+    <PageTransition animationType="fade">
       <div className={`min-h-screen relative flex flex-col py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-300 ${
         theme === 'dark' 
           ? 'bg-gradient-to-b from-gray-950 via-slate-950 to-zinc-950' 
@@ -87,6 +88,11 @@ export default function Register() {
         {/* Theme Toggle - Top Right */}
         <div className="fixed top-4 right-4 z-50">
           <ThemeToggle />
+        </div>
+
+        {/* Back Button - Top Left */}
+        <div className="fixed top-4 left-4 z-50">
+          <BackButton />
         </div>
 
         {/* Particles Background */}

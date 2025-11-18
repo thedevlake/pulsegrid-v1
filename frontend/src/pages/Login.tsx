@@ -7,6 +7,7 @@ import Particles from "../components/Particles";
 import CardSwap, { Card } from "../components/CardSwap";
 import ThemeToggle from "../components/ThemeToggle";
 import PageTransition from "../components/PageTransition";
+import BackButton from "../components/BackButton";
 import { LogIn, Mail, Lock, Activity } from "lucide-react";
 
 export default function Login() {
@@ -52,6 +53,11 @@ export default function Login() {
         {/* Theme Toggle - Top Right */}
         <div className="fixed top-4 right-4 z-50">
           <ThemeToggle />
+        </div>
+
+        {/* Back Button - Top Left */}
+        <div className="fixed top-4 left-4 z-50">
+          <BackButton />
         </div>
 
         {/* Particles Background */}

@@ -4,6 +4,7 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 import { useAuthStore } from "./store/authStore";
 import { useThemeStore } from "./store/themeStore";
@@ -19,6 +20,29 @@ import Admin from "./pages/Admin";
 import Predictions from "./pages/Predictions";
 import AlertSubscriptions from "./pages/AlertSubscriptions";
 import Layout from "./components/Layout";
+import Docs from "./pages/Docs";
+
+// Route transition wrapper to prevent flash
+function RouteTransition({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  const { theme } = useThemeStore();
+
+  useEffect(() => {
+    // Ensure background is set immediately on route change
+    const html = document.documentElement;
+    const body = document.body;
+    const root = document.getElementById('root');
+    
+    const bgColor = theme === 'dark' ? '#030712' : '#000000';
+    html.style.background = bgColor;
+    body.style.background = bgColor;
+    if (root) {
+      root.style.background = bgColor;
+    }
+  }, [location.pathname, theme]);
+
+  return <>{children}</>;
+}
 
 
 function App() {
@@ -78,53 +102,65 @@ function App() {
   }
 
   return (
-    <Router
-      future={{
-        v7_startTransition: true,
-        v7_relativeSplatPath: true,
-      }}
+    <div 
+      className={`min-h-screen transition-colors duration-300 ${
+        theme === 'dark' 
+          ? 'bg-gradient-to-b from-gray-950 via-slate-950 to-zinc-950' 
+          : 'bg-gradient-to-b from-black via-slate-950 to-blue-950'
+      }`}
+      style={{ minHeight: '100vh' }}
     >
-      <Routes>
-        {/* Public routes */}
-        <Route
-          path="/"
-          element={!token ? <Landing /> : <Navigate to="/dashboard" replace />}
-        />
-        <Route
-          path="/login"
-          element={!token ? <Login /> : <Navigate to="/dashboard" replace />}
-        />
-        <Route
-          path="/register"
-          element={!token ? <Register /> : <Navigate to="/dashboard" replace />}
-        />
-        
-        {/* Protected routes - keep existing paths for backward compatibility */}
-        <Route
-          element={
-            token ? (
-              <Layout />
-            ) : (
-              <Navigate to="/" replace />
-            )
-          }
-        >
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="services" element={<Services />} />
-          <Route path="services/:id" element={<ServiceDetail />} />
-          <Route path="alerts" element={<Alerts />} />
-          <Route path="alerts/subscriptions" element={<AlertSubscriptions />} />
-          <Route path="predictions" element={<Predictions />} />
-          <Route path="admin" element={<Admin />} />
-        </Route>
-        
-        {/* Catch all */}
-        <Route
-          path="*"
-          element={<Navigate to={token ? "/dashboard" : "/"} replace />}
-        />
-      </Routes>
-    </Router>
+      <Router
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
+        <RouteTransition>
+          <Routes>
+            {/* Public routes */}
+            <Route
+              path="/"
+              element={!token ? <Landing /> : <Navigate to="/dashboard" replace />}
+            />
+            <Route
+              path="/login"
+              element={!token ? <Login /> : <Navigate to="/dashboard" replace />}
+            />
+            <Route
+              path="/register"
+              element={!token ? <Register /> : <Navigate to="/dashboard" replace />}
+            />
+            
+            {/* Protected routes - keep existing paths for backward compatibility */}
+            <Route
+              element={
+                token ? (
+                  <Layout />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            >
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="services" element={<Services />} />
+              <Route path="services/:id" element={<ServiceDetail />} />
+              <Route path="alerts" element={<Alerts />} />
+              <Route path="alerts/subscriptions" element={<AlertSubscriptions />} />
+              <Route path="predictions" element={<Predictions />} />
+              <Route path="admin" element={<Admin />} />
+          <Route path="docs" element={<Docs />} />
+            </Route>
+            
+            {/* Catch all */}
+            <Route
+              path="*"
+              element={<Navigate to={token ? "/dashboard" : "/"} replace />}
+            />
+          </Routes>
+        </RouteTransition>
+      </Router>
+    </div>
   );
 }
 

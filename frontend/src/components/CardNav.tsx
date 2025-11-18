@@ -2,6 +2,7 @@ import React, { useLayoutEffect, useRef, useState, useEffect } from 'react';
 import { gsap } from 'gsap';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
 
 type CardNavLink = {
   label: string;
@@ -298,7 +299,7 @@ const CardNav: React.FC<CardNavProps> = ({
           } md:flex-row md:items-end md:gap-[12px]`}
           aria-hidden={!isExpanded}
         >
-          {(items || []).slice(0, 3).map((item, idx) => (
+          {(items || []).map((item, idx) => (
             <div
               key={`${item.label}-${idx}`}
               className="nav-card select-none relative flex flex-col gap-2 p-[12px_16px] rounded-xl min-w-0 flex-[1_1_auto] h-auto min-h-[60px] md:h-full md:min-h-0 md:flex-[1_1_0%] transition-all duration-500 hover:scale-[1.03] hover:shadow-2xl group overflow-hidden"
@@ -344,6 +345,24 @@ const CardNav: React.FC<CardNavProps> = ({
               </div>
             </div>
           ))}
+          <div className="md:hidden mt-2">
+            <div className="bg-black/20 border border-white/10 rounded-xl p-4 flex items-center justify-between">
+              <div>
+                <p className="text-white/80 text-sm font-medium">Appearance</p>
+                <p className="text-white/50 text-xs">Switch light / dark</p>
+              </div>
+              <ThemeToggle />
+            </div>
+            {onButtonClick && (
+              <button
+                type="button"
+                onClick={onButtonClick}
+                className="w-full mt-3 px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white font-semibold text-sm hover:bg-white/20 transition-all"
+              >
+                Logout
+              </button>
+            )}
+          </div>
         </div>
       </nav>
     </div>

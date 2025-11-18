@@ -9,12 +9,14 @@ import {
   Users,
   Activity,
   Brain,
+  BookOpen,
   LucideIcon,
 } from "lucide-react";
 import GlassSurface from "./GlassSurface";
 import CardNav, { CardNavItem } from "./CardNav";
 import ThemeToggle from "./ThemeToggle";
 import Particles from "./Particles";
+import BackButton from "./BackButton";
 
 interface NavLinkProps {
   to: string;
@@ -147,6 +149,21 @@ export default function Layout() {
           },
         ]
       : []),
+    {
+      label: "Resources",
+      bgColor:
+        theme === "dark"
+          ? "linear-gradient(135deg, rgba(14, 165, 233, 0.4) 0%, rgba(56, 189, 248, 0.5) 50%, rgba(59, 130, 246, 0.4) 100%)"
+          : "linear-gradient(135deg, rgba(59, 130, 246, 0.4) 0%, rgba(96, 165, 250, 0.5) 50%, rgba(129, 212, 250, 0.4) 100%)",
+      textColor: "#fff",
+      links: [
+        {
+          label: "Docs & Guides",
+          href: "/docs",
+          ariaLabel: "PulseGrid Documentation",
+        },
+      ],
+    },
   ];
 
   return (
@@ -301,6 +318,12 @@ export default function Layout() {
                     label="Predictions"
                     isActive={location.pathname === "/predictions"}
                   />
+                  <NavLink
+                    to="/docs"
+                    icon={BookOpen}
+                    label="Docs"
+                    isActive={location.pathname === "/docs"}
+                  />
                   {(user?.role === "admin" || user?.role === "super_admin") && (
                     <NavLink
                       to="/admin"
@@ -339,6 +362,11 @@ export default function Layout() {
           </GlassSurface>
         </nav>
         <main className="max-w-7xl mx-auto px-6 lg:px-8 pt-24 md:pt-24">
+          {location.pathname !== "/dashboard" && (
+            <div className="mb-6">
+              <BackButton />
+            </div>
+          )}
           <Outlet />
         </main>
       </div>

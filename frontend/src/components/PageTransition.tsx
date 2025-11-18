@@ -48,11 +48,11 @@ export default function PageTransition({ children, animationType = 'fade' }: Pag
 
     const variant = animationVariants[animationType];
     
-    // Set initial state
-    gsap.set(container, variant.from);
+    // Set initial state immediately to prevent flash
+    gsap.set(container, { ...variant.from, immediateRender: true });
 
-    // Animate in
-    const tl = gsap.timeline();
+    // Animate in with smooth transition
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
     tl.to(container, variant.to);
 
     return () => {
@@ -61,7 +61,14 @@ export default function PageTransition({ children, animationType = 'fade' }: Pag
   }, [location.pathname, animationType]);
 
   return (
-    <div ref={containerRef} className="w-full h-full">
+    <div 
+      ref={containerRef} 
+      className="w-full h-full"
+      style={{ 
+        backgroundColor: 'transparent',
+        willChange: 'opacity, transform',
+      }}
+    >
       {children}
     </div>
   );

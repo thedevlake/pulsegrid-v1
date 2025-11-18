@@ -9,12 +9,20 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
   
+  html {
+    background: #030712; /* gray-950 - dark mode default */
+    transition: background-color 0.3s ease;
+  }
+  
   body {
     font-family: 'JetBrains Mono', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', monospace, sans-serif;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     font-variant-numeric: oldstyle-nums;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background: #030712; /* gray-950 - dark mode default */
+    min-height: 100vh;
+    transition: background-color 0.3s ease;
   }
   :root {
     --background: 0 0% 100%;
@@ -87,6 +95,33 @@
     100% {
       background-position: 0% 50%;
     }
+  }
+  
+  @keyframes gradient-x {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  /* Docs fade up animation */
+  @keyframes docs-fade-up {
+    0% {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .docs-section {
+    opacity: 0;
+    transform: translateY(16px);
+    animation: docs-fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
   @keyframes fade-in {
@@ -286,6 +321,16 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  
+  /* Smooth route transitions - prevent white flash */
+  #root {
+    transition: background-color 0.2s ease;
+  }
+  
+  /* Ensure all route containers have proper background */
+  [data-router-view] {
+    background: inherit;
   }
 }
 

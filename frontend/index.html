@@ -1,13 +1,26 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" style="background: #030712; transition: background-color 0.3s ease;">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PulseGrid - Infrastructure Monitoring</title>
+    <style>
+      /* Prevent white flash on page load */
+      html, body {
+        background: #030712 !important;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+      }
+      #root {
+        min-height: 100vh;
+        background: #030712;
+      }
+    </style>
   </head>
-  <body>
-    <div id="root"></div>
+  <body style="background: #030712; margin: 0; padding: 0;">
+    <div id="root" style="min-height: 100vh; background: #030712;"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
