@@ -19,7 +19,6 @@ export default function TrueFocus({
 }: TrueFocusProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
     if (manualMode) return;
@@ -29,11 +28,9 @@ export default function TrueFocus({
     let timeoutId: NodeJS.Timeout;
 
     const animate = () => {
-      setIsAnimating(true);
       setCurrentIndex(index);
 
       timeoutId = setTimeout(() => {
-        setIsAnimating(false);
         index = (index + 1) % words.length;
 
         setTimeout(() => {
