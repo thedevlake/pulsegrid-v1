@@ -10,11 +10,13 @@ jobs:
   update-ip:
     name: Update Backend IP
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required to push changes
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0  # Fetch all history for proper git operations
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -43,10 +45,10 @@ jobs:
         run: |
           CURRENT_IP="${{ steps.get-ip.outputs.current_ip }}"
           
-          # Extract IP from workflow files
-          DEPLOY_IP=$(grep -oP 'FRONTEND_API_URL: http://\K[0-9.]+' .github/workflows/deploy.yml || echo "")
-          FRONTEND_IP=$(grep -oP 'FRONTEND_API_URL: http://\K[0-9.]+' .github/workflows/deploy-frontend.yml || echo "")
-          SCRIPT_IP=$(grep -oP 'VITE_API_URL=\$\{VITE_API_URL:-http://\K[0-9.]+' deploy-frontend.sh || echo "")
+          # Extract IP from workflow files (using sed instead of grep -oP for better compatibility)
+          DEPLOY_IP=$(grep 'FRONTEND_API_URL: http://' .github/workflows/deploy.yml | sed -E 's/.*http:\/\/([0-9.]+):.*/\1/' || echo "")
+          FRONTEND_IP=$(grep 'FRONTEND_API_URL: http://' .github/workflows/deploy-frontend.yml | sed -E 's/.*http:\/\/([0-9.]+):.*/\1/' || echo "")
+          SCRIPT_IP=$(grep 'VITE_API_URL=' deploy-frontend.sh | sed -E 's/.*http:\/\/([0-9.]+):.*/\1/' || echo "")
           
           echo "Deploy workflow IP: $DEPLOY_IP"
           echo "Frontend workflow IP: $FRONTEND_IP"
@@ -84,7 +86,7 @@ jobs:
           git config --local user.name "GitHub Action"
           git add .github/workflows/deploy.yml .github/workflows/deploy-frontend.yml deploy-frontend.sh
           git commit -m "chore: auto-update backend IP to ${{ steps.get-ip.outputs.current_ip }}" || exit 0
-          git push
+          git push origin HEAD:main
 
       - name: Trigger frontend deployment
         if: steps.check-ip.outputs.ip_changed == 'true'
