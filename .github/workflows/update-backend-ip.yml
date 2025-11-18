@@ -11,7 +11,8 @@ jobs:
     name: Update Backend IP
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Required to push changes
+      contents: write   # Required to push changes
+      workflows: write  # Required to update workflow files
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
