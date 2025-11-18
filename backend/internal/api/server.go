@@ -102,6 +102,9 @@ func (s *Server) setupRoutes() {
 	protected := api.Group("")
 	protected.Use(middleware.AuthMiddleware(s.cfg.JWT.Secret))
 	{
+		// Auth
+		protected.GET("/auth/me", authHandler.Me)
+
 		// Services
 		protected.GET("/services", serviceHandler.ListServices)
 		protected.POST("/services", serviceHandler.CreateService)

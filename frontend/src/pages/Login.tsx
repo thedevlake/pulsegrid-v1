@@ -45,7 +45,7 @@ export default function Login() {
       <div
         className={`min-h-screen relative flex flex-col py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-300 ${
           theme === "dark"
-            ? "bg-gradient-to-b from-slate-900 via-slate-800 to-gray-900"
+            ? "bg-gradient-to-b from-gray-950 via-slate-950 to-zinc-950"
             : "bg-gradient-to-b from-black via-slate-950 to-blue-950"
         }`}
       >
@@ -59,7 +59,7 @@ export default function Login() {
           <Particles
             particleColors={
               theme === "dark"
-                ? ["#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0"]
+                ? ["#3b82f6", "#6366f1", "#8b5cf6", "#a78bfa"]
                 : ["#ffffff", "#ffffff"]
             }
             particleCount={200}
@@ -194,10 +194,10 @@ export default function Login() {
                     <button
                       type="submit"
                       disabled={loading}
-                      className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg ${
+                      className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md ${
                         theme === "dark"
-                          ? "bg-gradient-to-r from-slate-700 to-gray-800 hover:from-slate-600 hover:to-gray-700 focus:ring-slate-400 shadow-slate-800/30"
-                          : "bg-gradient-to-r from-blue-900 to-indigo-950 hover:from-blue-800 hover:to-indigo-900 focus:ring-blue-700 shadow-blue-900/30"
+                          ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:via-indigo-500 hover:to-blue-600 focus:ring-blue-400"
+                          : "bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:via-indigo-500 hover:to-blue-600 focus:ring-blue-400"
                       }`}
                     >
                       {loading ? (

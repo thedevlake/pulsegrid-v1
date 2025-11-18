@@ -554,7 +554,7 @@ export default function Services() {
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-3 rounded-lg bg-gradient-to-r from-blue-900 to-indigo-950 hover:from-blue-800 hover:to-indigo-900 border border-blue-800/30 text-white font-medium transition-colors shadow-lg shadow-blue-900/30"
+                    className="flex-1 px-4 py-3 rounded-lg bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:via-indigo-500 hover:to-blue-600 border border-blue-500/30 text-white font-medium transition-all duration-200 shadow-lg shadow-blue-500/50"
                   >
                     {editingService ? "Update Service" : "Create Service"}
                   </button>

@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -188,5 +189,40 @@ func (h *AuthHandler) generateToken(user *models.User) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(h.cfg.JWT.Secret))
+}
+
+// Me returns the current authenticated user
+// This endpoint is used to validate tokens on app startup
+func (h *AuthHandler) Me(c *gin.Context) {
+	// Get user ID from context (set by AuthMiddleware)
+	userIDStr, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
+		return
+	}
+
+	userIDString, ok := userIDStr.(string)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID format"})
+		return
+	}
+
+	// Parse UUID from string
+	userID, err := uuid.Parse(userIDString)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID format"})
+		return
+	}
+
+	// Get user from database
+	user, err := h.userRepo.GetByID(userID)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Clear sensitive data
+	user.PasswordHash = ""
+	c.JSON(http.StatusOK, gin.H{"user": user})
 }
 

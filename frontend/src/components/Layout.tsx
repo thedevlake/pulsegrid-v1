@@ -153,7 +153,7 @@ export default function Layout() {
     <div
       className={`min-h-screen relative transition-colors duration-300 ${
         theme === "dark"
-          ? "bg-gradient-to-b from-slate-900 via-slate-800 to-gray-900"
+          ? "bg-gradient-to-b from-gray-950 via-slate-950 to-zinc-950"
           : "bg-gradient-to-b from-black via-slate-950 to-blue-950"
       }`}
     >
@@ -165,7 +165,7 @@ export default function Layout() {
         <Particles
           particleColors={
             theme === "dark"
-              ? ["#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0"]
+              ? ["#3b82f6", "#6366f1", "#8b5cf6", "#a78bfa"]
               : ["#ffffff", "#ffffff"]
           }
           particleCount={200}
