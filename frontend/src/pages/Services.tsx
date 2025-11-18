@@ -96,17 +96,28 @@ export default function Services() {
     try {
       if (editingService) {
         // Update existing service
+        // Update existing service
         console.log("Updating service:", editingService.id, formData);
         const response = await api.put(
           `/services/${editingService.id}`,
           formData
         );
         console.log("Service updated:", response.data);
+        // Update the service in the list immediately
+        if (response.data && response.data.id) {
+          setServices((prev) =>
+            prev.map((s) => (s.id === response.data.id ? response.data : s))
+          );
+        }
       } else {
         // Create new service
         console.log("Creating service:", formData);
         const response = await api.post("/services", formData);
         console.log("Service created:", response.data);
+        // Add the new service to the list immediately for better UX
+        if (response.data && response.data.id) {
+          setServices((prev) => [response.data, ...prev]);
+        }
       }
       setShowModal(false);
       setEditingService(null);
@@ -118,7 +129,11 @@ export default function Services() {
         timeout: 10,
         latency_threshold_ms: undefined,
       });
-      fetchServices();
+      // Refresh the list to ensure we have the latest data
+      // Add a small delay to ensure backend has processed the creation
+      setTimeout(() => {
+        fetchServices();
+      }, 500);
     } catch (error: any) {
       console.error("Failed to save service:", error);
       const errorMsg =
