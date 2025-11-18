@@ -12,6 +12,7 @@ on:
 env:
   AWS_REGION: eu-north-1
   S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME != '' && secrets.S3_BUCKET_NAME || 'pulsegrid-frontend-777319172038' }}
+  FRONTEND_API_URL: http://51.20.252.39:8080/api/v1
 
 jobs:
   deploy-frontend:
@@ -39,7 +40,7 @@ jobs:
 
       - name: Build frontend
         working-directory: ./frontend
-        run: npm run build
+        run: VITE_API_URL=${{ env.FRONTEND_API_URL }} npm run build
 
       - name: Deploy to S3
         run: |
