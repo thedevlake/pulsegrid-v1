@@ -16,7 +16,7 @@ env:
   ECR_FRONTEND_REPOSITORY: pulsegrid-frontend
   ECS_CLUSTER: pulsegrid-cluster
   ECS_SERVICE_BACKEND: pulsegrid-backend
-  FRONTEND_API_URL: http://13.60.31.210:8080/api/v1
+  FRONTEND_API_URL: http://13.60.188.37:8080/api/v1
 
 jobs:
   build-and-push-backend:
