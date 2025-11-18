@@ -2,8 +2,8 @@ name: Auto-Update Backend IP
 
 on:
   schedule:
-    # Run every hour to check for IP changes (stays within GitHub Actions free tier)
-    - cron: '0 * * * *'
+    # Run every 15 minutes to catch IP changes quickly (uses ~2,880 min/month, within free tier)
+    - cron: '*/15 * * * *'
   workflow_dispatch: # Allow manual trigger
 
 jobs:
