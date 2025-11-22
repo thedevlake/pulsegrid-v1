@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Activity, Home, BookOpen, Github, LogIn, UserPlus } from "lucide-react";
+import { Activity, Home, BookOpen, Github } from "lucide-react";
 import { useThemeStore } from "../store/themeStore";
 import ThemeToggle from "./ThemeToggle";
 

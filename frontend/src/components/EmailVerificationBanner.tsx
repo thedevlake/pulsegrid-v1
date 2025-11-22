@@ -4,7 +4,7 @@ import api from "../lib/api";
 import { useAuthStore } from "../store/authStore";
 
 export default function EmailVerificationBanner() {
-  const { user, setAuth } = useAuthStore();
+  const { user } = useAuthStore();
   const [resending, setResending] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
