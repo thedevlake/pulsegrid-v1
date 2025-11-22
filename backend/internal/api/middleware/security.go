@@ -30,6 +30,12 @@ func SecurityHeaders() gin.HandlerFunc {
 		// Permissions Policy
 		c.Writer.Header().Set("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
 		
+		// PulseGrid identification headers
+		c.Writer.Header().Set("X-Powered-By", "PulseGrid")
+		c.Writer.Header().Set("X-API-Service", "PulseGrid Monitoring API")
+		c.Writer.Header().Set("X-API-Version", "1.0.0")
+		c.Writer.Header().Set("X-API-Docs", "https://pulsegrid.com/docs#api")
+		
 		c.Next()
 	}
 }
