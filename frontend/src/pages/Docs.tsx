@@ -1105,8 +1105,10 @@ export default function Docs() {
   "status": "up",
   "response_time_ms": 45,
   "status_code": 200,
+  "error_message": null,
   "checked_at": "2024-01-15T10:30:00Z",
-  "cached": false
+  "cached": false,
+  "usage_note": "This API is for legitimate service health checks only. See /docs#publicAPI for guidelines."
 }`}
                                     language="bash"
                                     filename="terminal.sh"
@@ -1200,15 +1202,15 @@ def check_service_before_call(service_url):
         return False
 
 # Usage in your API client
-def send_sms_via_twilio(phone, message):
-    twilio_url = "https://api.twilio.com"
+def send_sms_via_aws_sns(phone, message):
+    sns_endpoint = "https://sns.us-east-1.amazonaws.com"
     
-    # Check if Twilio is up first
-    if not check_service_before_call(twilio_url):
+    # Check if AWS SNS is up first
+    if not check_service_before_call(sns_endpoint):
         raise Exception("SMS service is currently unavailable")
     
     # Proceed with actual API call
-    # ... your Twilio API code here`}
+    # ... your AWS SNS API code here`}
                                     language="python"
                                     filename="api_client.py"
                                   />
@@ -1297,9 +1299,8 @@ async function getAvailableService(services) {
   return available[0] || null;
 }
 const emailServices = [
-  { name: 'SendGrid', url: 'https://api.sendgrid.com' },
-  { name: 'Mailgun', url: 'https://api.mailgun.com' },
-  { name: 'AWS SES', url: 'https://email.us-east-1.amazonaws.com' }
+  { name: 'AWS SES', url: 'https://email.us-east-1.amazonaws.com' },
+  { name: 'SMTP Server', url: 'https://smtp.example.com' }
 ];
 
 const bestService = await getAvailableService(emailServices);
