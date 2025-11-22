@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"pulsegrid/backend/internal/config"
@@ -61,6 +62,16 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		return
+	}
+
+	// Check if organization already exists (by slug generated from name)
+	slug := strings.ToLower(req.OrgName)
+	slug = strings.ReplaceAll(slug, " ", "-")
+	slug = strings.ReplaceAll(slug, "_", "-")
+	existingOrg, err := h.orgRepo.GetBySlug(slug)
+	if err == nil && existingOrg != nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "Organization already exists"})
 		return
 	}
 

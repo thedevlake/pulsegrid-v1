@@ -52,6 +52,21 @@ func (r *OrganizationRepository) GetByID(id uuid.UUID) (*models.Organization, er
 	return org, err
 }
 
+func (r *OrganizationRepository) GetBySlug(slug string) (*models.Organization, error) {
+	query := `
+		SELECT id, name, slug, created_at, updated_at
+		FROM organizations
+		WHERE slug = $1
+	`
+
+	org := &models.Organization{}
+	err := r.db.QueryRow(query, slug).Scan(
+		&org.ID, &org.Name, &org.Slug, &org.CreatedAt, &org.UpdatedAt,
+	)
+
+	return org, err
+}
+
 func (r *OrganizationRepository) GetDB() *sql.DB {
 	return r.db
 }
