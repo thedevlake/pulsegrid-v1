@@ -14,31 +14,7 @@ A full-stack, cloud-native monitoring platform that tracks the health, uptime, l
 [![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-Click_Here-success?style=for-the-badge)](https://your-demo-url.com)
 [![API Documentation](https://img.shields.io/badge/📚_API_Docs-View_Documentation-blue?style=for-the-badge)](https://your-api-docs-url.com)
 
-## 📸 Screenshots
 
-<div align="center">
-  
-### Dashboard Overview
-
-![Dashboard](https://file%2B.vscode-resource.vscode-cdn.net/Users/sportysofia/Desktop/Screenshot%202025-11-14%20at%2011.49.28.png?version%3D1763207564834)
-_Real-time service monitoring dashboard with interactive charts and analytics_
-
-### Service Management
-
-![Services](https://file%2B.vscode-resource.vscode-cdn.net/Users/sportysofia/Desktop/Screenshot%202025-11-15%20at%2012.53.48.png?version%3D1763207641985)
-_Add, edit, and monitor multiple services with custom health check intervals_
-
-### Alert Configuration
-
-![alert-image](https://file%2B.vscode-resource.vscode-cdn.net/Users/sportysofia/Desktop/Screenshot%202025-11-15%20at%2012.54.38.png?version%3D1763207689879)
-_Configure email and SMS notifications for service downtime_
-
-### Health Check Details
-
-_Detailed health check history with response times and status codes_
-![Health-check image](https://file%2B.vscode-resource.vscode-cdn.net/Users/sportysofia/Desktop/Screenshot%202025-11-15%20at%2012.55.56.png?version%3D1763207768418)
-
-</div>
 
 ## 🚀 Features
 
