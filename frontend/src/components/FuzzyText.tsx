@@ -31,7 +31,7 @@ const FuzzyText: FC<FuzzyTextProps> = ({
   
   useEffect(() => {
     let animationFrameId: number;
-    let startTime = Date.now();
+    const startTime = Date.now();
 
     const animate = () => {
       const elapsed = (Date.now() - startTime) / 1000;
