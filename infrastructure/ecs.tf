@@ -70,9 +70,13 @@ resource "aws_ecs_task_definition" "backend" {
           value = "require"
         },
         {
-          name  = "CORS_ORIGIN"
+          name = "CORS_ORIGIN"
           # value = "https://${aws_cloudfront_distribution.frontend.domain_name}"  # Uncomment when CloudFront is enabled
-          value = "http://${aws_s3_bucket_website_configuration.frontend.website_endpoint}"  # Temporary: using S3 website endpoint
+          value = "http://${aws_s3_bucket_website_configuration.frontend.website_endpoint}" # Using S3 website endpoint
+        },
+        {
+          name  = "BACKEND_URL"
+          value = "http://${aws_lb.main.dns_name}"
         },
         {
           name  = "SNS_TOPIC_ARN"
@@ -146,102 +150,104 @@ resource "aws_ecs_task_definition" "backend" {
   }
 }
 
-# Application Load Balancer
-# Commented out due to AWS account limitation - contact AWS Support to enable
-# resource "aws_lb" "main" {
-#   name               = "pulsegrid-alb"
-#   internal           = false
-#   load_balancer_type = "application"
-#   security_groups    = [aws_security_group.alb.id]
-#   subnets            = aws_subnet.public[*].id
-#
-#   enable_deletion_protection = false
-#
-#   tags = {
-#     Name = "pulsegrid-alb"
-#   }
-# }
+# Application Load Balancer - Provides stable DNS endpoint
+resource "aws_lb" "main" {
+  name               = "pulsegrid-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb.id]
+  subnets            = aws_subnet.public[*].id
+
+  enable_deletion_protection = false
+
+  tags = {
+    Name = "pulsegrid-alb"
+  }
+}
 
 # Security Group for ALB
-# Commented out due to AWS account limitation
-# resource "aws_security_group" "alb" {
-#   name        = "pulsegrid-alb-sg"
-#   description = "Security group for Application Load Balancer"
-#   vpc_id      = aws_vpc.main.id
-#
-#   ingress {
-#     from_port   = 80
-#     to_port     = 80
-#     protocol    = "tcp"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-#
-#   ingress {
-#     from_port   = 443
-#     to_port     = 443
-#     protocol    = "tcp"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-#
-#   egress {
-#     from_port   = 0
-#     to_port     = 0
-#     protocol    = "-1"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-#
-#   tags = {
-#     Name = "pulsegrid-alb-sg"
-#   }
-# }
+resource "aws_security_group" "alb" {
+  name        = "pulsegrid-alb-sg"
+  description = "Security group for Application Load Balancer"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "HTTP traffic"
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "HTTPS traffic"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all outbound traffic"
+  }
+
+  tags = {
+    Name = "pulsegrid-alb-sg"
+  }
+}
 
 # ALB Target Group
-# Commented out due to AWS account limitation
-# resource "aws_lb_target_group" "backend" {
-#   name        = "pulsegrid-backend-tg"
-#   port        = 8080
-#   protocol    = "HTTP"
-#   vpc_id      = aws_vpc.main.id
-#   target_type = "ip"
-#
-#   health_check {
-#     enabled             = true
-#     healthy_threshold   = 2
-#     unhealthy_threshold = 2
-#     timeout             = 5
-#     interval            = 30
-#     path                = "/api/v1/health"
-#     matcher             = "200"
-#   }
-#
-#   tags = {
-#     Name = "pulsegrid-backend-tg"
-#   }
-# }
+resource "aws_lb_target_group" "backend" {
+  name        = "pulsegrid-backend-tg"
+  port        = 8080
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.main.id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 5
+    interval            = 30
+    path                = "/api/v1/health"
+    matcher             = "200"
+    protocol            = "HTTP"
+  }
+
+  deregistration_delay = 30
+
+  tags = {
+    Name = "pulsegrid-backend-tg"
+  }
+}
 
 # ALB Listener
-# Commented out due to AWS account limitation
-# resource "aws_lb_listener" "backend" {
-#   load_balancer_arn = aws_lb.main.arn
-#   port              = "80"
-#   protocol          = "HTTP"
-#
-#   default_action {
-#     type             = "forward"
-#     target_group_arn = aws_lb_target_group.backend.arn
-#   }
-# }
+resource "aws_lb_listener" "backend" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.backend.arn
+  }
+}
 
 # Update ECS Security Group to allow ALB
-# Commented out due to AWS account limitation
-# resource "aws_security_group_rule" "ecs_from_alb" {
-#   type                     = "ingress"
-#   from_port                = 8080
-#   to_port                  = 8080
-#   protocol                 = "tcp"
-#   source_security_group_id = aws_security_group.alb.id
-#   security_group_id        = aws_security_group.ecs.id
-# }
+resource "aws_security_group_rule" "ecs_from_alb" {
+  type                     = "ingress"
+  from_port                = 8080
+  to_port                  = 8080
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.alb.id
+  security_group_id        = aws_security_group.ecs.id
+  description              = "Allow traffic from ALB to ECS"
+}
 
 # ECS Service
 resource "aws_ecs_service" "backend" {
@@ -257,17 +263,15 @@ resource "aws_ecs_service" "backend" {
     assign_public_ip = true
   }
 
-  # Load balancer configuration commented out due to AWS account limitation
-  # Uncomment and contact AWS Support to enable load balancer creation
-  # load_balancer {
-  #   target_group_arn = aws_lb_target_group.backend.arn
-  #   container_name   = "pulsegrid-backend"
-  #   container_port   = 8080
-  # }
+  load_balancer {
+    target_group_arn = aws_lb_target_group.backend.arn
+    container_name   = "pulsegrid-backend"
+    container_port   = 8080
+  }
 
-  # depends_on = [
-  #   aws_lb_listener.backend
-  # ]
+  depends_on = [
+    aws_lb_listener.backend
+  ]
 
   tags = {
     Name = "pulsegrid-backend-service"

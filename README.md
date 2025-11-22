@@ -488,7 +488,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- Built as a portfolio project demonstrating full-stack development, cloud engineering, and DevOps practices
+- Built as a production-ready, full-stack cloud-native web application demonstrating enterprise-grade software engineering, cloud architecture, and DevOps practices
 - Inspired by modern monitoring platforms like UptimeRobot, Pingdom, and StatusCake
 - Thanks to the open-source community for the amazing tools and libraries
 

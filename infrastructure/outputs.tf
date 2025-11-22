@@ -34,16 +34,14 @@ output "sns_topic_arn" {
   value       = aws_sns_topic.alerts.arn
 }
 
-# output "alb_dns_name" {
-#   description = "Application Load Balancer DNS name"
-#   value       = aws_lb.main.dns_name
-# }
+output "alb_dns_name" {
+  description = "Application Load Balancer DNS name (stable endpoint)"
+  value       = aws_lb.main.dns_name
+}
 
-# Note: ALB is disabled due to AWS account limitation
-# Use ECS task public IPs directly or contact AWS Support to enable load balancers
-output "ecs_service_note" {
-  description = "ALB disabled - use ECS task public IPs. Contact AWS Support to enable load balancers."
-  value       = "Get public IPs from ECS tasks using AWS CLI"
+output "backend_api_url" {
+  description = "Backend API URL (use this in frontend)"
+  value       = "http://${aws_lb.main.dns_name}/api/v1"
 }
 
 output "ecs_cluster_name" {

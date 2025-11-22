@@ -120,13 +120,13 @@ export default function About() {
               </div>
             </section>
 
-            {/* Portfolio Note */}
+            {/* Enterprise Solution */}
             <section className="bg-blue-800/10 border border-blue-800/20 rounded-2xl p-6 md:p-8">
               <h2 className="text-2xl font-semibold text-white mb-4">
-                Portfolio Project
+                Enterprise-Grade Solution
               </h2>
               <p className="text-white/70 leading-relaxed mb-4">
-                PulseGrid is a full-stack portfolio project demonstrating modern web development practices, cloud architecture, and DevOps principles. It showcases:
+                PulseGrid is a production-ready, full-stack cloud-native web application demonstrating enterprise-grade software engineering, modern web development practices, cloud architecture, and DevOps principles. It showcases:
               </p>
               <ul className="space-y-2 text-white/70 list-disc list-inside">
                 <li>Full-stack development with React and Go</li>

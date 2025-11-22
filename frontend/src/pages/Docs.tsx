@@ -21,8 +21,6 @@ import {
   Database,
   LifeBuoy,
   Mail,
-  Send,
-  MessageSquare,
   Activity,
   LogIn,
   UserPlus,
@@ -333,7 +331,6 @@ const sections = [
     summary:
       "Get in touch with our team for questions, feedback, or support requests.",
     bullets: [
-      "Submit support requests through our contact form",
       "Email support for direct communication",
       "Response time: We aim to respond within 24-48 hours",
       "Report bugs or suggest new features",
@@ -341,7 +338,7 @@ const sections = [
       "Request custom integrations or enterprise features",
     ],
     details: [
-      "Use the contact form below to send us a message. Include as much detail as possible so we can help you quickly.",
+      "Send us an email directly using the contact information below. Include as much detail as possible so we can help you quickly.",
       "For urgent issues affecting your production services, please mark your message as 'Urgent' in the subject line.",
       "We welcome feedback and feature requests! If you have ideas to improve PulseGrid, we'd love to hear from you.",
       "For technical questions about API integration or advanced configuration, include your use case and we'll provide detailed guidance.",
@@ -359,14 +356,6 @@ export default function Docs() {
   const { token } = useAuthStore();
   const location = useLocation();
   const [particlesLoaded, setParticlesLoaded] = useState(false);
-  const [contactForm, setContactForm] = useState({
-    name: "",
-    email: "",
-    category: "",
-    subject: "",
-    message: "",
-  });
-  const [contactSubmitted, setContactSubmitted] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string>("overview");
   const [isNavigating, setIsNavigating] = useState(false);
@@ -784,37 +773,6 @@ export default function Docs() {
         }, 1500);
       });
     }
-  };
-
-  const handleContactSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const categoryLabel = contactForm.category
-      ? `[${contactForm.category}] `
-      : "";
-    const subject = encodeURIComponent(
-      `${categoryLabel}${contactForm.subject || "PulseGrid Support Request"}`
-    );
-    const body = encodeURIComponent(
-      `Name: ${contactForm.name}\nEmail: ${contactForm.email}\nCategory: ${
-        contactForm.category || "General"
-      }\n\nMessage:\n${contactForm.message}`
-    );
-    const mailtoLink = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
-
-    window.location.href = mailtoLink;
-    setContactSubmitted(true);
-
-    setTimeout(() => {
-      setContactForm({
-        name: "",
-        email: "",
-        category: "",
-        subject: "",
-        message: "",
-      });
-      setContactSubmitted(false);
-    }, 3000);
   };
 
   const docsContent = (
@@ -1429,144 +1387,48 @@ def test_payment_processing(payment_gateway_available):
                             </div>
                           )}
 
-                          {/* Contact Form - Only for contact section */}
+                          {/* Contact Section - Direct Email Contact */}
                           {section.id === "contact" && (
                             <div className="mt-8 pt-6 border-t border-white/10">
                               <div className="max-w-2xl">
                                 <div className="flex items-center gap-3 mb-6">
-                                  <MessageSquare className="w-5 h-5 text-blue-400" />
+                                  <Mail className="w-5 h-5 text-blue-400" />
                                   <h3 className="text-xl font-semibold text-white">
-                                    Send us a Message
+                                    Get in Touch
                                   </h3>
                                 </div>
 
-                                {contactSubmitted ? (
-                                  <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-6 text-center">
-                                    <CheckCircle2 className="w-12 h-12 text-green-400 mx-auto mb-3" />
-                                    <p className="text-green-200 font-medium mb-1">
-                                      Message Prepared!
-                                    </p>
-                                    <p className="text-green-200/80 text-sm">
-                                      Your email client should open. If it
-                                      doesn't, please email us at{" "}
-                                      <a
-                                        href={`mailto:${CONTACT_EMAIL}`}
-                                        className="underline font-semibold"
-                                      >
-                                        {CONTACT_EMAIL}
-                                      </a>
-                                    </p>
-                                  </div>
-                                ) : (
-                                  <form
-                                    onSubmit={handleContactSubmit}
-                                    className="space-y-5"
-                                  >
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                      <div>
-                                        <label className="block text-sm font-medium text-white/90 mb-2">
-                                          Your Name
-                                        </label>
-                                        <input
-                                          type="text"
-                                          required
-                                          className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-800/50 focus:border-blue-800/50 transition-all"
-                                          placeholder="John Doe"
-                                          value={contactForm.name}
-                                          onChange={(e) =>
-                                            setContactForm({
-                                              ...contactForm,
-                                              name: e.target.value,
-                                            })
-                                          }
-                                        />
-                                      </div>
-                                      <div>
-                                        <label className="block text-sm font-medium text-white/90 mb-2">
-                                          Your Email
-                                        </label>
-                                        <input
-                                          type="email"
-                                          required
-                                          className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-800/50 focus:border-blue-800/50 transition-all"
-                                          placeholder="you@example.com"
-                                          value={contactForm.email}
-                                          onChange={(e) =>
-                                            setContactForm({
-                                              ...contactForm,
-                                              email: e.target.value,
-                                            })
-                                          }
-                                        />
-                                      </div>
-                                    </div>
-
-                                    <div>
-                                      <label className="block text-sm font-medium text-white/90 mb-2">
-                                        Subject
-                                      </label>
-                                      <input
-                                        type="text"
-                                        required
-                                        className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-800/50 focus:border-blue-800/50 transition-all"
-                                        placeholder="How can we help?"
-                                        value={contactForm.subject}
-                                        onChange={(e) =>
-                                          setContactForm({
-                                            ...contactForm,
-                                            subject: e.target.value,
-                                          })
-                                        }
-                                      />
-                                    </div>
-
-                                    <div>
-                                      <label className="block text-sm font-medium text-white/90 mb-2">
-                                        Message
-                                      </label>
-                                      <textarea
-                                        required
-                                        rows={6}
-                                        className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-800/50 focus:border-blue-800/50 transition-all resize-none"
-                                        placeholder="Tell us about your question, issue, or feedback..."
-                                        value={contactForm.message}
-                                        onChange={(e) =>
-                                          setContactForm({
-                                            ...contactForm,
-                                            message: e.target.value,
-                                          })
-                                        }
-                                      />
-                                    </div>
-
-                                    <div className="flex items-center justify-between pt-2">
-                                      <p className="text-xs text-white/50">
-                                        We typically respond within 24-48 hours
-                                      </p>
-                                      <button
-                                        type="submit"
-                                        className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-800 via-blue-800 to-blue-900 hover:from-blue-700 hover:via-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg shadow-blue-800/50"
-                                      >
-                                        <Send className="w-4 h-4 mr-2" />
-                                        Send Message
-                                      </button>
-                                    </div>
-                                  </form>
-                                )}
-
-                                {/* Alternative Contact Methods */}
-                                <div className="mt-8 pt-6 border-t border-white/10">
-                                  <p className="text-sm font-medium text-white/90 mb-4">
-                                    Or contact us directly:
+                                <div className="bg-white/5 border border-white/10 rounded-xl p-8">
+                                  <p className="text-white/80 mb-6">
+                                    Have questions, feedback, or need support?
+                                    Send us an email directly and we'll get back
+                                    to you as soon as possible.
                                   </p>
+
                                   <div className="flex flex-col sm:flex-row gap-4">
                                     <a
                                       href={`mailto:${CONTACT_EMAIL}`}
-                                      className="inline-flex items-center px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-all"
+                                      className="inline-flex items-center justify-center px-6 py-4 bg-gradient-to-r from-blue-800 via-blue-800 to-blue-900 hover:from-blue-700 hover:via-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg shadow-blue-800/50"
                                     >
-                                      <Mail className="w-4 h-4 mr-2" />
-                                      {CONTACT_EMAIL}
+                                      <Mail className="w-5 h-5 mr-2" />
+                                      Email Us: {CONTACT_EMAIL}
                                     </a>
+                                  </div>
+
+                                  <div className="mt-6 pt-6 border-t border-white/10">
+                                    <p className="text-sm text-white/60">
+                                      <strong className="text-white/80">
+                                        Response Time:
+                                      </strong>{" "}
+                                      We typically respond within 24-48 hours
+                                    </p>
+                                    <p className="text-sm text-white/60 mt-2">
+                                      <strong className="text-white/80">
+                                        For Urgent Issues:
+                                      </strong>{" "}
+                                      Please include "URGENT" in your subject
+                                      line
+                                    </p>
                                   </div>
                                 </div>
                               </div>

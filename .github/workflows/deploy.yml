@@ -117,20 +117,30 @@ jobs:
       - name: Deploy to S3
         if: github.ref == 'refs/heads/main'
         run: |
-          # Get backend IP dynamically from ECS task
-          TASK_ARN=$(aws ecs list-tasks --cluster ${{ env.ECS_CLUSTER }} --service-name ${{ env.ECS_SERVICE_BACKEND }} --region ${{ env.AWS_REGION }} --query "taskArns[0]" --output text)
-          if [ -n "$TASK_ARN" ] && [ "$TASK_ARN" != "None" ]; then
-            NETWORK_ID=$(aws ecs describe-tasks --cluster ${{ env.ECS_CLUSTER }} --tasks $TASK_ARN --region ${{ env.AWS_REGION }} --query "tasks[0].attachments[0].details[?name=='networkInterfaceId'].value" --output text)
-            BACKEND_IP=$(aws ec2 describe-network-interfaces --network-interface-ids $NETWORK_ID --region ${{ env.AWS_REGION }} --query "NetworkInterfaces[0].Association.PublicIp" --output text)
-            echo "Backend IP: $BACKEND_IP"
-            export VITE_API_URL="http://${BACKEND_IP}:8080/api/v1"
+          # Get ALB DNS name from Terraform output (stable endpoint)
+          cd infrastructure
+          ALB_DNS=$(terraform output -raw alb_dns_name 2>/dev/null || echo "")
+          
+          if [ -n "$ALB_DNS" ]; then
+            echo "Using ALB DNS: $ALB_DNS"
+            export VITE_API_URL="http://${ALB_DNS}/api/v1"
           else
-            echo "Warning: Could not get backend IP, using default"
-            export VITE_API_URL="http://localhost:8080/api/v1"
+            echo "Warning: ALB not found, falling back to ECS task IP"
+            # Fallback: Get backend IP dynamically from ECS task
+            TASK_ARN=$(aws ecs list-tasks --cluster ${{ env.ECS_CLUSTER }} --service-name ${{ env.ECS_SERVICE_BACKEND }} --region ${{ env.AWS_REGION }} --query "taskArns[0]" --output text)
+            if [ -n "$TASK_ARN" ] && [ "$TASK_ARN" != "None" ]; then
+              NETWORK_ID=$(aws ecs describe-tasks --cluster ${{ env.ECS_CLUSTER }} --tasks $TASK_ARN --region ${{ env.AWS_REGION }} --query "tasks[0].attachments[0].details[?name=='networkInterfaceId'].value" --output text)
+              BACKEND_IP=$(aws ec2 describe-network-interfaces --network-interface-ids $NETWORK_ID --region ${{ env.AWS_REGION }} --query "NetworkInterfaces[0].Association.PublicIp" --output text)
+              echo "Backend IP: $BACKEND_IP"
+              export VITE_API_URL="http://${BACKEND_IP}:8080/api/v1"
+            else
+              echo "Error: Could not get backend endpoint"
+              exit 1
+            fi
           fi
           
           # Build frontend for production with backend URL
-          cd frontend
+          cd ../frontend
           npm ci --legacy-peer-deps
           npm run build
 
