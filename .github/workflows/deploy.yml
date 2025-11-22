@@ -121,12 +121,21 @@ jobs:
           cd infrastructure
           NLB_DNS=$(terraform output -raw nlb_dns_name 2>/dev/null || terraform output -raw alb_dns_name 2>/dev/null || echo "")
           
+          # Test if NLB is responding
           if [ -n "$NLB_DNS" ]; then
-            echo "Using Load Balancer DNS: $NLB_DNS"
-            export VITE_API_URL="http://${NLB_DNS}/api/v1"
-          else
-            echo "Warning: ALB not found, falling back to ECS task IP"
-            # Fallback: Get backend IP dynamically from ECS task
+            echo "Testing NLB: $NLB_DNS"
+            if curl -s --max-time 5 "http://${NLB_DNS}/api/v1/health" > /dev/null 2>&1; then
+              echo "✅ NLB is responding, using: $NLB_DNS"
+              export VITE_API_URL="http://${NLB_DNS}/api/v1"
+            else
+              echo "⚠️ NLB not responding, falling back to ECS task IP"
+              NLB_DNS=""
+            fi
+          fi
+          
+          # Fallback: Get backend IP dynamically from ECS task
+          if [ -z "$NLB_DNS" ]; then
+            echo "Getting backend IP from ECS task..."
             TASK_ARN=$(aws ecs list-tasks --cluster ${{ env.ECS_CLUSTER }} --service-name ${{ env.ECS_SERVICE_BACKEND }} --region ${{ env.AWS_REGION }} --query "taskArns[0]" --output text)
             if [ -n "$TASK_ARN" ] && [ "$TASK_ARN" != "None" ]; then
               NETWORK_ID=$(aws ecs describe-tasks --cluster ${{ env.ECS_CLUSTER }} --tasks $TASK_ARN --region ${{ env.AWS_REGION }} --query "tasks[0].attachments[0].details[?name=='networkInterfaceId'].value" --output text)
@@ -139,6 +148,8 @@ jobs:
             fi
           fi
           
+          echo "Building frontend with API URL: $VITE_API_URL"
+          
           # Build frontend for production with backend URL
           cd ../frontend
           npm ci --legacy-peer-deps
@@ -146,3 +157,14 @@ jobs:
 
           # Sync to S3
           aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_NAME }} --delete --region ${{ env.AWS_REGION }}
+          
+          # CloudFront invalidation (optional - only if distribution ID is set)
+          if [ -n "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" ]; then
+            echo "Invalidating CloudFront cache..."
+            aws cloudfront create-invalidation \
+              --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+              --paths "/*" \
+              --region ${{ env.AWS_REGION }} || echo "⚠️ CloudFront invalidation failed (non-critical)"
+          else
+            echo "ℹ️ CloudFront distribution ID not set, skipping invalidation"
+          fi
