@@ -7,14 +7,17 @@ import (
 )
 
 type User struct {
-	ID             uuid.UUID `json:"id"`
-	Email          string    `json:"email"`
-	PasswordHash   string    `json:"-"`
-	Name           string    `json:"name"`
-	Role           string    `json:"role"`
-	OrganizationID *uuid.UUID `json:"organization_id,omitempty"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
+	ID                      uuid.UUID  `json:"id"`
+	Email                   string    `json:"email"`
+	PasswordHash            string    `json:"-"`
+	Name                    string    `json:"name"`
+	Role                    string    `json:"role"`
+	OrganizationID          *uuid.UUID `json:"organization_id,omitempty"`
+	EmailVerified           bool      `json:"email_verified"`
+	VerificationToken      *string   `json:"-"`
+	VerificationTokenExpires *time.Time `json:"-"`
+	CreatedAt               time.Time `json:"created_at"`
+	UpdatedAt               time.Time `json:"updated_at"`
 }
 
 type Organization struct {

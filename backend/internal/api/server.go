@@ -27,12 +27,9 @@ func NewServer(cfg *config.Config, db *sql.DB) *Server {
 
 	router := gin.New()
 
-	// Set trusted proxies to avoid warning
-	// In production, set this to your actual proxy IPs
 	if cfg.Server.Env == "production" {
 		router.SetTrustedProxies([]string{"127.0.0.1", "::1"})
 	} else {
-		// For development, trust localhost only
 		router.SetTrustedProxies([]string{"127.0.0.1", "::1"})
 	}
 
@@ -47,12 +44,19 @@ func NewServer(cfg *config.Config, db *sql.DB) *Server {
 }
 
 func (s *Server) setupRoutes() {
-	// Middleware
+	s.router.Use(middleware.SecurityHeaders())
 	s.router.Use(middleware.CORS(s.cfg.CORS.Origin))
-	s.router.Use(middleware.Logger())
+	s.router.Use(middleware.InputValidation())
+	s.router.Use(middleware.ValidateContentType())
+	
+	if s.cfg.Server.Env == "production" {
+		s.router.Use(middleware.JSONLogger())
+	} else {
+		s.router.Use(middleware.Logger())
+	}
+	
 	s.router.Use(gin.Recovery())
 
-	// Initialize repositories
 	userRepo := repository.NewUserRepository(s.db)
 	orgRepo := repository.NewOrganizationRepository(s.db)
 	serviceRepo := repository.NewServiceRepository(s.db)
@@ -79,7 +83,6 @@ func (s *Server) setupRoutes() {
 		log.Println("ℹ️ OpenAI not configured - predictions will use statistical analysis only")
 	}
 
-	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(userRepo, orgRepo, s.cfg)
 	serviceHandler := handlers.NewServiceHandler(serviceRepo, s.cfg)
 	healthCheckHandler := handlers.NewHealthCheckHandler(healthCheckRepo, serviceRepo, alertRepo, notifierService, s.cfg)
@@ -90,37 +93,32 @@ func (s *Server) setupRoutes() {
 	predictionHandler := handlers.NewPredictionHandler(serviceRepo, healthCheckRepo, s.cfg, openAIClient)
 	metricsHandler := handlers.NewMetricsHandler(healthCheckRepo, s.cfg)
 
-	// Public routes
 	api := s.router.Group("/api/v1")
 	{
 		api.POST("/auth/register", authHandler.Register)
 		api.POST("/auth/login", authHandler.Login)
 		api.GET("/health", handlers.HealthCheck)
+		api.GET("/health/detailed", handlers.DetailedHealthCheck(s.db))
+		api.GET("/public/status", handlers.CheckPublicStatus)
 	}
 
-	// Protected routes
 	protected := api.Group("")
 	protected.Use(middleware.AuthMiddleware(s.cfg.JWT.Secret))
 	{
-		// Auth
 		protected.GET("/auth/me", authHandler.Me)
 
-		// Services
 		protected.GET("/services", serviceHandler.ListServices)
 		protected.POST("/services", serviceHandler.CreateService)
 		protected.GET("/services/:id", serviceHandler.GetService)
 		protected.PUT("/services/:id", serviceHandler.UpdateService)
 		protected.DELETE("/services/:id", serviceHandler.DeleteService)
 
-		// Health Checks
 		protected.GET("/services/:id/health-checks", healthCheckHandler.GetHealthChecks)
 		protected.POST("/services/:id/health-checks/trigger", healthCheckHandler.TriggerHealthCheck)
 
-		// Stats
 		protected.GET("/services/:id/stats", statsHandler.GetServiceStats)
 		protected.GET("/stats/overview", statsHandler.GetOverview)
 
-		// Alerts
 		protected.GET("/alerts", alertHandler.ListAlerts)
 		protected.GET("/alerts/:id", alertHandler.GetAlert)
 		protected.PUT("/alerts/:id/resolve", alertHandler.ResolveAlert)
@@ -128,48 +126,36 @@ func (s *Server) setupRoutes() {
 		protected.GET("/alerts/subscriptions", alertHandler.ListSubscriptions)
 		protected.DELETE("/alerts/subscriptions/:id", alertHandler.DeleteSubscription)
 
-		// Reports
 		protected.GET("/services/:id/reports/csv", reportHandler.ExportCSV)
 		protected.GET("/services/:id/reports/pdf", reportHandler.ExportPDF)
 
-		// WebSocket for real-time updates
 		wsHandler := handlers.NewWebSocketHandler()
 		protected.GET("/ws", wsHandler.HandleWebSocket)
 
-		// AI Predictions
 		protected.GET("/predictions", predictionHandler.GetPredictions)
 		protected.GET("/services/:id/prediction", predictionHandler.GetServicePrediction)
 	}
 
-	// Public metrics endpoint (Prometheus format)
 	api.GET("/metrics", metricsHandler.GetPrometheusMetrics)
 
-	// Admin routes (require admin role)
 	admin := api.Group("/admin")
 	admin.Use(middleware.AuthMiddleware(s.cfg.JWT.Secret))
 	admin.Use(middleware.AdminMiddleware())
 	{
-		// System metrics
 		admin.GET("/metrics", adminHandler.GetSystemMetrics)
-
-		// User management
 		admin.GET("/users", adminHandler.ListUsers)
 		admin.POST("/users", adminHandler.CreateUser)
 		admin.PUT("/users/:id", adminHandler.UpdateUser)
 		admin.DELETE("/users/:id", adminHandler.DeleteUser)
-
-		// Organization management
 		admin.GET("/organizations", adminHandler.ListOrganizations)
 		admin.PUT("/organizations/:id", adminHandler.UpdateOrganization)
 		admin.DELETE("/organizations/:id", adminHandler.DeleteOrganization)
 	}
 
-	// Super admin routes (require super_admin role)
 	superAdmin := api.Group("/admin/super")
 	superAdmin.Use(middleware.AuthMiddleware(s.cfg.JWT.Secret))
 	superAdmin.Use(middleware.SuperAdminMiddleware())
 	{
-		// Super admin user management
 		superAdmin.POST("/users/:id/promote", adminHandler.PromoteToSuperAdmin)
 		superAdmin.POST("/users/:id/demote", adminHandler.DemoteFromSuperAdmin)
 	}

@@ -1,6 +1,15 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { gsap } from 'gsap';
+
+// Lazy load GSAP to reduce initial bundle size
+let gsap: any = null;
+const loadGSAP = async () => {
+  if (!gsap) {
+    const gsapModule = await import('gsap');
+    gsap = gsapModule.gsap;
+  }
+  return gsap;
+};
 
 interface PageTransitionProps {
   children: React.ReactNode;
@@ -10,7 +19,7 @@ interface PageTransitionProps {
 const animationVariants = {
   fade: {
     from: { opacity: 0 },
-    to: { opacity: 1, duration: 0.5, ease: 'power2.out' },
+    to: { opacity: 1, duration: 0.3, ease: 'power2.out' },
   },
   slideLeft: {
     from: { opacity: 0, x: 60 },
@@ -47,16 +56,32 @@ export default function PageTransition({ children, animationType = 'fade' }: Pag
     if (!container) return;
 
     const variant = animationVariants[animationType];
+    let tl: any = null;
     
-    // Set initial state immediately to prevent flash
-    gsap.set(container, { ...variant.from, immediateRender: true });
+    // Load GSAP and animate
+    loadGSAP().then((gsapLib) => {
+      if (!container) return;
+      
+      // Set initial state immediately to prevent flash
+      gsapLib.set(container, { ...variant.from, immediateRender: true });
 
-    // Animate in with smooth transition
-    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
-    tl.to(container, variant.to);
+      // Animate in with smooth transition
+      tl = gsapLib.timeline({ 
+        defaults: { ease: 'power2.out' },
+        onComplete: () => {
+          // Remove will-change after animation for better performance
+          if (container) {
+            container.style.willChange = 'auto';
+          }
+        }
+      });
+      tl.to(container, variant.to);
+    });
 
     return () => {
-      tl.kill();
+      if (tl) {
+        tl.kill();
+      }
     };
   }, [location.pathname, animationType]);
 
@@ -67,6 +92,7 @@ export default function PageTransition({ children, animationType = 'fade' }: Pag
       style={{ 
         backgroundColor: 'transparent',
         willChange: 'opacity, transform',
+        minHeight: '100%',
       }}
     >
       {children}

@@ -24,7 +24,7 @@ func (r *ServiceRepository) Create(service *models.Service) error {
 		RETURNING id, created_at, updated_at
 	`
 	
-	now := time.Now()
+	now := time.Now().UTC()
 	service.ID = uuid.New()
 	service.CreatedAt = now
 	service.UpdatedAt = now
@@ -132,7 +132,7 @@ func (r *ServiceRepository) Update(service *models.Service) error {
 		RETURNING updated_at
 	`
 
-	service.UpdatedAt = time.Now()
+	service.UpdatedAt = time.Now().UTC()
 	err := r.db.QueryRow(
 		query,
 		service.ID, service.Name, service.URL, service.Type,

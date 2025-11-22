@@ -24,7 +24,7 @@ func (r *OrganizationRepository) Create(org *models.Organization) error {
 		RETURNING id, created_at, updated_at
 	`
 	
-	now := time.Now()
+	now := time.Now().UTC()
 	org.ID = uuid.New()
 	org.Slug = generateSlug(org.Name)
 	org.CreatedAt = now

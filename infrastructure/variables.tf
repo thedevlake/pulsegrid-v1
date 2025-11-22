@@ -47,3 +47,29 @@ variable "openai_api_key" {
   default     = ""
 }
 
+variable "smtp_host" {
+  description = "SMTP server hostname (AWS SES SMTP endpoint)"
+  type        = string
+  default     = "" # Will default based on region
+}
+
+variable "smtp_user" {
+  description = "SMTP username (AWS SES SMTP username)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "smtp_password" {
+  description = "SMTP password (AWS SES SMTP password)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "frontend_url" {
+  description = "Frontend URL for email verification links"
+  type        = string
+  default     = ""
+}
+

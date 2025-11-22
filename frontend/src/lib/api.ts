@@ -9,7 +9,7 @@ const api = axios.create({
   },
 })
 
-// Add token to requests
+// Add token to requests and handle Content-Type for empty bodies
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('auth-storage')
   if (token) {
@@ -23,6 +23,12 @@ api.interceptors.request.use((config) => {
       console.warn('Failed to parse auth token from localStorage')
     }
   }
+  
+  // Remove Content-Type header if there's no body (no data, null, or undefined)
+  if (!config.data || (typeof config.data === 'object' && Object.keys(config.data).length === 0)) {
+    delete config.headers['Content-Type']
+  }
+  
   return config
 })
 

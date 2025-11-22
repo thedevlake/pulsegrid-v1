@@ -16,7 +16,6 @@ env:
   ECR_FRONTEND_REPOSITORY: pulsegrid-frontend
   ECS_CLUSTER: pulsegrid-cluster
   ECS_SERVICE_BACKEND: pulsegrid-backend
-  FRONTEND_API_URL: http://16.171.153.235:8080/api/v1
 
 jobs:
   build-and-push-backend:
@@ -121,12 +120,7 @@ jobs:
           # Build frontend for production
           cd frontend
           npm ci
-          VITE_API_URL=${{ env.FRONTEND_API_URL }} npm run build
+          npm run build
 
           # Sync to S3
-          BUCKET_NAME="${{ secrets.S3_BUCKET_NAME }}"
-          if [ -z "$BUCKET_NAME" ]; then
-            BUCKET_NAME="pulsegrid-frontend-777319172038"
-            echo "S3_BUCKET_NAME secret not set. Falling back to $BUCKET_NAME"
-          fi
-          aws s3 sync dist/ s3://$BUCKET_NAME --delete --region ${{ env.AWS_REGION }}
+          aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_NAME }} --delete --region ${{ env.AWS_REGION }}

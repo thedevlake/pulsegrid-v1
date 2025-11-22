@@ -62,7 +62,6 @@ func (h *AlertHandler) ListAlerts(c *gin.Context) {
 		return
 	}
 
-	// Ensure alerts is always an array, never null
 	if alerts == nil {
 		alerts = []*models.Alert{}
 	}

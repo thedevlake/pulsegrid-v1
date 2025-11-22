@@ -16,7 +16,7 @@ import {
   Bar,
   ReferenceLine,
 } from "recharts";
-import { format } from "date-fns";
+import { formatDate } from "../lib/utils";
 
 interface Service {
   id: string;
@@ -130,7 +130,7 @@ export default function ServiceDetail() {
     return (
       <div className="text-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white/40 mx-auto"></div>
-        <p className="mt-4 text-white/70">Loading service details...</p>
+        <p className="mt-4 text-slate-300">Loading service details...</p>
       </div>
     );
   }
@@ -176,7 +176,7 @@ export default function ServiceDetail() {
     .slice()
     .reverse()
     .map((check) => ({
-      time: format(new Date(check.checked_at), "HH:mm"),
+      time: formatDate(check.checked_at, "HH:mm"),
       responseTime: check.response_time_ms != null ? check.response_time_ms : 0,
       status: check.status === "up" ? 1 : 0,
       statusCode: check.status_code || null,
@@ -187,343 +187,132 @@ export default function ServiceDetail() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "up":
-        return "text-blue-500 bg-blue-800/20";
+        return "text-emerald-300 bg-emerald-500/20 border border-emerald-500/30";
       case "down":
-        return "text-red-400 bg-red-500/20";
+        return "text-red-300 bg-red-500/20 border border-red-500/30";
       case "unknown":
-        return "text-white/60 bg-white/10";
+        return "text-slate-400 bg-slate-700/30 border border-slate-600/30";
       default:
-        return "text-white/60 bg-white/10";
+        return "text-slate-400 bg-slate-700/30 border border-slate-600/30";
     }
   };
 
   return (
-    <PageTransition animationType="scale">
-      <div className="space-y-8 pb-8">
-        <div>
-          <h1 className="text-4xl font-semibold text-white tracking-tight">
-            {service.name}
-          </h1>
-          <p className="text-white/70 mt-1.5 text-sm">{service.url}</p>
-          <div className="mt-3 flex items-center space-x-4 text-sm text-white/60">
-            <span>Type: {service.type.toUpperCase()}</span>
-            <span>•</span>
-            <span>Interval: {service.check_interval}s</span>
-            <span>•</span>
-            <span>Timeout: {service.timeout}s</span>
+    <PageTransition animationType="fade">
+      <div className="relative space-y-6 pb-8">
+        <div className="relative z-[2] space-y-6">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-semibold text-white tracking-tight">
+              {service.name}
+            </h1>
+            <p className="text-slate-300 text-sm">{service.url}</p>
+            <div className="flex items-center space-x-4 text-sm text-slate-400">
+              <span>Type: {service.type.toUpperCase()}</span>
+              <span>•</span>
+              <span>Interval: {service.check_interval}s</span>
+              <span>•</span>
+              <span>Timeout: {service.timeout}s</span>
+            </div>
           </div>
-        </div>
 
-        {/* Stats Cards - Dark Theme */}
-        {stats ? (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-            <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20 shadow-lg">
-              <dt className="text-sm font-medium text-white/70 mb-1">Status</dt>
-              <dd className="mt-1">
-                <span
-                  className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${getStatusColor(
-                    stats.status || "unknown"
-                  )}`}
-                >
+          {stats ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50 shadow-xl">
+                <dt className="text-sm font-medium text-slate-300 mb-2">
+                  Status
+                </dt>
+                <dd>
                   <span
-                    className={`h-1.5 w-1.5 rounded-full mr-1.5 ${
-                      stats.status === "up"
-                        ? "bg-blue-600"
-                        : stats.status === "down"
-                        ? "bg-red-400"
-                        : "bg-white/40"
-                    }`}
-                  ></span>
-                  {stats.status === "unknown"
-                    ? "NO DATA"
-                    : (stats.status || "UNKNOWN").toUpperCase()}
-                </span>
-              </dd>
-            </div>
-            <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20 shadow-lg">
-              <dt className="text-sm font-medium text-white/70 mb-1">Uptime</dt>
-              <dd className="mt-2">
-                <span className="text-3xl font-semibold text-white">
-                  {stats.total_checks > 0
-                    ? `${(stats.uptime_percent || 0).toFixed(2)}%`
-                    : "N/A"}
-                </span>
-              </dd>
-            </div>
-            <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20 shadow-lg">
-              <dt className="text-sm font-medium text-white/70 mb-1">
-                Avg Response Time
-              </dt>
-              <dd className="mt-2">
-                <span className="text-3xl font-semibold text-white">
-                  {stats.avg_response_time_ms > 0
-                    ? `${stats.avg_response_time_ms.toFixed(0)}ms`
-                    : "N/A"}
-                </span>
-              </dd>
-            </div>
-            <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20 shadow-lg">
-              <dt className="text-sm font-medium text-white/70 mb-1">
-                Total Checks
-              </dt>
-              <dd className="mt-2">
-                <span className="text-3xl font-semibold text-white">
-                  {stats.total_checks || 0}
-                </span>
-              </dd>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20 shadow-lg">
-            <p className="text-sm text-white/70">
-              Statistics will be available after health checks start running.
-              Make sure the scheduler is running.
-            </p>
-          </div>
-        )}
-
-        {/* Response Time Chart - Dark Theme */}
-        <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20 shadow-lg">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h2 className="text-lg font-semibold text-white mb-1">
-                Response Time
-              </h2>
-              <p className="text-sm text-white/70">
-                {chartData.length > 0
-                  ? `Showing last ${chartData.length} health checks`
-                  : "Real-time performance monitoring"}
-              </p>
-            </div>
-            {chartData.length > 0 && (
-              <div className="flex items-center space-x-2 text-sm text-white/80">
-                <div className="h-2 w-2 bg-blue-600 rounded-full animate-pulse"></div>
-                <span>Live</span>
-                <span>•</span>
-                <span>Updates every 5s</span>
+                    className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${getStatusColor(
+                      stats.status || "unknown"
+                    )}`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full mr-1.5 ${
+                        stats.status === "up"
+                          ? "bg-emerald-400"
+                          : stats.status === "down"
+                          ? "bg-red-400"
+                          : "bg-slate-400"
+                      }`}
+                    ></span>
+                    {stats.status === "unknown"
+                      ? "NO DATA"
+                      : (stats.status || "UNKNOWN").toUpperCase()}
+                  </span>
+                </dd>
               </div>
-            )}
-          </div>
-          {chartData.length > 0 && chartData.some((d) => d.responseTime > 0) ? (
-            <ResponsiveContainer width="100%" height={350}>
-              <LineChart
-                data={chartData}
-                margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="rgba(255,255,255,0.1)"
-                />
-                <XAxis
-                  dataKey="time"
-                  tick={{ fontSize: 11, fill: "rgba(255,255,255,0.7)" }}
-                  stroke="rgba(255,255,255,0.2)"
-                  interval="preserveStartEnd"
-                />
-                <YAxis
-                  label={{
-                    value: "ms",
-                    angle: -90,
-                    position: "insideLeft",
-                    style: {
-                      textAnchor: "middle",
-                      fill: "rgba(255,255,255,0.7)",
-                      fontSize: "12px",
-                    },
-                  }}
-                  tick={{ fontSize: 11, fill: "rgba(255,255,255,0.7)" }}
-                  stroke="rgba(255,255,255,0.2)"
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "rgba(0,0,0,0.8)",
-                    border: "1px solid rgba(255,255,255,0.2)",
-                    borderRadius: "8px",
-                    color: "#fff",
-                    padding: "12px",
-                  }}
-                  labelStyle={{
-                    fontWeight: 600,
-                    marginBottom: "4px",
-                    color: "#fff",
-                  }}
-                  formatter={(value: any) => [`${value}ms`, "Response Time"]}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="responseTime"
-                  stroke="#60a5fa"
-                  strokeWidth={2}
-                  dot={{
-                    fill: "#60a5fa",
-                    r: 4,
-                    strokeWidth: 2,
-                    stroke: "#fff",
-                  }}
-                  activeDot={{
-                    r: 6,
-                    fill: "#3b82f6",
-                    stroke: "#fff",
-                    strokeWidth: 2,
-                  }}
-                  animationDuration={400}
-                />
-                {stats && stats.avg_response_time_ms > 0 && (
-                  <ReferenceLine
-                    y={stats.avg_response_time_ms}
-                    stroke="#fbbf24"
-                    strokeWidth={2}
-                    strokeDasharray="8 4"
-                    label={{
-                      value: `Avg: ${stats.avg_response_time_ms.toFixed(0)}ms`,
-                      position: "right",
-                      fill: "#fbbf24",
-                      fontWeight: 600,
-                      fontSize: 12,
-                    }}
-                  />
-                )}
-              </LineChart>
-            </ResponsiveContainer>
+              <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50 shadow-xl">
+                <dt className="text-sm font-medium text-slate-300 mb-2">
+                  Uptime
+                </dt>
+                <dd>
+                  <span className="text-3xl font-semibold text-white">
+                    {stats.total_checks > 0
+                      ? `${(stats.uptime_percent || 0).toFixed(2)}%`
+                      : "N/A"}
+                  </span>
+                </dd>
+              </div>
+              <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50 shadow-xl">
+                <dt className="text-sm font-medium text-slate-300 mb-2">
+                  Avg Response Time
+                </dt>
+                <dd>
+                  <span className="text-3xl font-semibold text-white">
+                    {stats.avg_response_time_ms > 0
+                      ? `${stats.avg_response_time_ms.toFixed(0)}ms`
+                      : "N/A"}
+                  </span>
+                </dd>
+              </div>
+              <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50 shadow-xl">
+                <dt className="text-sm font-medium text-slate-300 mb-2">
+                  Total Checks
+                </dt>
+                <dd>
+                  <span className="text-3xl font-semibold text-white">
+                    {stats.total_checks || 0}
+                  </span>
+                </dd>
+              </div>
+            </div>
           ) : (
-            <div className="text-center py-16 text-white/60">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-lg bg-white/10 mb-4">
-                <svg
-                  className="w-8 h-8 text-white/40"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                  />
-                </svg>
-              </div>
-              <p className="text-base font-medium text-white">
-                No health check data available yet
+            <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50 shadow-lg">
+              <p className="text-sm text-slate-300">
+                Statistics will be available after health checks start running.
+                Make sure the scheduler is running.
               </p>
-              <p className="text-sm mt-2 text-white/70">
-                {safeHealthChecks.length === 0
-                  ? "Health checks will appear here once the scheduler starts running"
-                  : "Waiting for health checks with response time data..."}
-              </p>
-              {safeHealthChecks.length === 0 && (
-                <p className="text-xs mt-3 text-white/50">
-                  Start scheduler:{" "}
-                  <code className="bg-white/10 px-2 py-1 rounded text-white/80">
-                    ./start-scheduler.sh
-                  </code>
-                </p>
-              )}
             </div>
           )}
-        </div>
 
-        {/* Status Chart - Dark Theme */}
-        {chartData.length > 0 && (
-          <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20 shadow-lg">
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-white mb-1">
-                Availability Status
-              </h2>
-              <p className="text-sm text-white/70">
-                Service uptime visualization over time
-              </p>
+          <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50 shadow-lg">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-lg font-semibold text-white mb-1">
+                  Response Time
+                </h2>
+                <p className="text-sm text-slate-300">
+                  {chartData.length > 0
+                    ? `Showing last ${chartData.length} health checks`
+                    : "Real-time performance monitoring"}
+                </p>
+              </div>
+              {chartData.length > 0 && (
+                <div className="flex items-center space-x-2 text-sm text-white/80">
+                  <div className="h-2 w-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                  <span>Live</span>
+                  <span>•</span>
+                  <span>Updates every 5s</span>
+                </div>
+              )}
             </div>
-            <ResponsiveContainer width="100%" height={250}>
-              <AreaChart
-                data={chartData}
-                margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
-              >
-                <defs>
-                  <linearGradient
-                    id="statusGradient"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop offset="0%" stopColor="#34d399" stopOpacity={0.6} />
-                    <stop offset="100%" stopColor="#34d399" stopOpacity={0.1} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="rgba(255,255,255,0.1)"
-                />
-                <XAxis
-                  dataKey="time"
-                  tick={{ fontSize: 11, fill: "rgba(255,255,255,0.7)" }}
-                  stroke="rgba(255,255,255,0.2)"
-                />
-                <YAxis
-                  domain={[0, 1]}
-                  tick={{ fontSize: 11, fill: "rgba(255,255,255,0.7)" }}
-                  stroke="rgba(255,255,255,0.2)"
-                  tickFormatter={(value) =>
-                    value === 1 ? "UP" : value === 0 ? "DOWN" : ""
-                  }
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "rgba(0,0,0,0.8)",
-                    border: "1px solid rgba(255,255,255,0.2)",
-                    borderRadius: "8px",
-                    color: "#fff",
-                    padding: "12px",
-                  }}
-                  formatter={(value: any) => [
-                    <span
-                      key="value"
-                      style={{
-                        color: value === 1 ? "#34d399" : "#f87171",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {value === 1 ? "UP" : "DOWN"}
-                    </span>,
-                    "Status",
-                  ]}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="status"
-                  stroke="#34d399"
-                  fill="url(#statusGradient)"
-                  strokeWidth={2}
-                  dot={{
-                    fill: "#34d399",
-                    r: 4,
-                    strokeWidth: 2,
-                    stroke: "#fff",
-                  }}
-                  activeDot={{
-                    r: 6,
-                    fill: "#10b981",
-                    stroke: "#fff",
-                    strokeWidth: 2,
-                  }}
-                  animationDuration={400}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-
-        {/* Performance Metrics Chart - Dark Theme */}
-        {chartData.length > 0 && chartData.some((d) => d.responseTime > 0) && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20 shadow-lg">
-              <h3 className="text-lg font-semibold text-white mb-4">
-                Response Time Distribution
-              </h3>
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart
-                  data={chartData.slice().reverse().slice(0, 10)}
-                  margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
+            {chartData.length > 0 &&
+            chartData.some((d) => d.responseTime > 0) ? (
+              <ResponsiveContainer width="100%" height={350}>
+                <LineChart
+                  data={chartData}
+                  margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
                 >
                   <CartesianGrid
                     strokeDasharray="3 3"
@@ -531,11 +320,22 @@ export default function ServiceDetail() {
                   />
                   <XAxis
                     dataKey="time"
-                    tick={{ fontSize: 10, fill: "rgba(255,255,255,0.7)" }}
+                    tick={{ fontSize: 11, fill: "rgba(255,255,255,0.7)" }}
                     stroke="rgba(255,255,255,0.2)"
+                    interval="preserveStartEnd"
                   />
                   <YAxis
-                    tick={{ fontSize: 10, fill: "rgba(255,255,255,0.7)" }}
+                    label={{
+                      value: "ms",
+                      angle: -90,
+                      position: "insideLeft",
+                      style: {
+                        textAnchor: "middle",
+                        fill: "rgba(255,255,255,0.7)",
+                        fontSize: "12px",
+                      },
+                    }}
+                    tick={{ fontSize: 11, fill: "rgba(255,255,255,0.7)" }}
                     stroke="rgba(255,255,255,0.2)"
                   />
                   <Tooltip
@@ -546,39 +346,116 @@ export default function ServiceDetail() {
                       color: "#fff",
                       padding: "12px",
                     }}
+                    labelStyle={{
+                      fontWeight: 600,
+                      marginBottom: "4px",
+                      color: "#fff",
+                    }}
                     formatter={(value: any) => [`${value}ms`, "Response Time"]}
                   />
-                  <Bar
+                  <Line
+                    type="monotone"
                     dataKey="responseTime"
-                    fill="#60a5fa"
-                    radius={[6, 6, 0, 0]}
+                    stroke="#60a5fa"
+                    strokeWidth={2}
+                    dot={{
+                      fill: "#60a5fa",
+                      r: 4,
+                      strokeWidth: 2,
+                      stroke: "#fff",
+                    }}
+                    activeDot={{
+                      r: 6,
+                      fill: "#3b82f6",
+                      stroke: "#fff",
+                      strokeWidth: 2,
+                    }}
                     animationDuration={400}
                   />
-                </BarChart>
+                  {stats && stats.avg_response_time_ms > 0 && (
+                    <ReferenceLine
+                      y={stats.avg_response_time_ms}
+                      stroke="#fbbf24"
+                      strokeWidth={2}
+                      strokeDasharray="8 4"
+                      label={{
+                        value: `Avg: ${stats.avg_response_time_ms.toFixed(
+                          0
+                        )}ms`,
+                        position: "right",
+                        fill: "#fbbf24",
+                        fontWeight: 600,
+                        fontSize: 12,
+                      }}
+                    />
+                  )}
+                </LineChart>
               </ResponsiveContainer>
-            </div>
+            ) : (
+              <div className="text-center py-16 text-slate-400">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-lg bg-white/10 mb-4">
+                  <svg
+                    className="w-8 h-8 text-white/40"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    />
+                  </svg>
+                </div>
+                <p className="text-base font-medium text-white">
+                  No health check data available yet
+                </p>
+                <p className="text-sm mt-2 text-slate-300">
+                  {safeHealthChecks.length === 0
+                    ? "Health checks will appear here once the scheduler starts running"
+                    : "Waiting for health checks with response time data..."}
+                </p>
+                {safeHealthChecks.length === 0 && (
+                  <p className="text-xs mt-3 text-slate-400">
+                    Start scheduler:{" "}
+                    <code className="bg-white/10 px-2 py-1 rounded text-white/80">
+                      ./start-scheduler.sh
+                    </code>
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
 
-            <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20 shadow-lg">
-              <h3 className="text-lg font-semibold text-white mb-4">
-                Trend Analysis
-              </h3>
-              <ResponsiveContainer width="100%" height={220}>
+          {/* Status Chart - Dark Theme */}
+          {chartData.length > 0 && (
+            <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50 shadow-lg">
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-white mb-1">
+                  Availability Status
+                </h2>
+                <p className="text-sm text-slate-300">
+                  Service uptime visualization over time
+                </p>
+              </div>
+              <ResponsiveContainer width="100%" height={250}>
                 <AreaChart
                   data={chartData}
-                  margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
+                  margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
                 >
                   <defs>
                     <linearGradient
-                      id="trendGradient"
+                      id="statusGradient"
                       x1="0"
                       y1="0"
                       x2="0"
                       y2="1"
                     >
-                      <stop offset="0%" stopColor="#60a5fa" stopOpacity={0.6} />
+                      <stop offset="0%" stopColor="#34d399" stopOpacity={0.6} />
                       <stop
                         offset="100%"
-                        stopColor="#60a5fa"
+                        stopColor="#34d399"
                         stopOpacity={0.1}
                       />
                     </linearGradient>
@@ -589,12 +466,16 @@ export default function ServiceDetail() {
                   />
                   <XAxis
                     dataKey="time"
-                    tick={{ fontSize: 10, fill: "rgba(255,255,255,0.7)" }}
+                    tick={{ fontSize: 11, fill: "rgba(255,255,255,0.7)" }}
                     stroke="rgba(255,255,255,0.2)"
                   />
                   <YAxis
-                    tick={{ fontSize: 10, fill: "rgba(255,255,255,0.7)" }}
+                    domain={[0, 1]}
+                    tick={{ fontSize: 11, fill: "rgba(255,255,255,0.7)" }}
                     stroke="rgba(255,255,255,0.2)"
+                    tickFormatter={(value) =>
+                      value === 1 ? "UP" : value === 0 ? "DOWN" : ""
+                    }
                   />
                   <Tooltip
                     contentStyle={{
@@ -604,122 +485,256 @@ export default function ServiceDetail() {
                       color: "#fff",
                       padding: "12px",
                     }}
-                    formatter={(value: any) => [`${value}ms`, "Response Time"]}
+                    formatter={(value: any) => [
+                      <span
+                        key="value"
+                        style={{
+                          color: value === 1 ? "#34d399" : "#f87171",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {value === 1 ? "UP" : "DOWN"}
+                      </span>,
+                      "Status",
+                    ]}
                   />
                   <Area
                     type="monotone"
-                    dataKey="responseTime"
-                    stroke="#60a5fa"
-                    fill="url(#trendGradient)"
+                    dataKey="status"
+                    stroke="#34d399"
+                    fill="url(#statusGradient)"
                     strokeWidth={2}
+                    dot={{
+                      fill: "#34d399",
+                      r: 4,
+                      strokeWidth: 2,
+                      stroke: "#fff",
+                    }}
+                    activeDot={{
+                      r: 6,
+                      fill: "#10b981",
+                      stroke: "#fff",
+                      strokeWidth: 2,
+                    }}
                     animationDuration={400}
                   />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Recent Health Checks - Dark Theme */}
-        <div className="bg-white/10 backdrop-blur-xl rounded-xl overflow-hidden border border-white/20">
-          <div className="px-6 py-5">
-            <h2 className="text-lg font-semibold text-white">
-              Recent Health Checks
-            </h2>
-          </div>
-          <div className="overflow-hidden">
-            <table className="min-w-full divide-y divide-white/20">
-              <thead>
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                    Time
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                    Response Time
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                    Status Code
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/10">
-                {safeHealthChecks.length > 0 ? (
-                  safeHealthChecks.slice(0, 20).map((check) => (
-                    <tr
-                      key={check.id}
-                      className="hover:bg-white/5 transition-colors"
+          {chartData.length > 0 &&
+            chartData.some((d) => d.responseTime > 0) && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50 shadow-lg">
+                  <h3 className="text-lg font-semibold text-white mb-4">
+                    Response Time Distribution
+                  </h3>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart
+                      data={chartData.slice().reverse().slice(0, 10)}
+                      margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
                     >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white/80">
-                        {check.checked_at
-                          ? format(
-                              new Date(check.checked_at),
-                              "MMM dd, yyyy HH:mm:ss"
-                            )
-                          : "-"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${getStatusColor(
-                            check.status || "unknown"
-                          )}`}
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="rgba(255,255,255,0.1)"
+                      />
+                      <XAxis
+                        dataKey="time"
+                        tick={{ fontSize: 10, fill: "rgba(255,255,255,0.7)" }}
+                        stroke="rgba(255,255,255,0.2)"
+                      />
+                      <YAxis
+                        tick={{ fontSize: 10, fill: "rgba(255,255,255,0.7)" }}
+                        stroke="rgba(255,255,255,0.2)"
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "rgba(0,0,0,0.8)",
+                          border: "1px solid rgba(255,255,255,0.2)",
+                          borderRadius: "8px",
+                          color: "#fff",
+                          padding: "12px",
+                        }}
+                        formatter={(value: any) => [
+                          `${value}ms`,
+                          "Response Time",
+                        ]}
+                      />
+                      <Bar
+                        dataKey="responseTime"
+                        fill="#60a5fa"
+                        radius={[6, 6, 0, 0]}
+                        animationDuration={400}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50 shadow-lg">
+                  <h3 className="text-lg font-semibold text-white mb-4">
+                    Trend Analysis
+                  </h3>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <AreaChart
+                      data={chartData}
+                      margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
+                    >
+                      <defs>
+                        <linearGradient
+                          id="trendGradient"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
                         >
+                          <stop
+                            offset="0%"
+                            stopColor="#60a5fa"
+                            stopOpacity={0.6}
+                          />
+                          <stop
+                            offset="100%"
+                            stopColor="#60a5fa"
+                            stopOpacity={0.1}
+                          />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="rgba(255,255,255,0.1)"
+                      />
+                      <XAxis
+                        dataKey="time"
+                        tick={{ fontSize: 10, fill: "rgba(255,255,255,0.7)" }}
+                        stroke="rgba(255,255,255,0.2)"
+                      />
+                      <YAxis
+                        tick={{ fontSize: 10, fill: "rgba(255,255,255,0.7)" }}
+                        stroke="rgba(255,255,255,0.2)"
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "rgba(0,0,0,0.8)",
+                          border: "1px solid rgba(255,255,255,0.2)",
+                          borderRadius: "8px",
+                          color: "#fff",
+                          padding: "12px",
+                        }}
+                        formatter={(value: any) => [
+                          `${value}ms`,
+                          "Response Time",
+                        ]}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="responseTime"
+                        stroke="#60a5fa"
+                        fill="url(#trendGradient)"
+                        strokeWidth={2}
+                        animationDuration={400}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+          <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl overflow-hidden border border-slate-700/50">
+            <div className="px-6 py-5">
+              <h2 className="text-lg font-semibold text-white">
+                Recent Health Checks
+              </h2>
+            </div>
+            <div className="overflow-hidden">
+              <table className="min-w-full divide-y divide-white/20">
+                <thead>
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                      Time
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                      Response Time
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                      Status Code
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/10">
+                  {safeHealthChecks.length > 0 ? (
+                    safeHealthChecks.slice(0, 20).map((check) => (
+                      <tr
+                        key={check.id}
+                        className="hover:bg-white/5 transition-colors"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white/80">
+                          {formatDate(check.checked_at)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
                           <span
-                            className={`h-1.5 w-1.5 rounded-full mr-1.5 ${
-                              check.status === "up"
-                                ? "bg-blue-600"
-                                : check.status === "down"
-                                ? "bg-red-400"
-                                : "bg-white/40"
-                            }`}
-                          ></span>
-                          {(check.status || "UNKNOWN").toUpperCase()}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white/80">
-                        {check.response_time_ms != null
-                          ? `${check.response_time_ms}ms`
-                          : "-"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white/80">
-                        {check.status_code || "-"}
+                            className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${getStatusColor(
+                              check.status || "unknown"
+                            )}`}
+                          >
+                            <span
+                              className={`h-1.5 w-1.5 rounded-full mr-1.5 ${
+                                check.status === "up"
+                                  ? "bg-emerald-400"
+                                  : check.status === "down"
+                                  ? "bg-red-400"
+                                  : "bg-white/40"
+                              }`}
+                            ></span>
+                            {(check.status || "UNKNOWN").toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white/80">
+                          {check.response_time_ms != null
+                            ? `${check.response_time_ms}ms`
+                            : "-"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white/80">
+                          {check.status_code || "-"}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-12 text-center">
+                        <div className="inline-flex flex-col items-center">
+                          <div className="w-16 h-16 rounded-lg bg-white/10 flex items-center justify-center mb-4">
+                            <svg
+                              className="w-8 h-8 text-white/40"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                              />
+                            </svg>
+                          </div>
+                          <p className="text-sm font-medium text-white">
+                            No health checks available yet
+                          </p>
+                          <p className="text-xs text-slate-300 mt-1">
+                            Health checks will appear here once the scheduler
+                            starts running
+                          </p>
+                        </div>
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center">
-                      <div className="inline-flex flex-col items-center">
-                        <div className="w-16 h-16 rounded-lg bg-white/10 flex items-center justify-center mb-4">
-                          <svg
-                            className="w-8 h-8 text-white/40"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                            />
-                          </svg>
-                        </div>
-                        <p className="text-sm font-medium text-white">
-                          No health checks available yet
-                        </p>
-                        <p className="text-xs text-white/70 mt-1">
-                          Health checks will appear here once the scheduler
-                          starts running
-                        </p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

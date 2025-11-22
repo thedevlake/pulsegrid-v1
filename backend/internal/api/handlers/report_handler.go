@@ -36,7 +36,7 @@ func (h *ReportHandler) ExportCSV(c *gin.Context) {
 	}
 
 	// Default to last 30 days
-	since := time.Now().AddDate(0, 0, -30)
+	since := time.Now().UTC().AddDate(0, 0, -30)
 	if sinceStr := c.Query("since"); sinceStr != "" {
 		if t, err := time.Parse(time.RFC3339, sinceStr); err == nil {
 			since = t
@@ -57,7 +57,7 @@ func (h *ReportHandler) ExportCSV(c *gin.Context) {
 
 	// Set headers for CSV download
 	c.Header("Content-Type", "text/csv")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=report-%s-%s.csv", service.Name, time.Now().Format("20060102")))
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=report-%s-%s.csv", service.Name, time.Now().UTC().Format("20060102")))
 
 	writer := csv.NewWriter(c.Writer)
 	defer writer.Flush()
@@ -79,7 +79,7 @@ func (h *ReportHandler) ExportCSV(c *gin.Context) {
 	writer.Write([]string{
 		service.Name,
 		service.URL,
-		fmt.Sprintf("%s to %s", since.Format("2006-01-02"), time.Now().Format("2006-01-02")),
+		fmt.Sprintf("%s to %s", since.Format("2006-01-02"), time.Now().UTC().Format("2006-01-02")),
 		fmt.Sprintf("%.2f", stats.UptimePercent),
 		fmt.Sprintf("%.2f", stats.AvgResponseTime),
 		strconv.Itoa(stats.TotalChecks),

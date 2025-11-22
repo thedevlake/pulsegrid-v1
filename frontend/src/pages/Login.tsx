@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect, Suspense } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
 import api from "../lib/api";
@@ -7,17 +7,34 @@ import Particles from "../components/Particles";
 import CardSwap, { Card } from "../components/CardSwap";
 import ThemeToggle from "../components/ThemeToggle";
 import PageTransition from "../components/PageTransition";
-import BackButton from "../components/BackButton";
-import { LogIn, Mail, Lock, Activity } from "lucide-react";
+import {
+  LogIn,
+  Mail,
+  Lock,
+  Activity,
+  Home,
+  BookOpen,
+  Github,
+} from "lucide-react";
+
+const GITHUB_URL = "https://github.com/thedevlake/PULSEGRID-V1";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [particlesLoaded, setParticlesLoaded] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { setAuth } = useAuthStore();
   const { theme } = useThemeStore();
+
+  // Defer particles loading until after initial render
+  useEffect(() => {
+    const timer = setTimeout(() => setParticlesLoaded(true), 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,83 +61,173 @@ export default function Login() {
   return (
     <PageTransition animationType="fade">
       <div
-        className={`min-h-screen relative flex flex-col py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-300 ${
+        className={`min-h-screen relative flex flex-col transition-colors duration-300 ${
           theme === "dark"
             ? "bg-gradient-to-b from-gray-950 via-slate-950 to-zinc-950"
             : "bg-gradient-to-b from-black via-slate-950 to-blue-950"
         }`}
+        style={{ minHeight: "100vh" }}
       >
-        {/* Theme Toggle - Top Right */}
-        <div className="fixed top-4 right-4 z-50">
-          <ThemeToggle />
-        </div>
-
-        {/* Back Button - Top Left */}
-        <div className="fixed top-4 left-4 z-50">
-          <BackButton />
-        </div>
-
-        {/* Particles Background */}
-        <div className="fixed inset-0 w-full h-full z-0 pointer-events-none">
-          <Particles
-            particleColors={
-              theme === "dark"
-                ? ["#3b82f6", "#6366f1", "#8b5cf6", "#a78bfa"]
-                : ["#ffffff", "#ffffff"]
-            }
-            particleCount={200}
-            particleSpread={10}
-            speed={0.1}
-            particleBaseSize={100}
-            moveParticlesOnHover={true}
-            alphaParticles={false}
-            disableRotation={false}
-          />
-        </div>
-
-        {/* PULSEGRID Branding */}
-        <div className="relative z-10 w-full max-w-6xl mx-auto mb-12">
-          <div className="flex flex-col items-center lg:items-start">
-            <div className="flex items-center space-x-3 mb-2 mt-20">
-              <div
-                className={`w-10 h-10 rounded-lg flex items-center justify-center shadow-lg ${
-                  theme === "dark"
-                    ? "bg-gradient-to-br from-slate-600 to-gray-700"
-                    : "bg-gradient-to-br from-blue-800 to-indigo-900"
-                }`}
+        {/* Navigation - Sticky */}
+        <nav className="sticky top-0 z-[100] w-full bg-gradient-to-b from-gray-950/95 via-slate-950/95 to-transparent backdrop-blur-xl pb-4 sm:pb-6 shadow-lg shadow-black/20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <Link
+                to="/"
+                className="flex items-center space-x-2 sm:space-x-3 group"
               >
-                <Activity className="w-6 h-6 text-white" />
+                <div
+                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shadow-lg backdrop-blur-xl border border-white/20 ${
+                    theme === "dark" ? "bg-blue-800" : "bg-blue-900"
+                  }`}
+                >
+                  <Activity className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <h1 className="text-lg sm:text-xl md:text-2xl font-black text-white tracking-tight">
+                  PulseGrid
+                </h1>
+              </Link>
+              <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 w-full sm:w-auto">
+                {/* Mobile Navigation Links */}
+                <div className="flex sm:hidden items-center gap-1.5 bg-white/5 border border-white/10 rounded-full px-1.5 py-1 backdrop-blur-xl">
+                  <Link
+                    to="/"
+                    className={`p-2 rounded-full transition-colors ${
+                      location.pathname === "/"
+                        ? "text-white bg-blue-800/30"
+                        : "text-white/70 hover:text-white hover:bg-white/10"
+                    }`}
+                    title="Home"
+                  >
+                    <Home className="w-4 h-4" />
+                  </Link>
+                  <Link
+                    to="/docs"
+                    className={`p-2 rounded-full transition-colors ${
+                      location.pathname === "/docs"
+                        ? "text-white bg-blue-800/30"
+                        : "text-white/70 hover:text-white hover:bg-white/10"
+                    }`}
+                    title="Documentation"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                  </Link>
+                  <a
+                    href={GITHUB_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-full text-white/70 hover:text-white transition-colors hover:bg-white/10"
+                    title="GitHub Repository"
+                  >
+                    <Github className="w-4 h-4" />
+                  </a>
+                </div>
+
+                {/* Desktop Navigation Links */}
+                <div className="hidden sm:flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-2 py-1 backdrop-blur-xl">
+                  <Link
+                    to="/"
+                    className={`px-3 py-1.5 text-xs sm:text-sm font-medium rounded-full flex items-center gap-1.5 transition-colors ${
+                      location.pathname === "/"
+                        ? "text-white bg-blue-800/30 border border-blue-800/50"
+                        : "text-white/70 hover:text-white hover:bg-white/10"
+                    }`}
+                    title="Home"
+                  >
+                    <Home className="w-4 h-4" />
+                    <span className="hidden md:inline">Home</span>
+                  </Link>
+                  <Link
+                    to="/docs"
+                    className={`px-3 py-1.5 text-xs sm:text-sm font-medium rounded-full flex items-center gap-1.5 transition-colors ${
+                      location.pathname === "/docs"
+                        ? "text-white bg-blue-800/30 border border-blue-800/50"
+                        : "text-white/70 hover:text-white hover:bg-white/10"
+                    }`}
+                    title="Documentation"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    <span className="hidden md:inline">Docs</span>
+                  </Link>
+                  <a
+                    href={GITHUB_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 text-white/70 hover:text-white transition-colors text-xs sm:text-sm font-medium rounded-full flex items-center gap-1.5 hover:bg-white/10"
+                    title="GitHub Repository"
+                  >
+                    <Github className="w-4 h-4" />
+                    <span className="hidden md:inline">GitHub</span>
+                  </a>
+                </div>
+
+                {/* Auth Buttons - Desktop */}
+                <div className="hidden sm:flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-2 py-1 sm:px-3 sm:py-1.5 backdrop-blur-xl shadow-lg">
+                  <Link
+                    to="/login"
+                    className={`px-3 py-1 text-xs sm:text-sm font-medium rounded-full transition-colors ${
+                      location.pathname === "/login"
+                        ? "text-white bg-blue-800/30 border border-blue-800/50"
+                        : "text-white/80 hover:text-white"
+                    }`}
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/register"
+                    className={`px-4 py-1.5 sm:px-5 sm:py-2 text-xs sm:text-sm font-semibold rounded-full transition-all shadow-lg ${
+                      location.pathname === "/register"
+                        ? "bg-blue-700 text-white"
+                        : "bg-blue-800 text-white hover:bg-blue-700"
+                    }`}
+                  >
+                    Get Started
+                  </Link>
+                </div>
+
+                {/* Theme Toggle - Always visible, well positioned */}
+                <div className="flex-shrink-0">
+                  <ThemeToggle />
+                </div>
               </div>
-              <h1 className="text-5xl font-black text-white tracking-tight">
-                PulseGrid
-              </h1>
             </div>
-            <p className="text-lg text-white font-medium">
-              Cloud-Native Infrastructure Monitoring Platform
-            </p>
-            <p className="text-sm text-white/80 mt-2 max-w-2xl text-center sm:text-left">
-              Monitor your services, track uptime, and receive instant alerts.
-              Built for startups, businesses, and tech communities.
-            </p>
           </div>
-        </div>
+        </nav>
+
+        {/* Particles Background - Lazy loaded and reduced */}
+        {particlesLoaded && (
+          <div className="fixed inset-0 w-full h-full z-0 pointer-events-none">
+            <Suspense fallback={null}>
+              <Particles
+                particleColors={["#ffffff", "#ffffff", "#ffffff"]}
+                particleCount={100}
+                particleSpread={10}
+                speed={0.08}
+                particleBaseSize={70}
+                moveParticlesOnHover={false}
+                alphaParticles={false}
+                disableRotation={false}
+              />
+            </Suspense>
+          </div>
+        )}
 
         {/* Content */}
-        <div className="relative z-10 w-full max-w-6xl mx-auto flex-1">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start w-full">
+        <div className="relative z-10 w-full max-w-6xl mx-auto flex-1 flex items-center justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center w-full">
             {/* Left Column - Login Form */}
             <div>
-              <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/20 p-8 shadow-2xl">
+              <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/20 p-6 sm:p-8 shadow-2xl">
                 {/* Header */}
-                <div className="text-center mb-8">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 rounded-2xl mb-4 border border-white/20">
-                    <LogIn className="w-8 h-8 text-white" />
+                <div className="text-center mb-6 sm:mb-8">
+                  <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-white/10 rounded-xl sm:rounded-2xl mb-4 border border-white/20">
+                    <LogIn className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
                   </div>
-                  <h2 className="text-3xl font-semibold text-white tracking-tight">
+                  <h2 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight">
                     Sign in to PulseGrid
                   </h2>
                   <p className="mt-2 text-sm text-white/90">
-                    Access your monitoring dashboard
+                    Access your monitoring dashboard and manage your services
                   </p>
                 </div>
 
@@ -155,7 +262,7 @@ export default function Login() {
                           className={`block w-full pl-10 pr-3 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 transition-all sm:text-sm ${
                             theme === "dark"
                               ? "focus:ring-slate-400/50 focus:border-slate-400/50"
-                              : "focus:ring-blue-700/50 focus:border-blue-700/50"
+                              : "focus:ring-blue-800/50 focus:border-blue-800/50"
                           }`}
                           placeholder="you@example.com"
                           value={email}
@@ -185,7 +292,7 @@ export default function Login() {
                           className={`block w-full pl-10 pr-3 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 transition-all sm:text-sm ${
                             theme === "dark"
                               ? "focus:ring-slate-400/50 focus:border-slate-400/50"
-                              : "focus:ring-blue-700/50 focus:border-blue-700/50"
+                              : "focus:ring-blue-800/50 focus:border-blue-800/50"
                           }`}
                           placeholder="••••••••"
                           value={password}
@@ -202,8 +309,8 @@ export default function Login() {
                       disabled={loading}
                       className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md ${
                         theme === "dark"
-                          ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:via-indigo-500 hover:to-blue-600 focus:ring-blue-400"
-                          : "bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:via-indigo-500 hover:to-blue-600 focus:ring-blue-400"
+                          ? "bg-gradient-to-r from-blue-800 via-blue-800 to-blue-900 hover:from-blue-700 hover:via-blue-700 hover:to-blue-800 focus:ring-blue-400"
+                          : "bg-gradient-to-r from-blue-800 via-blue-800 to-blue-900 hover:from-blue-700 hover:via-blue-700 hover:to-blue-800 focus:ring-blue-400"
                       }`}
                     >
                       {loading ? (
@@ -245,7 +352,7 @@ export default function Login() {
                         className={`font-semibold transition-colors ${
                           theme === "dark"
                             ? "text-slate-300 hover:text-slate-200"
-                            : "text-blue-500 hover:text-blue-400"
+                            : "text-blue-400 hover:text-blue-300"
                         }`}
                       >
                         Sign up
@@ -257,7 +364,7 @@ export default function Login() {
             </div>
 
             {/* Right Column - CardSwap Feature Showcase */}
-            <div className="hidden lg:flex flex-col space-y-6 ">
+            <div className="hidden lg:flex flex-col space-y-6">
               <div className="flex items-center justify-center h-[500px] relative overflow-visible">
                 <div className="relative w-full h-full">
                   <CardSwap
@@ -269,8 +376,8 @@ export default function Login() {
                     pauseOnHover={false}
                   >
                     <Card>
-                      <div className="flex flex-col items-center justify-center text-center p-8 h-full bg-white/95 backdrop-blur-xl border border-gray-200/60 shadow-lg rounded-2xl">
-                        <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center mb-5 shadow-md">
+                      <div className="flex flex-col items-center justify-center text-center p-8 h-full bg-white/45 backdrop-blur-xl border border-gray-200/60 shadow-lg rounded-2xl">
+                        <div className="w-14 h-14 bg-gradient-to-br from-blue-800 to-blue-900 rounded-xl flex items-center justify-center mb-5 shadow-md">
                           <svg
                             className="w-7 h-7 text-white"
                             fill="none"
@@ -290,7 +397,7 @@ export default function Login() {
                         </h3>
                         <p className="text-gray-600 leading-relaxed text-sm max-w-[260px] mb-5">
                           Access your{" "}
-                          <span className="font-semibold text-indigo-600">
+                          <span className="font-semibold text-blue-800">
                             real-time metrics
                           </span>{" "}
                           and service health data. View uptime statistics,
@@ -298,7 +405,7 @@ export default function Login() {
                         </p>
                         <div className="mt-auto flex items-center justify-center space-x-2 text-xs text-gray-500 bg-gray-50 px-3 py-1.5 rounded-full">
                           <svg
-                            className="w-3.5 h-3.5 text-indigo-500"
+                            className="w-3.5 h-3.5 text-blue-700"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -315,7 +422,7 @@ export default function Login() {
                       </div>
                     </Card>
                     <Card>
-                      <div className="flex flex-col items-center justify-center text-center p-8 h-full bg-white/95 backdrop-blur-xl border border-gray-200/60 shadow-lg rounded-2xl">
+                      <div className="flex flex-col items-center justify-center text-center p-8 h-full bg-white/35 backdrop-blur-xl border border-gray-200/60 shadow-lg rounded-2xl">
                         <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center mb-5 shadow-md">
                           <svg
                             className="w-7 h-7 text-white"
@@ -350,7 +457,7 @@ export default function Login() {
                       </div>
                     </Card>
                     <Card>
-                      <div className="flex flex-col items-center justify-center text-center p-8 h-full bg-white/95 backdrop-blur-xl border border-gray-200/60 shadow-lg rounded-2xl">
+                      <div className="flex flex-col items-center justify-center text-center p-8 h-full bg-white/45 backdrop-blur-xl border border-gray-200/60 shadow-lg rounded-2xl">
                         <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mb-5 shadow-md">
                           <svg
                             className="w-7 h-7 text-white"
@@ -396,7 +503,7 @@ export default function Login() {
                       </div>
                     </Card>
                     <Card>
-                      <div className="flex flex-col items-center justify-center text-center p-8 h-full bg-white/95 backdrop-blur-xl border border-gray-200/60 shadow-lg rounded-2xl">
+                      <div className="flex flex-col items-center justify-center text-center p-8 h-full bg-white/45 backdrop-blur-xl border border-gray-200/60 shadow-lg rounded-2xl">
                         <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center mb-5 shadow-md">
                           <svg
                             className="w-7 h-7 text-white"
@@ -447,6 +554,18 @@ export default function Login() {
             </div>
           </div>
         </div>
+
+        {/* Footer */}
+        <footer className="relative z-10 w-full border-t border-white/10 mt-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+            <div className="text-center space-y-2">
+              <p className="text-sm text-white/60">
+                © 2025 PulseGrid. All rights reserved.
+              </p>
+              <p className="text-xs text-white/50">Developed by Thedevlake</p>
+            </div>
+          </div>
+        </footer>
       </div>
     </PageTransition>
   );

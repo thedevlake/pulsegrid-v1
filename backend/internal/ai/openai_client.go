@@ -12,20 +12,18 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
-// OpenAIClient wraps the OpenAI API client
 type OpenAIClient struct {
 	client           *openai.Client
 	model            string
 	timeout          time.Duration
 	quotaExceeded    bool
 	quotaExceededAt  time.Time
-	quotaRetryAfter  time.Duration // How long to wait before retrying after quota error
-	rateLimiter      sync.Mutex    // Mutex for rate limiting
-	lastRequestTime  time.Time     // Track last API request time
-	minRequestGap    time.Duration // Minimum time between requests (rate limiting)
+	quotaRetryAfter  time.Duration
+	rateLimiter      sync.Mutex
+	lastRequestTime  time.Time
+	minRequestGap    time.Duration
 }
 
-// NewOpenAIClient creates a new OpenAI client
 func NewOpenAIClient(apiKey, model string, timeout time.Duration) *OpenAIClient {
 	if apiKey == "" {
 		return nil
@@ -39,19 +37,17 @@ func NewOpenAIClient(apiKey, model string, timeout time.Duration) *OpenAIClient 
 		model:           model,
 		timeout:         timeout,
 		quotaExceeded:   false,
-		quotaRetryAfter: 1 * time.Hour, // Wait 1 hour before retrying after quota error
-		minRequestGap:   2 * time.Second, // Rate limit: max 1 request per 2 seconds
+		quotaRetryAfter: 1 * time.Hour,
+		minRequestGap:   2 * time.Second,
 	}
 }
 
-// PredictionTextResponse represents the structured response from OpenAI
 type PredictionTextResponse struct {
 	PredictedIssue      string `json:"predicted_issue"`
 	Reason              string `json:"reason"`
 	RecommendedAction   string `json:"recommended_action"`
 }
 
-// AggregatedMetrics represents aggregated health check data for OpenAI analysis
 type AggregatedMetrics struct {
 	ServiceName        string            `json:"service_name"`
 	ServiceType        string            `json:"service_type"`
@@ -68,20 +64,16 @@ type AggregatedMetrics struct {
 	Confidence          float64           `json:"confidence"`
 }
 
-// GeneratePredictionText generates natural language descriptions using OpenAI
 func (c *OpenAIClient) GeneratePredictionText(ctx context.Context, metrics AggregatedMetrics) (*PredictionTextResponse, error) {
 	if c == nil || c.client == nil {
 		return nil, fmt.Errorf("OpenAI client not initialized")
 	}
 
-	// Create context with timeout
 	ctx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
 
-	// Build the prompt
 	prompt := c.buildPrompt(metrics)
 
-	// Create the chat completion request
 	req := openai.ChatCompletionRequest{
 		Model: c.model,
 		Messages: []openai.ChatCompletionMessage{
@@ -101,16 +93,13 @@ func (c *OpenAIClient) GeneratePredictionText(ctx context.Context, metrics Aggre
 		},
 	}
 
-	// Check if we're in a quota-exceeded cooldown period
 	if c.quotaExceeded {
 		if time.Since(c.quotaExceededAt) < c.quotaRetryAfter {
 			return nil, fmt.Errorf("OpenAI quota exceeded, retry after %v", c.quotaRetryAfter-time.Since(c.quotaExceededAt))
 		}
-		// Reset quota flag after cooldown period
 		c.quotaExceeded = false
 	}
 
-	// Rate limiting: ensure minimum gap between requests
 	c.rateLimiter.Lock()
 	timeSinceLastRequest := time.Since(c.lastRequestTime)
 	if timeSinceLastRequest < c.minRequestGap {
@@ -122,10 +111,8 @@ func (c *OpenAIClient) GeneratePredictionText(ctx context.Context, metrics Aggre
 	c.lastRequestTime = time.Now()
 	c.rateLimiter.Unlock()
 
-	// Make the API call
 	resp, err := c.client.CreateChatCompletion(ctx, req)
 	if err != nil {
-		// Check if it's a quota/rate limit error (429)
 		errStr := err.Error()
 		if contains(errStr, "429") || contains(errStr, "quota") || contains(errStr, "rate limit") {
 			c.quotaExceeded = true
@@ -139,7 +126,6 @@ func (c *OpenAIClient) GeneratePredictionText(ctx context.Context, metrics Aggre
 		return nil, fmt.Errorf("no response from OpenAI")
 	}
 
-	// Parse the JSON response
 	content := resp.Choices[0].Message.Content
 	var predictionText PredictionTextResponse
 	if err := json.Unmarshal([]byte(content), &predictionText); err != nil {
@@ -150,12 +136,10 @@ func (c *OpenAIClient) GeneratePredictionText(ctx context.Context, metrics Aggre
 	return &predictionText, nil
 }
 
-// contains checks if a string contains a substring (case-insensitive)
 func contains(s, substr string) bool {
 	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
 }
 
-// buildPrompt constructs the prompt for OpenAI
 func (c *OpenAIClient) buildPrompt(metrics AggregatedMetrics) string {
 	return fmt.Sprintf(`Analyze the following service monitoring data and provide insights:
 

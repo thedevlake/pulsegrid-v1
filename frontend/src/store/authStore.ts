@@ -7,6 +7,7 @@ interface User {
   name: string
   role: string
   organization_id?: string
+  email_verified?: boolean
 }
 
 interface AuthState {

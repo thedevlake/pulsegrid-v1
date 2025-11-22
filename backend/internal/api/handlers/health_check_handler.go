@@ -61,7 +61,6 @@ func (h *HealthCheckHandler) GetHealthChecks(c *gin.Context) {
 		return
 	}
 
-	// Ensure checks is always an array, never null
 	if checks == nil {
 		checks = []*models.HealthCheck{}
 	}

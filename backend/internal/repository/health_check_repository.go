@@ -24,7 +24,7 @@ func (r *HealthCheckRepository) Create(check *models.HealthCheck) error {
 	`
 
 	check.ID = uuid.New()
-	check.CheckedAt = time.Now()
+	check.CheckedAt = time.Now().UTC()
 
 	err := r.db.QueryRow(
 		query,

@@ -87,7 +87,7 @@ func (h *PredictionHandler) GetPredictions(c *gin.Context) {
 		}
 
 		// Get historical health checks (last 7 days)
-		since := time.Now().Add(-7 * 24 * time.Hour)
+		since := time.Now().UTC().Add(-7 * 24 * time.Hour)
 		healthChecks, err := h.healthCheckRepo.GetByServiceID(service.ID, 1000)
 		if err != nil {
 			continue

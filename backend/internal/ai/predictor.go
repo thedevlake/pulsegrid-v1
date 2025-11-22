@@ -23,7 +23,6 @@ type Prediction struct {
 	PredictedAt     time.Time `json:"predicted_at"`
 }
 
-// Predictor analyzes historical health check data to predict potential incidents
 type Predictor struct {
 	openAIClient *OpenAIClient
 }
@@ -34,32 +33,21 @@ func NewPredictor(openAIClient *OpenAIClient) *Predictor {
 	}
 }
 
-// AnalyzeService analyzes historical health check data for a service and generates predictions
 func (p *Predictor) AnalyzeService(service *models.Service, healthChecks []*models.HealthCheck) *Prediction {
 	if len(healthChecks) < 10 {
-		// Not enough data for meaningful prediction
 		return nil
 	}
 
-	// Calculate trends and patterns
 	recentChecks := getRecentChecks(healthChecks, 24*time.Hour)
 	if len(recentChecks) < 5 {
 		return nil
 	}
 
-	// Analyze response time trends
 	responseTimeTrend := analyzeResponseTimeTrend(recentChecks)
-	
-	// Analyze status patterns
 	statusPattern := analyzeStatusPattern(recentChecks)
-	
-	// Calculate failure rate
 	failureRate := calculateFailureRate(recentChecks)
-	
-	// Detect anomalies
 	anomalies := detectAnomalies(recentChecks)
 	
-	// Generate prediction based on analysis
 	prediction := p.generatePrediction(
 		service,
 		responseTimeTrend,
@@ -72,9 +60,8 @@ func (p *Predictor) AnalyzeService(service *models.Service, healthChecks []*mode
 	return prediction
 }
 
-// getRecentChecks filters health checks within the specified time window
 func getRecentChecks(checks []*models.HealthCheck, window time.Duration) []*models.HealthCheck {
-	now := time.Now()
+	now := time.Now().UTC()
 	cutoff := now.Add(-window)
 	
 	var recent []*models.HealthCheck
@@ -104,7 +91,6 @@ func analyzeResponseTimeTrend(checks []*models.HealthCheck) string {
 		return "stable"
 	}
 
-	// Calculate trend (simple linear regression slope)
 	firstHalf := times[:len(times)/2]
 	secondHalf := times[len(times)/2:]
 	
@@ -121,7 +107,6 @@ func analyzeResponseTimeTrend(checks []*models.HealthCheck) string {
 	return "stable"
 }
 
-// analyzeStatusPattern analyzes status patterns for degradation
 func analyzeStatusPattern(checks []*models.HealthCheck) map[string]int {
 	pattern := make(map[string]int)
 	for _, check := range checks {
@@ -130,7 +115,6 @@ func analyzeStatusPattern(checks []*models.HealthCheck) map[string]int {
 	return pattern
 }
 
-// calculateFailureRate calculates the failure rate
 func calculateFailureRate(checks []*models.HealthCheck) float64 {
 	if len(checks) == 0 {
 		return 0
@@ -281,7 +265,7 @@ func (p *Predictor) generatePrediction(
 		TimeWindow:       timeWindow,
 		Reason:           reason,
 		RecommendedAction: recommendedAction,
-		PredictedAt:      time.Now(),
+		PredictedAt:      time.Now().UTC(),
 	}
 }
 
@@ -314,7 +298,7 @@ func standardDeviation(values []float64, mean float64) float64 {
 
 // aggregateMetrics aggregates health check data into structured metrics for OpenAI
 func aggregateMetrics(service *models.Service, checks []*models.HealthCheck, timeWindow time.Duration) AggregatedMetrics {
-	now := time.Now()
+	now := time.Now().UTC()
 	cutoff := now.Add(-timeWindow)
 	
 	var recentChecks []*models.HealthCheck

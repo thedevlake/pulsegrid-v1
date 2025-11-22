@@ -9,13 +9,15 @@ import {
   Users,
   Activity,
   Brain,
-  BookOpen,
   LucideIcon,
+  BookOpen,
 } from "lucide-react";
 import GlassSurface from "./GlassSurface";
 import CardNav, { CardNavItem } from "./CardNav";
 import ThemeToggle from "./ThemeToggle";
-import Particles from "./Particles";
+import { lazy, Suspense, useState, useEffect } from "react";
+
+const Particles = lazy(() => import("./Particles"));
 import BackButton from "./BackButton";
 
 interface NavLinkProps {
@@ -73,6 +75,13 @@ export default function Layout() {
   const { theme } = useThemeStore();
   const navigate = useNavigate();
   const location = useLocation();
+  const [particlesLoaded, setParticlesLoaded] = useState(false);
+
+  // Defer particles loading until after initial render
+  useEffect(() => {
+    const timer = setTimeout(() => setParticlesLoaded(true), 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -96,14 +105,13 @@ export default function Layout() {
     '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>'
   )}`;
 
-  // Navigation items for CardNav - Vibrant, exciting glassmorphism design
   const navItems: CardNavItem[] = [
     {
       label: "Monitoring",
       bgColor:
         theme === "dark"
-          ? "linear-gradient(135deg, rgba(99, 102, 241, 0.4) 0%, rgba(67, 56, 202, 0.5) 50%, rgba(79, 70, 229, 0.4) 100%)" // vibrant indigo gradient
-          : "linear-gradient(135deg, rgba(59, 130, 246, 0.5) 0%, rgba(37, 99, 235, 0.6) 50%, rgba(29, 78, 216, 0.5) 100%)", // vibrant blue gradient
+          ? "linear-gradient(135deg, rgba(59, 130, 246, 0.7) 0%, rgba(37, 99, 235, 0.8) 50%, rgba(29, 78, 216, 0.7) 100%)"
+          : "linear-gradient(135deg, rgba(37, 99, 235, 0.75) 0%, rgba(29, 78, 216, 0.85) 50%, rgba(30, 64, 175, 0.75) 100%)",
       textColor: "#fff",
       links: [
         {
@@ -118,8 +126,8 @@ export default function Layout() {
       label: "Alerts & Insights",
       bgColor:
         theme === "dark"
-          ? "linear-gradient(135deg, rgba(168, 85, 247, 0.4) 0%, rgba(147, 51, 234, 0.5) 50%, rgba(126, 34, 206, 0.4) 100%)" // vibrant purple gradient
-          : "linear-gradient(135deg, rgba(96, 165, 250, 0.5) 0%, rgba(59, 130, 246, 0.6) 50%, rgba(37, 99, 235, 0.5) 100%)", // vibrant blue-purple gradient
+          ? "linear-gradient(135deg, rgba(139, 92, 246, 0.7) 0%, rgba(124, 58, 237, 0.8) 50%, rgba(109, 40, 217, 0.7) 100%)"
+          : "linear-gradient(135deg, rgba(124, 58, 237, 0.75) 0%, rgba(109, 40, 217, 0.85) 50%, rgba(91, 33, 182, 0.75) 100%)",
       textColor: "#fff",
       links: [
         { label: "Alerts", href: "/alerts", ariaLabel: "View Alerts" },
@@ -130,14 +138,29 @@ export default function Layout() {
         },
       ],
     },
+    {
+      label: "Resources",
+      bgColor:
+        theme === "dark"
+          ? "linear-gradient(135deg, rgba(20, 184, 166, 0.7) 0%, rgba(15, 118, 110, 0.8) 50%, rgba(13, 148, 136, 0.7) 100%)"
+          : "linear-gradient(135deg, rgba(15, 118, 110, 0.75) 0%, rgba(13, 148, 136, 0.85) 50%, rgba(17, 94, 89, 0.75) 100%)",
+      textColor: "#fff",
+      links: [
+        {
+          label: "Documentation",
+          href: "/docs",
+          ariaLabel: "View Documentation",
+        },
+      ],
+    },
     ...(user?.role === "admin" || user?.role === "super_admin"
       ? [
           {
             label: "Admin",
             bgColor:
               theme === "dark"
-                ? "linear-gradient(135deg, rgba(236, 72, 153, 0.4) 0%, rgba(219, 39, 119, 0.5) 50%, rgba(190, 24, 93, 0.4) 100%)" // vibrant pink gradient
-                : "linear-gradient(135deg, rgba(37, 99, 235, 0.5) 0%, rgba(29, 78, 216, 0.6) 50%, rgba(30, 64, 175, 0.5) 100%)", // vibrant deep blue gradient
+                ? "linear-gradient(135deg, rgba(236, 72, 153, 0.7) 0%, rgba(219, 39, 119, 0.8) 50%, rgba(190, 24, 93, 0.7) 100%)"
+                : "linear-gradient(135deg, rgba(219, 39, 119, 0.75) 0%, rgba(190, 24, 93, 0.85) 50%, rgba(157, 23, 77, 0.75) 100%)",
             textColor: "#fff",
             links: [
               {
@@ -149,21 +172,6 @@ export default function Layout() {
           },
         ]
       : []),
-    {
-      label: "Resources",
-      bgColor:
-        theme === "dark"
-          ? "linear-gradient(135deg, rgba(14, 165, 233, 0.4) 0%, rgba(56, 189, 248, 0.5) 50%, rgba(59, 130, 246, 0.4) 100%)"
-          : "linear-gradient(135deg, rgba(59, 130, 246, 0.4) 0%, rgba(96, 165, 250, 0.5) 50%, rgba(129, 212, 250, 0.4) 100%)",
-      textColor: "#fff",
-      links: [
-        {
-          label: "Docs & Guides",
-          href: "/docs",
-          ariaLabel: "PulseGrid Documentation",
-        },
-      ],
-    },
   ];
 
   return (
@@ -175,25 +183,25 @@ export default function Layout() {
       }`}
     >
       {/* Particles Background */}
-      <div
-        className="fixed inset-0 w-full h-full z-0"
-        style={{ position: "fixed", width: "100%", height: "100%" }}
-      >
-        <Particles
-          particleColors={
-            theme === "dark"
-              ? ["#3b82f6", "#6366f1", "#8b5cf6", "#a78bfa"]
-              : ["#ffffff", "#ffffff"]
-          }
-          particleCount={200}
-          particleSpread={10}
-          speed={0.1}
-          particleBaseSize={100}
-          moveParticlesOnHover={true}
-          alphaParticles={false}
-          disableRotation={false}
-        />
-      </div>
+      {particlesLoaded && (
+        <div
+          className="fixed inset-0 w-full h-full z-0"
+          style={{ position: "fixed", width: "100%", height: "100%" }}
+        >
+          <Suspense fallback={null}>
+            <Particles
+              particleColors={["#ffffff", "#ffffff", "#ffffff"]}
+              particleCount={100}
+              particleSpread={10}
+              speed={0.08}
+              particleBaseSize={70}
+              moveParticlesOnHover={false}
+              alphaParticles={false}
+              disableRotation={false}
+            />
+          </Suspense>
+        </div>
+      )}
 
       {/* Content */}
       <div className="relative z-10">
@@ -203,7 +211,7 @@ export default function Layout() {
             logo={logo}
             logoAlt="PulseGrid Logo"
             items={navItems}
-            baseColor="rgba(255, 255, 255, 0.1)" // glassy white with low opacity
+            baseColor="rgba(15, 30, 55, 0.85)"
             menuColor="#fff"
             buttonBgColor="#1e3a8a" // blue-900
             buttonTextColor="#fff"
@@ -219,6 +227,8 @@ export default function Layout() {
             width="100%"
             height={80}
             displace={15}
+            backgroundOpacity={location.pathname === "/docs" ? 0.85 : 0.8}
+            borderRadius={0}
             distortionScale={-150}
             redOffset={5}
             greenOffset={15}
@@ -227,11 +237,11 @@ export default function Layout() {
             opacity={0.8}
             mixBlendMode="screen"
             className="border-b border-white/20"
-            style={{ borderRadius: 0 }}
+            style={{ borderRadius: 0, background: 'rgba(15, 30, 55, 0.85)' }}
           >
             <div className="max-w-7xl mx-auto px-6 lg:px-8 w-full h-full">
               <div className="flex items-center justify-between h-20">
-                {/* Brand Section - Enhanced */}
+                {/* Brand Section */}
                 <Link
                   to="/dashboard"
                   className="flex items-center space-x-3 group relative"
@@ -362,7 +372,7 @@ export default function Layout() {
           </GlassSurface>
         </nav>
         <main className="max-w-7xl mx-auto px-6 lg:px-8 pt-24 md:pt-24">
-          {location.pathname !== "/dashboard" && (
+          {!location.pathname.startsWith("/dashboard") && (
             <div className="mb-6">
               <BackButton />
             </div>

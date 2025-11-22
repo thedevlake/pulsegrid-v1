@@ -1,0 +1,123 @@
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    - gofmt
+    - goimports
+    - gosec
+    - gocritic
+    - revive
+    - misspell
+    - unconvert
+    - unparam
+    - gocyclo
+    - dupl
+    - goconst
+    - gomnd
+    - lll
+    - stylecheck
+    - errorlint
+    - exhaustive
+    - funlen
+    - godot
+    - goerr113
+    - goprintffuncname
+    - makezero
+    - musttag
+    - nestif
+    - nilerr
+    - nlreturn
+    - noctx
+    - nolintlint
+    - prealloc
+    - predeclared
+    - promlinter
+    - rowserrcheck
+    - sqlclosecheck
+    - tagliatelle
+    - testpackage
+    - thelper
+    - tparallel
+    - unconvert
+    - unparam
+    - unused
+    - varcheck
+    - varnamelen
+    - wastedassign
+    - whitespace
+    - wrapcheck
+    - wsl
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+  gocyclo:
+    min-complexity: 15
+  dupl:
+    threshold: 100
+  funlen:
+    lines: 100
+    statements: 50
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+  gosec:
+    severity: medium
+    confidence: medium
+  govet:
+    check-shadowing: true
+  lll:
+    line-length: 120
+  misspell:
+    locale: US
+  revive:
+    min-confidence: 0
+    rules:
+      - name: exported
+        severity: warning
+      - name: error-return
+        severity: warning
+      - name: error-naming
+        severity: warning
+      - name: var-naming
+        severity: warning
+      - name: line-length-limit
+        severity: warning
+        arguments:
+          - "120"
+  tagliatelle:
+    case:
+      rules:
+        json:
+          - json
+          - JSON
+        yaml:
+          - yaml
+          - YAML
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck
+        - gosec
+        - funlen
+        - gocyclo
+        - lll
+        - gomnd
+        - dupl
+        - goconst
+        - noctx
+        - testpackage
+  max-issues-per-linter: 0
+  max-same-issues: 0

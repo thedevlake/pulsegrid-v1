@@ -42,30 +42,42 @@ resource "aws_ssm_parameter" "jwt_secret" {
 #   count       = var.aws_secret_access_key != "" ? 1 : 0
 # }
 
-# Optional: SMTP Configuration (if using SMTP instead of SES)
-# resource "aws_ssm_parameter" "smtp_host" {
-#   name        = "/pulsegrid/smtp/host"
-#   description = "SMTP server hostname"
-#   type        = "String"
-#   value       = var.smtp_host
-#   count       = var.smtp_host != "" ? 1 : 0
-# }
+# SMTP Configuration for AWS SES
+resource "aws_ssm_parameter" "smtp_host" {
+  name        = "/pulsegrid/smtp/host"
+  description = "SMTP server hostname (AWS SES endpoint)"
+  type        = "String"
+  # Default to region-specific SES endpoint if not provided
+  value = var.smtp_host != "" ? var.smtp_host : "email-smtp.${var.aws_region}.amazonaws.com"
 
-# resource "aws_ssm_parameter" "smtp_user" {
-#   name        = "/pulsegrid/smtp/user"
-#   description = "SMTP username"
-#   type        = "SecureString"
-#   value       = var.smtp_user
-#   count       = var.smtp_user != "" ? 1 : 0
-# }
+  tags = {
+    Name = "pulsegrid-smtp-host"
+  }
+}
 
-# resource "aws_ssm_parameter" "smtp_password" {
-#   name        = "/pulsegrid/smtp/password"
-#   description = "SMTP password"
-#   type        = "SecureString"
-#   value       = var.smtp_password
-#   count       = var.smtp_password != "" ? 1 : 0
-# }
+resource "aws_ssm_parameter" "smtp_user" {
+  name        = "/pulsegrid/smtp/user"
+  description = "SMTP username (AWS SES SMTP username)"
+  type        = "SecureString"
+  value       = var.smtp_user
+  key_id      = "alias/aws/ssm"
+
+  tags = {
+    Name = "pulsegrid-smtp-user"
+  }
+}
+
+resource "aws_ssm_parameter" "smtp_password" {
+  name        = "/pulsegrid/smtp/password"
+  description = "SMTP password (AWS SES SMTP password)"
+  type        = "SecureString"
+  value       = var.smtp_password
+  key_id      = "alias/aws/ssm"
+
+  tags = {
+    Name = "pulsegrid-smtp-password"
+  }
+}
 
 # OpenAI API Key (optional)
 resource "aws_ssm_parameter" "openai_api_key" {

@@ -64,10 +64,7 @@ type UpdateServiceRequest struct {
 	IsActive          *bool    `json:"is_active"`
 }
 
-// CreateService creates a new service (Organization Admin and Super Admin only)
-// Standard Users cannot create services - they have read-only access
 func (h *ServiceHandler) CreateService(c *gin.Context) {
-	// Check role - only admin and super_admin can create services
 	role, exists := c.Get("role")
 	if !exists || (role != "admin" && role != "super_admin") {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Only Organization Admin or Super Admin can create services"})
@@ -117,11 +114,8 @@ func (h *ServiceHandler) CreateService(c *gin.Context) {
 		return
 	}
 
-	// Schedule health checks if scheduler is available
 	if h.scheduler != nil && service.IsActive {
 		if err := h.scheduler.ScheduleService(service.ID.String(), service.CheckInterval); err != nil {
-			// Log error but don't fail the request
-			// log.Printf("Warning: Failed to schedule service %s: %v", service.ID, err)
 		}
 	}
 
@@ -147,7 +141,6 @@ func (h *ServiceHandler) ListServices(c *gin.Context) {
 		return
 	}
 
-	// Ensure services is always an array, never null
 	if services == nil {
 		services = []*models.Service{}
 	}
@@ -168,7 +161,6 @@ func (h *ServiceHandler) GetService(c *gin.Context) {
 		return
 	}
 
-	// Verify organization access
 	orgID, _ := c.Get("organization_id")
 	if service.OrganizationID.String() != orgID.(string) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
@@ -178,10 +170,7 @@ func (h *ServiceHandler) GetService(c *gin.Context) {
 	c.JSON(http.StatusOK, service)
 }
 
-// UpdateService updates an existing service (Organization Admin and Super Admin only)
-// Standard Users cannot update services - they have read-only access
 func (h *ServiceHandler) UpdateService(c *gin.Context) {
-	// Check role - only admin and super_admin can update services
 	role, exists := c.Get("role")
 	if !exists || (role != "admin" && role != "super_admin") {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Only Organization Admin or Super Admin can update services"})
@@ -200,7 +189,6 @@ func (h *ServiceHandler) UpdateService(c *gin.Context) {
 		return
 	}
 
-	// Verify organization access
 	orgID, _ := c.Get("organization_id")
 	if service.OrganizationID.String() != orgID.(string) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
@@ -267,10 +255,7 @@ func (h *ServiceHandler) UpdateService(c *gin.Context) {
 	c.JSON(http.StatusOK, service)
 }
 
-// DeleteService deletes a service (Organization Admin and Super Admin only)
-// Standard Users cannot delete services - they have read-only access
 func (h *ServiceHandler) DeleteService(c *gin.Context) {
-	// Check role - only admin and super_admin can delete services
 	role, exists := c.Get("role")
 	if !exists || (role != "admin" && role != "super_admin") {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Only Organization Admin or Super Admin can delete services"})
@@ -289,7 +274,6 @@ func (h *ServiceHandler) DeleteService(c *gin.Context) {
 		return
 	}
 
-	// Verify organization access
 	orgID, _ := c.Get("organization_id")
 	if service.OrganizationID.String() != orgID.(string) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})

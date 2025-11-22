@@ -44,14 +44,6 @@ resource "aws_ecs_task_definition" "backend" {
         }
       ]
 
-      healthCheck = {
-        command     = ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/api/v1/health || exit 1"]
-        interval    = 30
-        timeout     = 5
-        retries     = 3
-        startPeriod = 60
-      }
-
       environment = [
         {
           name  = "PORT"
@@ -97,6 +89,18 @@ resource "aws_ecs_task_definition" "backend" {
         {
           name  = "ENV"
           value = "production"
+        },
+        {
+          name  = "SMTP_HOST"
+          value = var.smtp_host != "" ? var.smtp_host : "email-smtp.${var.aws_region}.amazonaws.com"
+        },
+        {
+          name  = "SMTP_PORT"
+          value = "587"
+        },
+        {
+          name  = "FRONTEND_URL"
+          value = var.frontend_url != "" ? var.frontend_url : "http://${aws_s3_bucket_website_configuration.frontend.website_endpoint}"
         }
       ]
 
@@ -113,6 +117,14 @@ resource "aws_ecs_task_definition" "backend" {
         {
           name      = "OPENAI_API_KEY"
           valueFrom = aws_ssm_parameter.openai_api_key.arn
+        },
+        {
+          name      = "SMTP_USER"
+          valueFrom = aws_ssm_parameter.smtp_user.arn
+        },
+        {
+          name      = "SMTP_PASSWORD"
+          valueFrom = aws_ssm_parameter.smtp_password.arn
         }
       ]
 
@@ -298,11 +310,14 @@ resource "aws_iam_role_policy" "ecs_task_sns_ses_ssm" {
           "ssm:GetParameter",
           "ssm:GetParametersByPath"
         ]
-            Resource = [
-              aws_ssm_parameter.db_password.arn,
-              aws_ssm_parameter.jwt_secret.arn,
-              aws_ssm_parameter.openai_api_key.arn
-            ]
+        Resource = [
+          aws_ssm_parameter.db_password.arn,
+          aws_ssm_parameter.jwt_secret.arn,
+          aws_ssm_parameter.openai_api_key.arn,
+          aws_ssm_parameter.smtp_host.arn,
+          aws_ssm_parameter.smtp_user.arn,
+          aws_ssm_parameter.smtp_password.arn
+        ]
       }
     ]
   })

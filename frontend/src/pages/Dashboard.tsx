@@ -109,13 +109,13 @@ export default function Dashboard() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "up":
-        return "text-blue-500 bg-blue-800/20";
+        return "text-emerald-300 bg-emerald-500/20 border border-emerald-500/30";
       case "down":
-        return "text-red-400 bg-red-500/20";
+        return "text-red-300 bg-red-500/20 border border-red-500/30";
       case "unknown":
-        return "text-white/60 bg-white/10";
+        return "text-slate-400 bg-slate-700/30 border border-slate-600/30";
       default:
-        return "text-white/60 bg-white/10";
+        return "text-slate-400 bg-slate-700/30 border border-slate-600/30";
     }
   };
 
@@ -133,7 +133,7 @@ export default function Dashboard() {
       };
 
   return (
-    <PageTransition animationType="slideUp">
+    <PageTransition animationType="fade">
       <div className="relative space-y-8 pb-8 min-h-screen">
         {/* ColorBends Background */}
         <div
@@ -141,15 +141,15 @@ export default function Dashboard() {
           style={{ top: 0, left: 0, right: 0, bottom: 0 }}
         >
           <ColorBends
-            colors={["#ff5c7a", "#8a5cff", "#00ffd1"]}
+            colors={["#1e40af", "#3b82f6", "#6366f1", "#8b5cf6"]}
             rotation={30}
-            speed={0.3}
-            scale={1.2}
-            frequency={1.4}
-            warpStrength={1.2}
-            mouseInfluence={0.8}
-            parallax={0.6}
-            noise={0.08}
+            speed={0.2}
+            scale={1.0}
+            frequency={1.2}
+            warpStrength={0.8}
+            mouseInfluence={0.5}
+            parallax={0.4}
+            noise={0.05}
             transparent
             style={{ width: "100%", height: "100%" }}
           />
@@ -158,7 +158,7 @@ export default function Dashboard() {
         {/* Content */}
         <div className="relative z-[2]">
           {/* Hero Section  */}
-          <div className="bg-gradient-to-r from-white/10 via-white/8 to-white/5 backdrop-blur-xl rounded-2xl p-8 border border-white/20 shadow-2xl shadow-black/20">
+          <div className="bg-gradient-to-br from-slate-800/40 via-slate-800/30 to-blue-900/20 backdrop-blur-xl rounded-2xl p-8 border border-slate-700/50 shadow-2xl shadow-black/30">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-4">
@@ -178,20 +178,22 @@ export default function Dashboard() {
                 </p>
               </div>
               <div className="flex items-center space-x-4">
-                <div className="bg-white/10 rounded-xl px-4 py-3 border border-white/20">
+                <div className="bg-emerald-500/20 rounded-xl px-4 py-3 border border-emerald-500/30 backdrop-blur-sm">
                   <div className="flex items-center space-x-2">
-                    <div className="h-2.5 w-2.5 bg-blue-600 rounded-full animate-pulse"></div>
+                    <div className="h-2.5 w-2.5 bg-emerald-400 rounded-full animate-pulse"></div>
                     <div>
-                      <p className="text-xs font-medium text-white/60">
+                      <p className="text-xs font-medium text-emerald-200/80">
                         Status
                       </p>
-                      <p className="text-sm font-semibold text-white">Active</p>
+                      <p className="text-sm font-semibold text-emerald-100">
+                        Active
+                      </p>
                     </div>
                   </div>
                 </div>
                 <Link
                   to="/services"
-                  className="inline-flex items-center px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl border border-white/20 text-sm font-semibold text-white transition-all duration-200"
+                  className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl border border-blue-500/30 text-sm font-semibold text-white transition-all duration-200 shadow-lg shadow-blue-500/20"
                 >
                   <Zap className="w-4 h-4 mr-2" />
                   Add Service
@@ -201,16 +203,16 @@ export default function Dashboard() {
           </div>
 
           {error && (
-            <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-xl p-4 backdrop-blur-xl">
+            <div className="bg-amber-500/20 border border-amber-500/40 rounded-xl p-4 backdrop-blur-xl shadow-lg">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
-                  <AlertCircle className="h-5 w-5 text-yellow-400 mt-0.5" />
+                  <AlertCircle className="h-5 w-5 text-amber-400 mt-0.5" />
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-sm font-semibold text-yellow-300">
+                  <h3 className="text-sm font-semibold text-amber-200">
                     Warning
                   </h3>
-                  <p className="mt-1 text-sm text-yellow-200/90">{error}</p>
+                  <p className="mt-1 text-sm text-amber-100/90">{error}</p>
                 </div>
               </div>
             </div>
@@ -227,58 +229,58 @@ export default function Dashboard() {
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20 hover:border-white/30 hover:bg-white/15 transition-all duration-300 group">
+              <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50 hover:border-slate-600/60 hover:shadow-lg hover:shadow-slate-900/50 transition-all duration-300 group">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="bg-white/20 rounded-lg p-2.5 group-hover:bg-white/30 transition-colors">
-                    <Server className="h-5 w-5 text-white/90" />
+                  <div className="bg-gradient-to-br from-indigo-500/30 to-indigo-600/30 rounded-lg p-2.5 group-hover:from-indigo-500/40 group-hover:to-indigo-600/40 transition-colors border border-indigo-500/20">
+                    <Server className="h-5 w-5 text-indigo-300" />
                   </div>
-                  <TrendingUp className="h-4 w-4 text-white/40" />
+                  <TrendingUp className="h-4 w-4 text-slate-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-white/60 mb-1">
+                  <p className="text-sm font-medium text-slate-300 mb-1">
                     Total Services
                   </p>
                   <p className="text-3xl font-bold text-white mb-2">
                     {displayOverview.total_services || 0}
                   </p>
-                  <p className="text-xs text-white/50">Monitored endpoints</p>
+                  <p className="text-xs text-slate-400">Monitored endpoints</p>
                 </div>
               </div>
 
-              <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20 hover:border-white/30 hover:bg-white/15 transition-all duration-300 group">
+              <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50 hover:border-slate-600/60 hover:shadow-lg hover:shadow-slate-900/50 transition-all duration-300 group">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="bg-blue-800/20 rounded-lg p-2.5 group-hover:bg-blue-800/30 transition-colors">
-                    <CheckCircle className="h-5 w-5 text-blue-500" />
+                  <div className="bg-gradient-to-br from-emerald-500/30 to-emerald-600/30 rounded-lg p-2.5 group-hover:from-emerald-500/40 group-hover:to-emerald-600/40 transition-colors border border-emerald-500/20">
+                    <CheckCircle className="h-5 w-5 text-emerald-300" />
                   </div>
-                  <TrendingUp className="h-4 w-4 text-white/40" />
+                  <TrendingUp className="h-4 w-4 text-slate-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-white/60 mb-1">
+                  <p className="text-sm font-medium text-slate-300 mb-1">
                     Average Uptime
                   </p>
                   <p className="text-3xl font-bold text-white mb-2">
                     {displayOverview.average_uptime.toFixed(2) || "0.00"}%
                   </p>
-                  <p className="text-xs text-white/50">System availability</p>
+                  <p className="text-xs text-slate-400">System availability</p>
                 </div>
               </div>
 
-              <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20 hover:border-white/30 hover:bg-white/15 transition-all duration-300 group">
+              <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50 hover:border-slate-600/60 hover:shadow-lg hover:shadow-slate-900/50 transition-all duration-300 group">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="bg-red-500/20 rounded-lg p-2.5 group-hover:bg-red-500/30 transition-colors">
-                    <AlertCircle className="h-5 w-5 text-red-400" />
+                  <div className="bg-gradient-to-br from-red-500/30 to-red-600/30 rounded-lg p-2.5 group-hover:from-red-500/40 group-hover:to-red-600/40 transition-colors border border-red-500/20">
+                    <AlertCircle className="h-5 w-5 text-red-300" />
                   </div>
-                  <TrendingUp className="h-4 w-4 text-white/40" />
+                  <TrendingUp className="h-4 w-4 text-slate-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-white/60 mb-1">
+                  <p className="text-sm font-medium text-slate-300 mb-1">
                     Services Down
                   </p>
                   <p className="text-3xl font-bold text-white mb-2">
                     {displayOverview.services.filter((s) => s.status === "down")
                       .length || 0}
                   </p>
-                  <p className="text-xs text-white/50">Requires attention</p>
+                  <p className="text-xs text-slate-400">Requires attention</p>
                 </div>
               </div>
             </div>
@@ -298,20 +300,20 @@ export default function Dashboard() {
                       monitored services
                     </p>
                   </div>
-                  <div className="flex items-center space-x-2 px-3 py-1.5 bg-white/5 rounded-lg border border-white/10 mt-4">
-                    <div className="h-2 w-2 bg-blue-600 rounded-full animate-pulse"></div>
-                    <span className="text-xs font-medium text-white/80 ">
+                  <div className="flex items-center space-x-2 px-3 py-1.5 bg-emerald-500/20 rounded-lg border border-emerald-500/30 mt-4 backdrop-blur-sm">
+                    <div className="h-2 w-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                    <span className="text-xs font-medium text-emerald-200">
                       Live
                     </span>
                   </div>
                 </div>
               </div>
-              <div className="bg-white/10 backdrop-blur-xl rounded-xl p-8 border border-white/20">
+              <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl p-8 border border-slate-700/50 shadow-xl">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {displayOverview.services.slice(0, 8).map((service) => (
                     <div
                       key={service.service_id}
-                      className="group bg-white/10 hover:bg-white/15 rounded-xl p-6 border border-white/20 hover:border-white/30 transition-all duration-300"
+                      className="group bg-slate-800/40 hover:bg-slate-800/50 rounded-xl p-6 border border-slate-700/50 hover:border-slate-600/60 transition-all duration-300 backdrop-blur-sm"
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1 min-w-0">
@@ -336,12 +338,12 @@ export default function Dashboard() {
                           <span
                             className={`text-2xl font-bold ${
                               service.uptime_percent >= 99
-                                ? "text-blue-500"
+                                ? "text-emerald-400"
                                 : service.uptime_percent >= 95
-                                ? "text-yellow-400"
+                                ? "text-amber-400"
                                 : service.total_checks > 0
                                 ? "text-red-400"
-                                : "text-white/40"
+                                : "text-slate-400"
                             }`}
                           >
                             {service.total_checks > 0
@@ -356,16 +358,16 @@ export default function Dashboard() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <div className="relative w-full h-3 bg-white/10 rounded-full overflow-hidden">
+                        <div className="relative w-full h-3 bg-slate-700/50 rounded-full overflow-hidden">
                           <div
                             className={`absolute inset-y-0 left-0 rounded-full transition-all duration-700 ease-out ${
                               service.uptime_percent >= 99
-                                ? "bg-gradient-to-r from-blue-700 via-indigo-800 to-blue-800"
+                                ? "bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-500"
                                 : service.uptime_percent >= 95
-                                ? "bg-gradient-to-r from-yellow-400 via-orange-400 to-amber-500"
+                                ? "bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500"
                                 : service.total_checks > 0
-                                ? "bg-gradient-to-r from-red-400 via-pink-400 to-rose-500"
-                                : "bg-white/20"
+                                ? "bg-gradient-to-r from-red-500 via-red-400 to-red-500"
+                                : "bg-slate-600/50"
                             }`}
                             style={{
                               width: `${
@@ -375,12 +377,12 @@ export default function Dashboard() {
                               }%`,
                               boxShadow:
                                 service.total_checks > 0
-                                  ? `0 0 12px ${
+                                  ? `0 0 8px ${
                                       service.uptime_percent >= 99
-                                        ? "rgba(34, 197, 94, 0.4)"
+                                        ? "rgba(16, 185, 129, 0.5)"
                                         : service.uptime_percent >= 95
-                                        ? "rgba(251, 191, 36, 0.4)"
-                                        : "rgba(239, 68, 68, 0.4)"
+                                        ? "rgba(245, 158, 11, 0.5)"
+                                        : "rgba(239, 68, 68, 0.5)"
                                     }`
                                   : "none",
                             }}
@@ -398,11 +400,11 @@ export default function Dashboard() {
                             <span className="text-white/50">
                               Last check:{" "}
                               {service.uptime_percent >= 99 ? (
-                                <span className="text-blue-500 font-medium">
+                                <span className="text-emerald-400 font-medium">
                                   Healthy
                                 </span>
                               ) : service.uptime_percent >= 95 ? (
-                                <span className="text-yellow-400 font-medium">
+                                <span className="text-amber-400 font-medium">
                                   Degraded
                                 </span>
                               ) : (
@@ -433,7 +435,7 @@ export default function Dashboard() {
                   services
                 </p>
               </div>
-              <div className="bg-white/10 backdrop-blur-xl rounded-xl p-8 border border-white/20">
+              <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl p-8 border border-slate-700/50 shadow-xl">
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart
                     data={displayOverview.services.slice(0, 10)}
@@ -486,17 +488,17 @@ export default function Dashboard() {
                     <Line
                       type="monotone"
                       dataKey="avg_response_time_ms"
-                      stroke="#60a5fa"
-                      strokeWidth={2}
+                      stroke="#6366f1"
+                      strokeWidth={2.5}
                       dot={{
-                        fill: "#60a5fa",
+                        fill: "#6366f1",
                         r: 4,
                         strokeWidth: 2,
-                        stroke: "#fff",
+                        stroke: "#1e293b",
                       }}
                       activeDot={{
                         r: 6,
-                        fill: "#3b82f6",
+                        fill: "#818cf8",
                         stroke: "#fff",
                         strokeWidth: 2,
                       }}
@@ -519,8 +521,8 @@ export default function Dashboard() {
                 metrics
               </p>
             </div>
-            <div className="bg-white/10 backdrop-blur-xl rounded-xl overflow-hidden border border-white/20">
-              <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-white/20 bg-white/10">
+            <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl overflow-hidden border border-slate-700/50 shadow-xl">
+              <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-700/50 bg-slate-800/40">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
                   <div>
                     <h3 className="text-base sm:text-lg font-semibold text-white">
@@ -552,7 +554,7 @@ export default function Dashboard() {
                   <div className="mt-6">
                     <Link
                       to="/services"
-                      className="inline-flex items-center px-4 py-2 border border-white/20 text-sm font-medium rounded-md text-white bg-white/10 hover:bg-white/20 transition-colors"
+                      className="inline-flex items-center px-4 py-2 border border-slate-600/50 text-sm font-medium rounded-md text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-colors shadow-lg shadow-blue-500/20"
                     >
                       Add Service
                     </Link>
@@ -586,7 +588,7 @@ export default function Dashboard() {
                         {displayOverview.services.map((service) => (
                           <tr
                             key={service.service_id}
-                            className="hover:bg-white/5 transition-colors"
+                            className="hover:bg-slate-800/40 transition-colors"
                           >
                             <td className="px-6 py-4 whitespace-nowrap">
                               <Link
@@ -605,10 +607,10 @@ export default function Dashboard() {
                                 <span
                                   className={`h-1.5 w-1.5 rounded-full mr-1.5 ${
                                     service.status === "up"
-                                      ? "bg-blue-600"
+                                      ? "bg-emerald-400"
                                       : service.status === "down"
                                       ? "bg-red-400"
-                                      : "bg-white/40"
+                                      : "bg-slate-400"
                                   }`}
                                 ></span>
                                 {service.status === "unknown"
@@ -622,9 +624,9 @@ export default function Dashboard() {
                                   <span className="text-sm font-medium text-white">
                                     {service.uptime_percent.toFixed(2)}%
                                   </span>
-                                  <div className="w-16 bg-white/20 rounded-full h-1.5">
+                                  <div className="w-16 bg-slate-700/50 rounded-full h-1.5">
                                     <div
-                                      className="bg-blue-400 h-1.5 rounded-full transition-all duration-300"
+                                      className="bg-emerald-500 h-1.5 rounded-full transition-all duration-300"
                                       style={{
                                         width: `${service.uptime_percent}%`,
                                       }}
@@ -649,10 +651,10 @@ export default function Dashboard() {
                                     {service.total_checks}
                                   </span>
                                   <span className="text-white/40 mx-1">•</span>
-                                  <span className="text-blue-500">
+                                  <span className="text-emerald-400">
                                     {service.up_checks} up
                                   </span>
-                                  <span className="text-white/40 mx-1">•</span>
+                                  <span className="text-slate-500 mx-1">•</span>
                                   <span className="text-red-400">
                                     {service.down_checks} down
                                   </span>
@@ -675,7 +677,7 @@ export default function Dashboard() {
                       <Link
                         key={service.service_id}
                         to={`/services/${service.service_id}`}
-                        className="block px-4 py-4 hover:bg-white/5 transition-colors"
+                        className="block px-4 py-4 hover:bg-slate-800/40 transition-colors"
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1 min-w-0">
@@ -691,7 +693,7 @@ export default function Dashboard() {
                             <span
                               className={`h-1.5 w-1.5 rounded-full mr-1.5 ${
                                 service.status === "up"
-                                  ? "bg-blue-600"
+                                  ? "bg-blue-800"
                                   : service.status === "down"
                                   ? "bg-red-400"
                                   : "bg-white/40"
@@ -714,9 +716,9 @@ export default function Dashboard() {
                                 <span className="text-xs font-medium text-white">
                                   {service.uptime_percent.toFixed(2)}%
                                 </span>
-                                <div className="flex-1 bg-white/20 rounded-full h-1.5 min-w-[60px]">
+                                <div className="flex-1 bg-slate-700/50 rounded-full h-1.5 min-w-[60px]">
                                   <div
-                                    className="bg-blue-400 h-1.5 rounded-full transition-all duration-300"
+                                    className="bg-emerald-500 h-1.5 rounded-full transition-all duration-300"
                                     style={{
                                       width: `${service.uptime_percent}%`,
                                     }}
@@ -753,10 +755,10 @@ export default function Dashboard() {
                                   {service.total_checks}
                                 </span>
                                 <span className="text-white/40">•</span>
-                                <span className="text-blue-500">
+                                <span className="text-emerald-400">
                                   {service.up_checks} up
                                 </span>
-                                <span className="text-white/40">•</span>
+                                <span className="text-slate-500">•</span>
                                 <span className="text-red-400">
                                   {service.down_checks} down
                                 </span>

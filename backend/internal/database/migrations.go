@@ -6,16 +6,17 @@ import (
 )
 
 func RunMigrations(db *sql.DB) error {
-migrations := []string{
-	createOrganizationsTable, // create first!
-	createUsersTable,
-	createServicesTable,
-	createHealthChecksTable,
-	createAlertsTable,
-	createAlertSubscriptionsTable,
-	createIndexes,
-	addLatencyThresholdColumn, // Add latency_threshold_ms if it doesn't exist
-}
+	migrations := []string{
+		createOrganizationsTable, // create first!
+		createUsersTable,
+		createServicesTable,
+		createHealthChecksTable,
+		createAlertsTable,
+		createAlertSubscriptionsTable,
+		createIndexes,
+		addLatencyThresholdColumn, // Add latency_threshold_ms if it doesn't exist
+		addEmailVerificationColumns, // Add email verification fields
+	}
 	for _, migration := range migrations {
 		if _, err := db.Exec(migration); err != nil {
 			return fmt.Errorf("migration failed: %w", err)
@@ -123,5 +124,12 @@ CREATE INDEX IF NOT EXISTS idx_alert_subscriptions_organization_id ON alert_subs
 const addLatencyThresholdColumn = `
 ALTER TABLE services 
 ADD COLUMN IF NOT EXISTS latency_threshold_ms INTEGER DEFAULT NULL;
+`
+
+const addEmailVerificationColumns = `
+ALTER TABLE users 
+ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255),
+ADD COLUMN IF NOT EXISTS verification_token_expires TIMESTAMP;
 `
 

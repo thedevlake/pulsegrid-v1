@@ -15,9 +15,9 @@ import (
 )
 
 type AuthHandler struct {
-	userRepo *repository.UserRepository
-	orgRepo  *repository.OrganizationRepository
-	cfg      *config.Config
+	userRepo    *repository.UserRepository
+	orgRepo     *repository.OrganizationRepository
+	cfg         *config.Config
 }
 
 func NewAuthHandler(userRepo *repository.UserRepository, orgRepo *repository.OrganizationRepository, cfg *config.Config) *AuthHandler {
@@ -52,21 +52,18 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Check if user exists
 	_, err := h.userRepo.GetByEmail(req.Email)
 	if err == nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "User already exists"})
 		return
 	}
 
-	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 		return
 	}
 
-	// Create organization
 	org := &models.Organization{
 		Name: req.OrgName,
 	}
@@ -75,50 +72,34 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Determine user role (Three-tier RBAC system):
-	// - Super Admin: First user in system becomes super_admin (bootstrap)
-	//   Controls the entire platform — all organizations, all users, all data
-	// - Organization Admin: First user in a new organization becomes admin of that organization
-	//   Manages everything inside their own organization only
-	// - Standard User: Subsequent users in existing organizations default to "user" role
-	//   Regular member with access only to their organization's features and resources
-	
-	// Check if this is the first user in the entire system
 	totalUserCount, err := h.userRepo.CountUsers()
 	if err != nil {
-		// If we can't count users, default to "user" for security
 		totalUserCount = 1
 	}
 
 	var userRole string
 	if totalUserCount == 0 {
-		// First user in the entire system becomes super_admin (bootstrap)
 		userRole = "super_admin"
 	} else {
-		// Check if this is the first user in this new organization
-		// Since we just created the organization, count users in it (should be 0, but check anyway)
 		orgUserCount, err := h.userRepo.CountUsersByOrganization(org.ID)
 		if err != nil {
-			// If we can't count, default to "user" for security
 			orgUserCount = 1
 		}
 		
 		if orgUserCount == 0 {
-			// First user in this new organization becomes admin
 			userRole = "admin"
 		} else {
-			// Subsequent users in existing organizations default to "user" role
 			userRole = "user"
 		}
 	}
 
-	// Create user
 	user := &models.User{
-		Email:        req.Email,
-		PasswordHash: string(hashedPassword),
-		Name:         req.Name,
-		Role:         userRole,
+		Email:          req.Email,
+		PasswordHash:   string(hashedPassword),
+		Name:           req.Name,
+		Role:           userRole,
 		OrganizationID: &org.ID,
+		EmailVerified:  true,
 	}
 
 	if err := h.userRepo.Create(user); err != nil {
@@ -126,7 +107,6 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Generate JWT token
 	token, err := h.generateToken(user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
@@ -134,6 +114,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	}
 
 	user.PasswordHash = ""
+
 	c.JSON(http.StatusCreated, AuthResponse{
 		Token: token,
 		User:  user,
@@ -147,20 +128,17 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// Get user
 	user, err := h.userRepo.GetByEmail(req.Email)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
 
-	// Verify password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
 
-	// Generate JWT token
 	token, err := h.generateToken(user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
@@ -191,10 +169,7 @@ func (h *AuthHandler) generateToken(user *models.User) (string, error) {
 	return token.SignedString([]byte(h.cfg.JWT.Secret))
 }
 
-// Me returns the current authenticated user
-// This endpoint is used to validate tokens on app startup
 func (h *AuthHandler) Me(c *gin.Context) {
-	// Get user ID from context (set by AuthMiddleware)
 	userIDStr, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
@@ -207,21 +182,18 @@ func (h *AuthHandler) Me(c *gin.Context) {
 		return
 	}
 
-	// Parse UUID from string
 	userID, err := uuid.Parse(userIDString)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID format"})
 		return
 	}
 
-	// Get user from database
 	user, err := h.userRepo.GetByID(userID)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return
 	}
 
-	// Clear sensitive data
 	user.PasswordHash = ""
 	c.JSON(http.StatusOK, gin.H{"user": user})
 }

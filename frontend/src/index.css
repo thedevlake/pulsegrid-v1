@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,16 +7,29 @@
 
 @layer base {
   * {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    /* font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; */
+ 
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-weight: 700;
+    font-style: normal;
+    letter-spacing: -0.03em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
   html {
     background: #030712; /* gray-950 - dark mode default */
     transition: background-color 0.3s ease;
+    scroll-behavior: smooth;
+    scroll-padding-top: 120px; /* Offset for sticky header */
   }
   
   body {
-    font-family: 'JetBrains Mono', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', monospace, sans-serif;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-weight: 400;
+    font-style: normal;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     font-variant-numeric: oldstyle-nums;
     -webkit-font-smoothing: antialiased;
@@ -23,6 +37,12 @@
     background: #030712; /* gray-950 - dark mode default */
     min-height: 100vh;
     transition: background-color 0.3s ease;
+  }
+  
+  /* Apply Manrope to UI elements for geometric modern feel */
+  button, .font-heading {
+    font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    letter-spacing: -0.02em;
   }
   :root {
     --background: 0 0% 100%;
@@ -80,6 +100,16 @@
 }
 
 @layer utilities {
+  /* Smooth scrolling enhancement */
+  * {
+    scroll-behavior: smooth;
+  }
+  
+  /* Ensure smooth scrolling for anchor links */
+  html {
+    scroll-padding-top: 120px;
+  }
+  
   .animate-gradient {
     background-size: 200% 200%;
     animation: gradient 3s ease infinite;
@@ -96,33 +126,6 @@
       background-position: 0% 50%;
     }
   }
-  
-  @keyframes gradient-x {
-    0%, 100% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-  }
-
-  /* Docs fade up animation */
-  @keyframes docs-fade-up {
-    0% {
-      opacity: 0;
-      transform: translateY(16px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .docs-section {
-    opacity: 0;
-    transform: translateY(16px);
-    animation: docs-fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
 
   @keyframes fade-in {
     from {
@@ -130,6 +133,28 @@
     }
     to {
       opacity: 1;
+    }
+  }
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade-in-scale {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
     }
   }
 
@@ -145,19 +170,62 @@
   }
 
   .animate-fade-in {
-    animation: fade-in 0.6s ease-out;
+    animation: fade-in 0.6s ease-out forwards;
+    opacity: 0;
   }
 
   .animate-slide-up {
-    animation: slide-up 0.8s ease-out;
+    animation: slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
   }
 
   .animate-slide-up-delay {
-    animation: slide-up 0.8s ease-out 0.2s both;
+    animation: slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+    opacity: 0;
   }
 
   .animate-fade-in-delay {
-    animation: fade-in 0.6s ease-out 0.4s both;
+    animation: fade-in 0.6s ease-out 0.4s forwards;
+    opacity: 0;
+  }
+
+  /* Smooth fade-in-up animation */
+  .animate-fade-in-up {
+    animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+  }
+
+  /* Staggered animation delays */
+  .animate-delay-100 {
+    animation-delay: 0.1s;
+  }
+
+  .animate-delay-200 {
+    animation-delay: 0.2s;
+  }
+
+  .animate-delay-300 {
+    animation-delay: 0.3s;
+  }
+
+  .animate-delay-400 {
+    animation-delay: 0.4s;
+  }
+
+  .animate-delay-500 {
+    animation-delay: 0.5s;
+  }
+
+  .animate-delay-600 {
+    animation-delay: 0.6s;
+  }
+
+  .animate-delay-700 {
+    animation-delay: 0.7s;
+  }
+
+  .animate-delay-800 {
+    animation-delay: 0.8s;
   }
 
   /* Feature Card Animations */
@@ -252,6 +320,36 @@
   .animate-glow {
     animation: glow 2s ease-in-out infinite;
   }
+
+  /* Icon pulse animation */
+  @keyframes icon-pulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 0.9;
+    }
+  }
+
+  .animate-icon-pulse {
+    animation: icon-pulse 3s ease-in-out infinite;
+  }
+
+  /* Icon glow animation */
+  @keyframes icon-glow {
+    0%, 100% {
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
+    }
+  }
+
+  .animate-icon-glow {
+    animation: icon-glow 2s ease-in-out infinite;
+  }
 }
 
 /* Glassmorphism effects */
@@ -321,16 +419,6 @@
   }
   body {
     @apply bg-background text-foreground;
-  }
-  
-  /* Smooth route transitions - prevent white flash */
-  #root {
-    transition: background-color 0.2s ease;
-  }
-  
-  /* Ensure all route containers have proper background */
-  [data-router-view] {
-    background: inherit;
   }
 }
 

@@ -6,11 +6,11 @@ import (
 
 func CORS(origin string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Allow localhost on any port for development
 		requestOrigin := c.Request.Header.Get("Origin")
-		if requestOrigin != "" && (requestOrigin == origin || 
-			(requestOrigin[:17] == "http://localhost:" && origin[:17] == "http://localhost:")) {
-			// Allow if exact match or both are localhost (any port)
+		
+		if requestOrigin != "" && len(requestOrigin) >= 17 && requestOrigin[:17] == "http://localhost:" {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", requestOrigin)
+		} else if requestOrigin != "" && requestOrigin == origin {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", requestOrigin)
 		} else {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)

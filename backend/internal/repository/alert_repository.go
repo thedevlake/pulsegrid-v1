@@ -24,7 +24,7 @@ func (r *AlertRepository) Create(alert *models.Alert) error {
 	`
 
 	alert.ID = uuid.New()
-	alert.CreatedAt = time.Now()
+	alert.CreatedAt = time.Now().UTC()
 
 	err := r.db.QueryRow(
 		query,
@@ -106,7 +106,7 @@ func (r *AlertRepository) Resolve(id uuid.UUID) error {
 		SET is_resolved = TRUE, resolved_at = $2
 		WHERE id = $1
 	`
-	_, err := r.db.Exec(query, id, time.Now())
+	_, err := r.db.Exec(query, id, time.Now().UTC())
 	return err
 }
 
@@ -155,7 +155,7 @@ func (r *AlertRepository) CreateSubscription(sub *models.AlertSubscription) erro
 	`
 
 	sub.ID = uuid.New()
-	sub.CreatedAt = time.Now()
+	sub.CreatedAt = time.Now().UTC()
 
 	err := r.db.QueryRow(
 		query,

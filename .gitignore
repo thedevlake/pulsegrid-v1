@@ -90,3 +90,6 @@ k6-load-test.js
 # Frontend build artifacts
 frontend/dist/
 
+backend/.env.backup
+backend/test_email.go
+infrastructure/terraform.tfvars

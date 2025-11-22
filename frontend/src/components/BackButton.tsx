@@ -4,18 +4,18 @@ import { useThemeStore } from "../store/themeStore";
 
 interface BackButtonProps {
   className?: string;
-  onClick?: () => void;
 }
 
-export default function BackButton({ className = "", onClick }: BackButtonProps) {
+export default function BackButton({ className }: BackButtonProps) {
   const navigate = useNavigate();
   const { theme } = useThemeStore();
 
   const handleBack = () => {
-    if (onClick) {
-      onClick();
-    } else {
+    // Check if there's history to go back to, otherwise navigate to dashboard
+    if (window.history.length > 1) {
       navigate(-1);
+    } else {
+      navigate("/dashboard");
     }
   };
 
@@ -31,7 +31,7 @@ export default function BackButton({ className = "", onClick }: BackButtonProps)
     >
       <ArrowLeft 
         className={`w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1 ${
-          theme === "dark" ? "text-slate-300 group-hover:text-white" : "text-blue-300 group-hover:text-white"
+          theme === "dark" ? "text-slate-300 group-hover:text-white" : "text-blue-400 group-hover:text-white"
         }`}
       />
     </button>

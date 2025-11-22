@@ -1,4 +1,4 @@
-# PulseGrid - Cloud-Native Local Infrastructure Monitoring Platform
+# PulseGrid - Cloud-Native Infrastructure Monitoring Platform
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Go Version](https://img.shields.io/badge/go-1.21+-00ADD8?logo=go)
@@ -9,7 +9,7 @@
 ![AWS](https://img.shields.io/badge/AWS-Cloud-orange?logo=amazon-aws)
 ![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker)
 
-A full-stack, cloud-native monitoring platform that tracks the health, uptime, latency, and performance of web and cloud services.
+A full-stack, cloud-native monitoring platform that tracks the health, uptime, latency, and performance of web and cloud services with AI-powered predictions and intelligent alerting.
 
 [![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-Click_Here-success?style=for-the-badge)](https://your-demo-url.com)
 [![API Documentation](https://img.shields.io/badge/📚_API_Docs-View_Documentation-blue?style=for-the-badge)](https://your-api-docs-url.com)
@@ -31,7 +31,7 @@ _Add, edit, and monitor multiple services with custom health check intervals_
 ### Alert Configuration
 
 ![alert-image](https://file%2B.vscode-resource.vscode-cdn.net/Users/sportysofia/Desktop/Screenshot%202025-11-15%20at%2012.54.38.png?version%3D1763207689879)
-_Configure email, SMS, and Slack notifications for service downtime_
+_Configure email and SMS notifications for service downtime_
 
 ### Health Check Details
 
@@ -42,15 +42,46 @@ _Detailed health check history with response times and status codes_
 
 ## 🚀 Features
 
+### Core Monitoring
 - **Service Monitoring**: Track uptime and performance of URLs, APIs, and IPs
-- **Real-time Alerts**: Email, SMS, and Slack notifications during downtime
-- **Interactive Dashboards**: Visualize real-time analytics and historical trends
-- **Performance Reports**: Export weekly/monthly summaries as PDF or CSV
-- **Multi-tenant**: Secure data isolation by organization
-- **Cloud-Native**: Built on AWS with auto-scaling capabilities
 - **Multi-Protocol Support**: HTTP/HTTPS, TCP, and ICMP (ping) monitoring
-- **Intelligent Scheduling**: Per-service configurable check intervals
+- **Intelligent Scheduling**: Per-service configurable check intervals (10 seconds to 24 hours)
+- **Real-time Health Checks**: Automatic periodic checks with manual trigger capability
+- **Response Time Tracking**: Monitor latency trends and performance degradation
+
+### Alerting & Notifications
+- **Email Alerts**: AWS SES and SMTP support for email notifications
+- **SMS Notifications**: AWS SNS integration for SMS alerts
+- **Alert Subscriptions**: Per-service or global alert subscriptions
 - **Alert Deduplication**: State transition-based alerting to prevent spam
+- **Severity Levels**: Critical, High, Medium, and Low alert classifications
+
+### Analytics & Insights
+- **Interactive Dashboards**: Real-time analytics with historical trend visualization
+- **AI-Powered Predictions**: OpenAI integration for proactive incident prediction
+- **Statistical Analysis**: Risk level assessment with confidence scoring
+- **Performance Reports**: Export weekly/monthly summaries as PDF or CSV
+- **Service Statistics**: Uptime percentage, average response time, failure rate tracking
+
+### Multi-Tenant Architecture
+- **Organization Isolation**: Secure data isolation by organization
+- **Role-Based Access Control (RBAC)**: Three-tier system (Super Admin, Organization Admin, Standard User)
+- **User Management**: Admin panel for user and organization management
+- **Permission System**: Granular access control for service management
+
+### Infrastructure & Deployment
+- **Cloud-Native**: Built on AWS with auto-scaling capabilities
+- **Containerized**: Docker support for consistent deployments
+- **Infrastructure as Code**: Terraform for AWS resource management
+- **CI/CD Ready**: GitHub Actions integration support
+- **Public API**: Rate-limited public status check endpoint
+
+### Additional Features
+- **WebSocket Support**: Real-time updates for dashboard and service status
+- **Prometheus Metrics**: Export metrics in Prometheus format
+- **Public Status API**: Rate-limited endpoint for checking any HTTP/HTTPS service
+- **Health Check History**: Detailed logs with response times and status codes
+- **Service Management**: Full CRUD operations for services with organization scoping
 
 ## 🏗️ Architecture
 
@@ -79,7 +110,7 @@ graph TB
 
     subgraph "Notification Layer"
         M[Alert Engine] --> N[AWS SES<br/>Email]
-        M --> O[AWS SNS<br/>SMS/Slack]
+        M --> O[AWS SNS<br/>SMS]
     end
 
     subgraph "Infrastructure"
@@ -108,8 +139,8 @@ graph TB
 - **Database**: PostgreSQL (RDS)
 - **Workers**: AWS Lambda (Go) for scheduled health checks
 - **Infrastructure**: Terraform for AWS deployment
-- **Notifications**: AWS SNS + SES
-- **CI/CD**: GitHub Actions
+- **Notifications**: AWS SES (Email) + AWS SNS (SMS)
+- **AI Integration**: OpenAI API for predictive analytics
 - **Containerization**: Docker + Docker Compose
 - **State Management**: Zustand
 - **Charts**: Recharts
@@ -139,6 +170,7 @@ graph TB
 - **JWT** - Secure token-based authentication
 - **Goroutines** - Concurrent health check execution
 - **AWS SDK** - Cloud service integration
+- **OpenAI SDK** - AI-powered predictions
 
 ### DevOps & Infrastructure
 
@@ -152,7 +184,8 @@ graph TB
   - Lambda (Serverless functions)
   - EventBridge (Scheduled tasks)
   - SES (Email delivery)
-  - SNS (Multi-channel notifications)
+  - SNS (SMS notifications)
+  - SSM Parameter Store (Secrets management)
 - **GitHub Actions** - CI/CD pipeline automation
 
 ### Key Skills Demonstrated
@@ -169,15 +202,31 @@ graph TB
 - ✅ Multi-tenant application architecture
 - ✅ Error handling and resilience patterns
 - ✅ Performance optimization
+- ✅ AI integration for predictive analytics
 
 ## 📁 Project Structure
 
 ```
 PULSEGRID-V1/
 ├── backend/          # Go API server
+│   ├── cmd/         # Application entry points
+│   ├── internal/    # Internal packages
+│   │   ├── api/     # HTTP handlers and middleware
+│   │   ├── ai/      # AI prediction logic
+│   │   ├── checker/ # Health check implementation
+│   │   ├── models/  # Data models
+│   │   ├── repository/ # Database access layer
+│   │   ├── scheduler/ # Health check scheduling
+│   │   └── notifier/ # Alert notification service
 ├── frontend/         # React application
-├── workers/          # Lambda functions for health checks
+│   ├── src/
+│   │   ├── components/ # Reusable UI components
+│   │   ├── pages/      # Page components
+│   │   ├── hooks/      # Custom React hooks
+│   │   ├── store/      # State management
+│   │   └── lib/        # Utility functions
 ├── infrastructure/   # Terraform configurations
+├── workers/          # Lambda functions for health checks
 ├── scripts/          # Deployment and utility scripts
 └── docs/             # Documentation
 ```
@@ -236,9 +285,10 @@ See `.env.example` files in each directory for required environment variables.
 
 - [Docker Setup Guide](./DOCKER_SETUP.md) - 🐳 Run with Docker and Docker Compose
 - [Docker & AWS Deployment](./DOCKER_AWS_DEPLOYMENT.md) - ☁️ Complete deployment guide
-- [Email Setup Guide](./EMAIL_SETUP.md) - 📧 Configure email notifications
+- [Email Setup Guide](./AWS_SES_SETUP_COMPLETE.md) - 📧 Configure email notifications
 - [Infrastructure README](./infrastructure/README.md) - 🏗️ Terraform configuration details
-- [API Documentation](https://your-api-docs-url.com) - 📖 Complete API reference and endpoints
+- [Public API Documentation](./PUBLIC_API.md) - 📖 Public status check API
+- [Role Hierarchy](./ROLE_HIERARCHY.md) - 👥 RBAC system documentation
 
 ## 🎯 Quick Start
 
@@ -268,20 +318,21 @@ See [DOCKER_SETUP.md](./DOCKER_SETUP.md) for detailed Docker instructions.
 - PostgreSQL database instance
 - JWT secret key (generate a secure random string)
 - CORS origin (default: http://localhost:3000)
+- OpenAI API key (optional, for AI predictions)
 
 ### For AWS Deployment
 
 - AWS Account with appropriate permissions
 - AWS Access Key ID and Secret Access Key
 - Verified email address in AWS SES (for email notifications)
-- SNS Topic ARN (for SMS/Slack notifications)
+- SNS Topic ARN (for SMS notifications)
 - Unique S3 bucket name for frontend
 - Domain name (optional, for custom CloudFront distribution)
 
 ### Manual AWS Configuration Required
 
 1. **SES Email Verification**: Verify your email address in AWS SES Console
-2. **SNS Subscriptions**: Configure SMS/Slack webhooks in SNS Console
+2. **SNS Subscriptions**: Configure SMS subscriptions in SNS Console
 3. **Domain Setup** (Optional): Configure custom domain for CloudFront
 4. **SSL Certificate** (Optional): Request ACM certificate for custom domain
 
@@ -291,20 +342,40 @@ See [DOCKER_SETUP.md](./DOCKER_SETUP.md) for detailed Docker instructions.
 ✅ Service registration and management  
 ✅ Health checks (HTTP, TCP, Ping)  
 ✅ Real-time dashboard with charts  
-✅ Alert system (Email, SMS, Slack)  
+✅ Alert system (Email, SMS)  
+✅ AI-powered incident predictions  
 ✅ Multi-tenant data isolation  
-✅ CSV report export  
+✅ Role-based access control (RBAC)  
+✅ CSV and PDF report export  
+✅ WebSocket real-time updates  
+✅ Public status check API  
+✅ Prometheus metrics export  
 ✅ AWS infrastructure (Terraform)  
-✅ CI/CD pipeline (GitHub Actions)
+✅ Docker containerization  
+✅ Health check scheduling  
+✅ Alert subscriptions  
+✅ Service statistics and analytics  
+
+## ⚠️ Current Limitations
+
+PulseGrid is designed with a focus on core monitoring capabilities. The following limitations are intentional trade-offs to prioritize development efforts on the platform's primary features:
+
+- **Email Verification**: The authentication system currently allows sign-up with any email address without verification. This is a deliberate trade-off to focus development efforts on the core monitoring features. Email verification can be added in future iterations.
+
+- **Rate Limiting**: API rate limiting is implemented for the public status endpoint, but comprehensive rate limiting across all endpoints is recommended for production deployments.
+
+These limitations do not impact the core functionality of the monitoring platform and can be addressed as the platform evolves.
 
 ## 🚧 Future Enhancements
 
-- PDF report generation
-- AI-driven incident prediction
+- Enhanced email verification system
+- Additional notification channels
+- Advanced analytics and reporting
 - Native mobile app
 - GraphQL API support
-- Public status pages
+- Enhanced public status pages
 - Multi-cloud support
+- Custom alert rules and conditions
 
 ## 🔒 Security
 
@@ -318,7 +389,7 @@ See [DOCKER_SETUP.md](./DOCKER_SETUP.md) for detailed Docker instructions.
 - **Environment Variables**: Sensitive configuration stored in environment variables, never committed
 - **HTTPS Enforcement**: All production deployments use HTTPS/TLS encryption
 - **Input Validation**: Server-side validation using Zod schemas and Go validators
-- **Rate Limiting**: (Recommended) Implement rate limiting for API endpoints in production
+- **AWS Secrets Management**: SSM Parameter Store for secure secret storage
 
 ### Security Best Practices
 

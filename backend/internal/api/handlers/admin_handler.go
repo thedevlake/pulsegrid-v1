@@ -225,7 +225,7 @@ func (h *AdminHandler) GetSystemMetrics(c *gin.Context) {
 	}
 
 	// Calculate system uptime (last 24 hours)
-	since := time.Now().AddDate(0, 0, -1)
+	since := time.Now().UTC().AddDate(0, 0, -1)
 	var total, up int
 	if isSuperAdmin {
 		uptimeQuery := `
@@ -481,7 +481,7 @@ func (h *AdminHandler) UpdateUser(c *gin.Context) {
 		SET name = $2, role = $3, email = $4, updated_at = $5
 		WHERE id = $1
 	`
-	_, err = h.userRepo.GetDB().Exec(updateQuery, user.ID, user.Name, user.Role, user.Email, time.Now())
+		_, err = h.userRepo.GetDB().Exec(updateQuery, user.ID, user.Name, user.Role, user.Email, time.Now().UTC())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
 		return
@@ -614,7 +614,7 @@ func (h *AdminHandler) UpdateOrganization(c *gin.Context) {
 		SET name = $2, slug = $3, updated_at = $4
 		WHERE id = $1
 	`
-	_, err = h.orgRepo.GetDB().Exec(updateQuery, org.ID, org.Name, org.Slug, time.Now())
+		_, err = h.orgRepo.GetDB().Exec(updateQuery, org.ID, org.Name, org.Slug, time.Now().UTC())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update organization"})
 		return
@@ -721,7 +721,7 @@ func (h *AdminHandler) PromoteToSuperAdmin(c *gin.Context) {
 
 	// Update role to super_admin
 	updateQuery := `UPDATE users SET role = $1, updated_at = $2 WHERE id = $3`
-	_, err = h.userRepo.GetDB().Exec(updateQuery, "super_admin", time.Now(), user.ID)
+		_, err = h.userRepo.GetDB().Exec(updateQuery, "super_admin", time.Now().UTC(), user.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to promote user"})
 		return
@@ -779,7 +779,7 @@ func (h *AdminHandler) DemoteFromSuperAdmin(c *gin.Context) {
 
 	// Update role
 	updateQuery := `UPDATE users SET role = $1, updated_at = $2 WHERE id = $3`
-	_, err = h.userRepo.GetDB().Exec(updateQuery, newRole, time.Now(), user.ID)
+		_, err = h.userRepo.GetDB().Exec(updateQuery, newRole, time.Now().UTC(), user.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to demote user"})
 		return

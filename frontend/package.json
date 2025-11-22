@@ -7,16 +7,24 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 60"
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 60",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.4.0",
     "axios": "^1.6.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^2.30.0",
     "gsap": "^3.13.0",
     "lucide-react": "^0.294.0",
+    "maath": "^0.10.8",
     "motion": "^12.23.24",
     "ogl": "^1.0.11",
     "react": "^18.2.0",
@@ -25,11 +33,14 @@
     "react-router-dom": "^6.20.0",
     "recharts": "^2.10.3",
     "tailwind-merge": "^2.6.0",
-    "three": "^0.181.1",
+    "three": "^0.181.2",
     "zod": "^3.22.4",
     "zustand": "^4.4.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
     "@types/node": "^24.10.1",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
@@ -41,10 +52,12 @@
     "eslint": "^8.55.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "jsdom": "^27.2.0",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.3.6",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.2.2",
-    "vite": "^5.0.8"
+    "vite": "^5.0.8",
+    "vitest": "^4.0.10"
   }
 }

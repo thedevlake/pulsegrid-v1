@@ -34,7 +34,7 @@ func (h *StatsHandler) GetServiceStats(c *gin.Context) {
 	}
 
 	// Default to last 7 days
-	since := time.Now().AddDate(0, 0, -7)
+	since := time.Now().UTC().AddDate(0, 0, -7)
 	if sinceStr := c.Query("since"); sinceStr != "" {
 		if t, err := time.Parse(time.RFC3339, sinceStr); err == nil {
 			since = t
@@ -100,7 +100,7 @@ func (h *StatsHandler) GetOverview(c *gin.Context) {
 		return
 	}
 
-	since := time.Now().AddDate(0, 0, -7)
+	since := time.Now().UTC().AddDate(0, 0, -7)
 	var totalUptime, totalServices float64
 	allStats := make([]interface{}, 0) // Initialize as empty slice, not nil
 
