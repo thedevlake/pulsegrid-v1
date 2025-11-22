@@ -10,7 +10,6 @@
 
 A full-stack, cloud-native monitoring platform that tracks the health, uptime, latency, and performance of web and cloud services with AI-powered predictions and intelligent alerting.
 
-[![Live Demo](http://pulsegrid-frontend-777319172038.s3-website.eu-north-1.amazonaws.com/)
 [![API Documentation](https://img.shields.io/badge/📚_API_Docs-View_Documentation-blue?style=for-the-badge)](https://your-api-docs-url.com)
 
 
