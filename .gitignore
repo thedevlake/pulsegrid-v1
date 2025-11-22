@@ -70,9 +70,22 @@ temp/
 .env.bak
 backend/.env.bak
 
-# Test scripts (temporary)
-test-*.sh
-TEST_*.md
+# Documentation files
+*.md
+!README.md
+
+# Test files
+*.test.js
+*.test.ts
+*.test.tsx
+*.spec.js
+*.spec.ts
+*.spec.tsx
+playwright.config.ts
+k6-load-test.js
+
+# Shell scripts (deployment scripts may be re-added if needed)
+*.sh
 
 # Frontend build artifacts
 frontend/dist/
