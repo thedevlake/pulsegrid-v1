@@ -7,7 +7,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+# Use --legacy-peer-deps to handle peer dependency conflicts with @react-three/drei
+RUN npm ci --legacy-peer-deps
 
 # Copy source code
 COPY . .

@@ -119,7 +119,7 @@ jobs:
         run: |
           # Build frontend for production
           cd frontend
-          npm ci
+          npm ci --legacy-peer-deps
           npm run build
 
           # Sync to S3
