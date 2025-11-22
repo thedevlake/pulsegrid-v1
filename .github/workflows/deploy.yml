@@ -117,7 +117,19 @@ jobs:
       - name: Deploy to S3
         if: github.ref == 'refs/heads/main'
         run: |
-          # Build frontend for production
+          # Get backend IP dynamically from ECS task
+          TASK_ARN=$(aws ecs list-tasks --cluster ${{ env.ECS_CLUSTER }} --service-name ${{ env.ECS_SERVICE_BACKEND }} --region ${{ env.AWS_REGION }} --query "taskArns[0]" --output text)
+          if [ -n "$TASK_ARN" ] && [ "$TASK_ARN" != "None" ]; then
+            NETWORK_ID=$(aws ecs describe-tasks --cluster ${{ env.ECS_CLUSTER }} --tasks $TASK_ARN --region ${{ env.AWS_REGION }} --query "tasks[0].attachments[0].details[?name=='networkInterfaceId'].value" --output text)
+            BACKEND_IP=$(aws ec2 describe-network-interfaces --network-interface-ids $NETWORK_ID --region ${{ env.AWS_REGION }} --query "NetworkInterfaces[0].Association.PublicIp" --output text)
+            echo "Backend IP: $BACKEND_IP"
+            export VITE_API_URL="http://${BACKEND_IP}:8080/api/v1"
+          else
+            echo "Warning: Could not get backend IP, using default"
+            export VITE_API_URL="http://localhost:8080/api/v1"
+          fi
+          
+          # Build frontend for production with backend URL
           cd frontend
           npm ci --legacy-peer-deps
           npm run build
