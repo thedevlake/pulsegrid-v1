@@ -2,7 +2,6 @@
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Go Version](https://img.shields.io/badge/go-1.21+-00ADD8?logo=go)
-![Node Version](https://img.shields.io/badge/node-18+-339933?logo=node.js)
 ![React](https://img.shields.io/badge/react-18.2-61DAFB?logo=react)
 ![TypeScript](https://img.shields.io/badge/typescript-5.2-3178C6?logo=typescript)
 ![PostgreSQL](https://img.shields.io/badge/postgresql-14+-4169E1?logo=postgresql)
@@ -11,7 +10,7 @@
 
 A full-stack, cloud-native monitoring platform that tracks the health, uptime, latency, and performance of web and cloud services with AI-powered predictions and intelligent alerting.
 
-[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-Click_Here-success?style=for-the-badge)](https://your-demo-url.com)
+[![Live Demo](http://pulsegrid-frontend-777319172038.s3-website.eu-north-1.amazonaws.com/)
 [![API Documentation](https://img.shields.io/badge/📚_API_Docs-View_Documentation-blue?style=for-the-badge)](https://your-api-docs-url.com)
 
 
