@@ -34,14 +34,19 @@ output "sns_topic_arn" {
   value       = aws_sns_topic.alerts.arn
 }
 
-output "alb_dns_name" {
-  description = "Application Load Balancer DNS name (stable endpoint)"
+output "nlb_dns_name" {
+  description = "Network Load Balancer DNS name (stable endpoint)"
   value       = aws_lb.main.dns_name
 }
 
 output "backend_api_url" {
   description = "Backend API URL (use this in frontend)"
   value       = "http://${aws_lb.main.dns_name}/api/v1"
+}
+
+output "alb_dns_name" {
+  description = "Alias for NLB DNS name (for backward compatibility)"
+  value       = aws_lb.main.dns_name
 }
 
 output "ecs_cluster_name" {

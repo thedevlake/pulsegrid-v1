@@ -150,61 +150,28 @@ resource "aws_ecs_task_definition" "backend" {
   }
 }
 
-# Application Load Balancer - Provides stable DNS endpoint
+# Network Load Balancer - Provides stable DNS endpoint (simpler than ALB, might work with account limitations)
 resource "aws_lb" "main" {
-  name               = "pulsegrid-alb"
+  name               = "pulsegrid-nlb"
   internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb.id]
+  load_balancer_type = "network"
   subnets            = aws_subnet.public[*].id
 
   enable_deletion_protection = false
 
   tags = {
-    Name = "pulsegrid-alb"
+    Name = "pulsegrid-nlb"
   }
 }
 
-# Security Group for ALB
-resource "aws_security_group" "alb" {
-  name        = "pulsegrid-alb-sg"
-  description = "Security group for Application Load Balancer"
-  vpc_id      = aws_vpc.main.id
+# Security Group for NLB (NLB doesn't use security groups, but we keep ECS security group open to NLB)
+# Note: NLB operates at Layer 4, security is handled at ECS level
 
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTP traffic"
-  }
-
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTPS traffic"
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow all outbound traffic"
-  }
-
-  tags = {
-    Name = "pulsegrid-alb-sg"
-  }
-}
-
-# ALB Target Group
+# NLB Target Group
 resource "aws_lb_target_group" "backend" {
   name        = "pulsegrid-backend-tg"
   port        = 8080
-  protocol    = "HTTP"
+  protocol    = "TCP"
   vpc_id      = aws_vpc.main.id
   target_type = "ip"
 
@@ -212,11 +179,10 @@ resource "aws_lb_target_group" "backend" {
     enabled             = true
     healthy_threshold   = 2
     unhealthy_threshold = 2
-    timeout             = 5
+    timeout             = 10
     interval            = 30
-    path                = "/api/v1/health"
-    matcher             = "200"
-    protocol            = "HTTP"
+    protocol            = "TCP"
+    port                = "traffic-port"
   }
 
   deregistration_delay = 30
@@ -226,11 +192,11 @@ resource "aws_lb_target_group" "backend" {
   }
 }
 
-# ALB Listener
+# NLB Listener
 resource "aws_lb_listener" "backend" {
   load_balancer_arn = aws_lb.main.arn
   port              = "80"
-  protocol          = "HTTP"
+  protocol          = "TCP"
 
   default_action {
     type             = "forward"
@@ -238,15 +204,15 @@ resource "aws_lb_listener" "backend" {
   }
 }
 
-# Update ECS Security Group to allow ALB
-resource "aws_security_group_rule" "ecs_from_alb" {
-  type                     = "ingress"
-  from_port                = 8080
-  to_port                  = 8080
-  protocol                 = "tcp"
-  source_security_group_id = aws_security_group.alb.id
-  security_group_id        = aws_security_group.ecs.id
-  description              = "Allow traffic from ALB to ECS"
+# Update ECS Security Group to allow NLB (NLB uses source IP preservation, allow from anywhere on port 8080)
+resource "aws_security_group_rule" "ecs_from_nlb" {
+  type              = "ingress"
+  from_port         = 8080
+  to_port           = 8080
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.ecs.id
+  description       = "Allow traffic from NLB to ECS"
 }
 
 # ECS Service

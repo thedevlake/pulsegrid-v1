@@ -117,13 +117,13 @@ jobs:
       - name: Deploy to S3
         if: github.ref == 'refs/heads/main'
         run: |
-          # Get ALB DNS name from Terraform output (stable endpoint)
+          # Get NLB/ALB DNS name from Terraform output (stable endpoint)
           cd infrastructure
-          ALB_DNS=$(terraform output -raw alb_dns_name 2>/dev/null || echo "")
+          NLB_DNS=$(terraform output -raw nlb_dns_name 2>/dev/null || terraform output -raw alb_dns_name 2>/dev/null || echo "")
           
-          if [ -n "$ALB_DNS" ]; then
-            echo "Using ALB DNS: $ALB_DNS"
-            export VITE_API_URL="http://${ALB_DNS}/api/v1"
+          if [ -n "$NLB_DNS" ]; then
+            echo "Using Load Balancer DNS: $NLB_DNS"
+            export VITE_API_URL="http://${NLB_DNS}/api/v1"
           else
             echo "Warning: ALB not found, falling back to ECS task IP"
             # Fallback: Get backend IP dynamically from ECS task
