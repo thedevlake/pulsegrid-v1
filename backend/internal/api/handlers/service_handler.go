@@ -28,8 +28,6 @@ func NewServiceHandler(serviceRepo *repository.ServiceRepository, cfg *config.Co
 			var err error
 			sched, err = scheduler.NewScheduler(serviceRepo.GetDB(), lambdaARN, "pulsegrid")
 			if err != nil {
-				// Log error but don't fail - scheduler is optional for local dev
-				// log.Printf("Warning: Failed to initialize scheduler: %v", err)
 			}
 		}
 	}
