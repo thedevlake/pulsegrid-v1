@@ -151,6 +151,11 @@ jobs:
           cd frontend
           npm ci --legacy-peer-deps
           npm run build
+          
+          # Inject backend URL into index.html as meta tag (backup method)
+          echo "Injecting backend URL into index.html..."
+          sed -i.bak "s|<head>|<head><meta name=\"backend-api-url\" content=\"http://${BACKEND_IP}:8080/api/v1\">|" dist/index.html
+          rm -f dist/index.html.bak
 
           # Sync to S3
           aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_NAME }} --delete --region ${{ env.AWS_REGION }}

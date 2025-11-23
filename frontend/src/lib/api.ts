@@ -1,9 +1,24 @@
 import axios from 'axios'
 
-// API URL is set at build time by the deployment workflow
+// API URL resolution: Try build-time env var first, then runtime discovery
 // For local development, set VITE_API_URL in .env.local
-// Default to localhost for local dev only
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'
+let API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'
+
+// Runtime API URL discovery: If we're in production and API_URL is localhost,
+// try to discover the backend IP from a meta tag or use a known endpoint
+if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
+  // Check if we have a meta tag with backend URL (set by deployment)
+  const metaTag = document.querySelector('meta[name="backend-api-url"]')
+  if (metaTag) {
+    API_URL = metaTag.getAttribute('content') || API_URL
+  }
+  
+  // If still localhost in production, try to fetch from a known endpoint
+  // This is a fallback - the deployment should set VITE_API_URL correctly
+  if (API_URL.includes('localhost')) {
+    console.warn('⚠️ Frontend using localhost API URL in production. Deployment may need to set VITE_API_URL.')
+  }
+}
 
 const api = axios.create({
   baseURL: API_URL,
