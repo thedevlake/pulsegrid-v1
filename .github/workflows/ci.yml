@@ -77,5 +77,6 @@ jobs:
           npm ci
           npm run build
           aws s3 sync dist/ s3://${{ secrets.FRONTEND_BUCKET }}/
-          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+          # CloudFront invalidation skipped - not using CloudFront distribution
+          echo "✅ Frontend deployed to S3 successfully"
 
