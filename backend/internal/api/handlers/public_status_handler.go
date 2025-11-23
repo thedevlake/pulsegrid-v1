@@ -176,6 +176,11 @@ func CheckPublicStatus(c *gin.Context) {
 			"error_message":   cached.ErrorMessage,
 			"checked_at":      time.Now().UTC().Format(time.RFC3339),
 			"cached":           true,
+			"service": gin.H{
+				"name":    "PulseGrid",
+				"version": "1.0.0",
+				"docs":    "https://pulsegrid.com/docs#api",
+			},
 			"usage_note":      "This API is for legitimate service health checks only. See /docs#publicAPI for usage guidelines.",
 		})
 		return
@@ -200,6 +205,11 @@ func CheckPublicStatus(c *gin.Context) {
 		"error_message":   result.ErrorMessage,
 		"checked_at":      time.Now().Format(time.RFC3339),
 		"cached":          false,
+		"service": gin.H{
+			"name":    "PulseGrid",
+			"version": "1.0.0",
+			"docs":    "https://pulsegrid.com/docs#api",
+		},
 		"usage_note":      "This API is for legitimate service health checks only. See /docs#publicAPI for usage guidelines.",
 	})
 }
@@ -465,5 +475,31 @@ func trackUsagePattern(ip, targetURL, userAgent string) {
 	if time.Since(pattern.LastRequest) > 1*time.Hour {
 		delete(usagePatterns, ip)
 	}
+}
+
+// GetPublicInfo returns information about the PulseGrid API service
+func GetPublicInfo(c *gin.Context) {
+	c.Header("X-API-Usage-Policy", "Acceptable use only. See /docs#publicAPI for guidelines")
+	c.JSON(http.StatusOK, gin.H{
+		"service":     "PulseGrid",
+		"description": "Cloud-Native Infrastructure Monitoring Platform",
+		"api_version": "1.0.0",
+		"docs":        "https://pulsegrid.com/docs#api",
+		"website":     "https://pulsegrid.com",
+		"contact":     "support@pulsegrid.com",
+		"features": []string{
+			"Service health monitoring",
+			"AI-powered predictions",
+			"Multi-protocol support (HTTP, TCP, ICMP)",
+			"Real-time alerts",
+			"Public status API",
+		},
+		"endpoints": gin.H{
+			"public_status": "/api/v1/public/status",
+			"public_info":   "/api/v1/public/info",
+		},
+		"rate_limit": "60 requests per minute per IP",
+		"cache_ttl":  "30 seconds",
+	})
 }
 

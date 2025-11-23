@@ -100,6 +100,7 @@ func (s *Server) setupRoutes() {
 		api.GET("/health", handlers.HealthCheck)
 		api.GET("/health/detailed", handlers.DetailedHealthCheck(s.db))
 		api.GET("/public/status", handlers.CheckPublicStatus)
+		api.GET("/public/info", handlers.GetPublicInfo)
 	}
 
 	protected := api.Group("")

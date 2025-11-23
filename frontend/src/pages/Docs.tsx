@@ -1108,6 +1108,11 @@ export default function Docs() {
   "error_message": null,
   "checked_at": "2024-01-15T10:30:00Z",
   "cached": false,
+  "service": {
+    "name": "PulseGrid",
+    "version": "1.0.0",
+    "docs": "https://pulsegrid.com/docs#api"
+  },
   "usage_note": "This API is for legitimate service health checks only. See /docs#publicAPI for guidelines."
 }`}
                                     language="bash"
@@ -1378,7 +1383,13 @@ def test_payment_processing(payment_gateway_available):
   "status_code": 200,
   "error_message": null,
   "checked_at": "2024-01-15T10:30:00Z",
-  "cached": false
+  "cached": false,
+  "service": {
+    "name": "PulseGrid",
+    "version": "1.0.0",
+    "docs": "https://pulsegrid.com/docs#api"
+  },
+  "usage_note": "This API is for legitimate service health checks only..."
 }`}
                                     language="json"
                                     filename="response.json"
