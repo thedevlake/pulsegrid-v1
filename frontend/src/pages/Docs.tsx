@@ -1120,6 +1120,68 @@ export default function Docs() {
                                   />
                                 </div>
 
+                                {/* API Identification */}
+                                <div className="space-y-2 sm:space-y-3">
+                                  <div>
+                                    <h4 className="text-xs sm:text-sm font-semibold text-white mb-1 flex items-center gap-1.5 sm:gap-2">
+                                      API Identification
+                                    </h4>
+                                    <p className="text-white/50 text-[10px] sm:text-xs ml-3 sm:ml-4">
+                                      How to identify PulseGrid API responses
+                                    </p>
+                                  </div>
+                                  <CodeEditor
+                                    code={`# Method 1: Check response headers
+curl -I "https://api.pulsegrid.com/api/v1/public/status?url=https://api.paystack.com"
+
+# Response headers include:
+# X-Powered-By: PulseGrid
+# X-API-Service: PulseGrid Monitoring API
+# X-API-Version: 1.0.0
+# X-API-Docs: https://pulsegrid.com/docs#api
+
+# Method 2: Check the /info endpoint
+curl "https://api.pulsegrid.com/api/v1/public/info"
+
+# Response:
+{
+  "service": "PulseGrid",
+  "description": "Cloud-Native Infrastructure Monitoring Platform",
+  "api_version": "1.0.0",
+  "docs": "https://pulsegrid.com/docs#api",
+  "website": "https://pulsegrid.com",
+  "contact": "support@pulsegrid.com",
+  "features": [
+    "Service health monitoring",
+    "AI-powered predictions",
+    "Multi-protocol support (HTTP, TCP, ICMP)",
+    "Real-time alerts",
+    "Public status API"
+  ],
+  "endpoints": {
+    "public_status": "/api/v1/public/status",
+    "public_info": "/api/v1/public/info"
+  },
+  "rate_limit": "60 requests per minute per IP",
+  "cache_ttl": "30 seconds"
+}
+
+# Method 3: Check JSON response body
+# All status responses include a "service" object:
+{
+  "url": "https://api.paystack.com",
+  "status": "up",
+  "service": {
+    "name": "PulseGrid",
+    "version": "1.0.0",
+    "docs": "https://pulsegrid.com/docs#api"
+  }
+}`}
+                                    language="bash"
+                                    filename="api-identification.sh"
+                                  />
+                                </div>
+
                                 {/* Payment Gateway Selection */}
                                 <div className="space-y-2 sm:space-y-3">
                                   <div>
