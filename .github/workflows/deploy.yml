@@ -117,40 +117,34 @@ jobs:
       - name: Deploy to S3
         if: github.ref == 'refs/heads/main'
         run: |
-          # Get NLB/ALB DNS name from Terraform output (stable endpoint)
+          # Use NLB DNS name (stable endpoint that never changes)
           cd infrastructure
-          NLB_DNS=$(terraform output -raw nlb_dns_name 2>/dev/null || terraform output -raw alb_dns_name 2>/dev/null || echo "")
+          NLB_DNS=$(terraform output -raw nlb_dns_name 2>/dev/null || echo "")
           
-          # Test if NLB is responding
-          if [ -n "$NLB_DNS" ]; then
-            echo "Testing NLB: $NLB_DNS"
-            if curl -s --max-time 5 "http://${NLB_DNS}/api/v1/health" > /dev/null 2>&1; then
-              echo "✅ NLB is responding, using: $NLB_DNS"
-              export VITE_API_URL="http://${NLB_DNS}/api/v1"
-            else
-              echo "⚠️ NLB not responding, falling back to ECS task IP"
-              NLB_DNS=""
-            fi
-          fi
-          
-          # Fallback: Get backend IP dynamically from ECS task
           if [ -z "$NLB_DNS" ]; then
-            echo "Getting backend IP from ECS task..."
-            TASK_ARN=$(aws ecs list-tasks --cluster ${{ env.ECS_CLUSTER }} --service-name ${{ env.ECS_SERVICE_BACKEND }} --region ${{ env.AWS_REGION }} --query "taskArns[0]" --output text)
-            if [ -n "$TASK_ARN" ] && [ "$TASK_ARN" != "None" ]; then
-              NETWORK_ID=$(aws ecs describe-tasks --cluster ${{ env.ECS_CLUSTER }} --tasks $TASK_ARN --region ${{ env.AWS_REGION }} --query "tasks[0].attachments[0].details[?name=='networkInterfaceId'].value" --output text)
-              BACKEND_IP=$(aws ec2 describe-network-interfaces --network-interface-ids $NETWORK_ID --region ${{ env.AWS_REGION }} --query "NetworkInterfaces[0].Association.PublicIp" --output text)
-              echo "Backend IP: $BACKEND_IP"
-              export VITE_API_URL="http://${BACKEND_IP}:8080/api/v1"
-            else
-              echo "Error: Could not get backend endpoint"
-              exit 1
-            fi
+            echo "❌ Error: NLB DNS name not found. Check Terraform outputs."
+            exit 1
           fi
           
-          echo "Building frontend with API URL: $VITE_API_URL"
+          echo "✅ Using stable NLB endpoint: $NLB_DNS"
+          echo "Testing NLB connectivity..."
           
-          # Build frontend for production with backend URL
+          # Test NLB (with retry in case it's still starting)
+          for i in {1..3}; do
+            if curl -s --max-time 5 "http://${NLB_DNS}/api/v1/health" > /dev/null 2>&1; then
+              echo "✅ NLB is responding"
+              break
+            else
+              echo "⚠️ NLB not responding (attempt $i/3), waiting 5 seconds..."
+              sleep 5
+            fi
+          done
+          
+          # Always use NLB DNS (stable endpoint)
+          export VITE_API_URL="http://${NLB_DNS}/api/v1"
+          echo "Building frontend with stable API URL: $VITE_API_URL"
+          
+          # Build frontend for production with stable NLB URL
           cd ../frontend
           npm ci --legacy-peer-deps
           npm run build
@@ -158,5 +152,4 @@ jobs:
           # Sync to S3
           aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_NAME }} --delete --region ${{ env.AWS_REGION }}
           
-          # CloudFront invalidation skipped - not using CloudFront distribution
-          echo "✅ Frontend deployed to S3 successfully"
+          echo "✅ Frontend deployed to S3 successfully with stable NLB endpoint"

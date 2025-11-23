@@ -1,6 +1,8 @@
 import axios from 'axios'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'
+// Use NLB DNS as default for production (stable endpoint that never changes)
+// For local development, set VITE_API_URL in .env.local
+const API_URL = import.meta.env.VITE_API_URL || 'http://pulsegrid-nlb-92ee47fafeff3776.elb.eu-north-1.amazonaws.com/api/v1'
 
 const api = axios.create({
   baseURL: API_URL,
