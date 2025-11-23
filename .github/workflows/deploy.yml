@@ -158,13 +158,5 @@ jobs:
           # Sync to S3
           aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_NAME }} --delete --region ${{ env.AWS_REGION }}
           
-          # CloudFront invalidation (optional - only if distribution ID is set and not empty)
-          CLOUDFRONT_ID="${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}"
-          if [ -n "${CLOUDFRONT_ID}" ] && [ "${#CLOUDFRONT_ID}" -gt 0 ]; then
-            echo "Invalidating CloudFront cache for distribution: ${CLOUDFRONT_ID}"
-            aws cloudfront create-invalidation \
-              --distribution-id "${CLOUDFRONT_ID}" \
-              --paths "/*" || echo "⚠️ CloudFront invalidation failed (non-critical)"
-          else
-            echo "ℹ️ CloudFront distribution ID not set, skipping invalidation"
-          fi
+          # CloudFront invalidation skipped - not using CloudFront distribution
+          echo "✅ Frontend deployed to S3 successfully"
