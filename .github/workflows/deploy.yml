@@ -117,39 +117,42 @@ jobs:
       - name: Deploy to S3
         if: github.ref == 'refs/heads/main'
         run: |
-          # Use NLB DNS name (stable endpoint that never changes)
-          cd infrastructure
-          NLB_DNS=$(terraform output -raw nlb_dns_name 2>/dev/null || echo "")
+          # Get current backend IP dynamically (most reliable approach)
+          echo "Getting current backend IP from ECS..."
+          TASK_ARN=$(aws ecs list-tasks --cluster ${{ env.ECS_CLUSTER }} --service-name ${{ env.ECS_SERVICE_BACKEND }} --region ${{ env.AWS_REGION }} --query "taskArns[0]" --output text)
           
-          if [ -z "$NLB_DNS" ]; then
-            echo "❌ Error: NLB DNS name not found. Check Terraform outputs."
+          if [ -z "$TASK_ARN" ] || [ "$TASK_ARN" == "None" ]; then
+            echo "❌ Error: No backend task found"
             exit 1
           fi
           
-          echo "✅ Using stable NLB endpoint: $NLB_DNS"
-          echo "Testing NLB connectivity..."
+          NETWORK_ID=$(aws ecs describe-tasks --cluster ${{ env.ECS_CLUSTER }} --tasks $TASK_ARN --region ${{ env.AWS_REGION }} --query "tasks[0].attachments[0].details[?name=='networkInterfaceId'].value" --output text)
+          BACKEND_IP=$(aws ec2 describe-network-interfaces --network-interface-ids $NETWORK_ID --region ${{ env.AWS_REGION }} --query "NetworkInterfaces[0].Association.PublicIp" --output text)
           
-          # Test NLB (with retry in case it's still starting)
-          for i in {1..3}; do
-            if curl -s --max-time 5 "http://${NLB_DNS}/api/v1/health" > /dev/null 2>&1; then
-              echo "✅ NLB is responding"
-              break
-            else
-              echo "⚠️ NLB not responding (attempt $i/3), waiting 5 seconds..."
-              sleep 5
-            fi
-          done
+          if [ -z "$BACKEND_IP" ]; then
+            echo "❌ Error: Could not get backend IP"
+            exit 1
+          fi
           
-          # Always use NLB DNS (stable endpoint)
-          export VITE_API_URL="http://${NLB_DNS}/api/v1"
-          echo "Building frontend with stable API URL: $VITE_API_URL"
+          echo "✅ Current backend IP: $BACKEND_IP"
+          echo "Testing backend connectivity..."
           
-          # Build frontend for production with stable NLB URL
-          cd ../frontend
+          # Test backend is responding
+          if curl -s --max-time 5 "http://${BACKEND_IP}:8080/api/v1/health" > /dev/null 2>&1; then
+            echo "✅ Backend is responding"
+          else
+            echo "⚠️ Backend not responding, but continuing with deployment..."
+          fi
+          
+          export VITE_API_URL="http://${BACKEND_IP}:8080/api/v1"
+          echo "Building frontend with API URL: $VITE_API_URL"
+          
+          # Build frontend for production
+          cd frontend
           npm ci --legacy-peer-deps
           npm run build
 
           # Sync to S3
           aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_NAME }} --delete --region ${{ env.AWS_REGION }}
           
-          echo "✅ Frontend deployed to S3 successfully with stable NLB endpoint"
+          echo "✅ Frontend deployed to S3 successfully"
