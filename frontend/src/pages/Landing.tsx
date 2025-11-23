@@ -60,19 +60,28 @@ export default function Landing() {
   useEffect(() => {
     const checkSystemStatus = async () => {
       try {
-        const response = await api.get("/health");
+        const response = await api.get("/health", { timeout: 5000 });
         setSystemStatus((prev) => ({
           ...prev,
           api: response.data?.status === "healthy" ? "operational" : "degraded",
         }));
       } catch (error) {
-        setSystemStatus((prev) => ({ ...prev, api: "degraded" }));
+        // Only show degraded if we're not on localhost (production deployment issue)
+        // On localhost, this is expected if backend isn't running
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        if (!isLocalhost) {
+          setSystemStatus((prev) => ({ ...prev, api: "degraded" }));
+        }
       }
     };
-    checkSystemStatus();
+    // Delay first check slightly to allow page to load
+    const initialTimer = setTimeout(checkSystemStatus, 1000);
     // Check every 60 seconds to reduce resource usage
     const interval = setInterval(checkSystemStatus, 60000);
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(interval);
+    };
   }, []);
 
   const features = [
