@@ -73,3 +73,21 @@ variable "frontend_url" {
   default     = ""
 }
 
+variable "ollama_enabled" {
+  description = "Enable Ollama for AI predictions"
+  type        = bool
+  default     = true
+}
+
+variable "ollama_model" {
+  description = "Ollama model to use (e.g., llama2, mistral, codellama)"
+  type        = string
+  default     = "llama2"
+}
+
+variable "ollama_timeout" {
+  description = "Timeout for Ollama API requests"
+  type        = string
+  default     = "30s"
+}
+

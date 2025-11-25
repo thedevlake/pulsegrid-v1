@@ -1,3 +1,21 @@
+aws_region           = "eu-north-1"
+db_instance_class    = "db.t3.micro"
+db_username          = "postgres"
+db_password          = "CHANGE_ME_DB_PASSWORD"
+frontend_bucket_name = "pulsegrid-frontend-XXXXXXXXXXXX"
+ses_from_email       = "noreply@example.com"
+
+# JWT Secret (generate with: openssl rand -base64 32)
+jwt_secret     = "CHANGE_ME_JWT_SECRET"
+openai_api_key = "sk-CHANGE-ME"
+
+# AWS SES SMTP Configuration
+smtp_host     = "email-smtp.eu-north-1.amazonaws.com"
+smtp_user     = "CHANGE_ME_SMTP_USER"
+smtp_password = "CHANGE_ME_SMTP_PASSWORD"
+
+# Frontend URL for email verification links
+frontend_url = "http://pulsegrid.duckdns.org:8080"
 aws_region         = "us-east-1"
 db_instance_class  = "db.t3.micro"
 db_username        = "postgres"

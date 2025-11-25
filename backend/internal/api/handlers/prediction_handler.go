@@ -25,10 +25,10 @@ func NewPredictionHandler(
 	serviceRepo *repository.ServiceRepository,
 	healthCheckRepo *repository.HealthCheckRepository,
 	cfg *config.Config,
-	openAIClient *ai.OpenAIClient,
+	aiClient ai.AIClient,
 ) *PredictionHandler {
 	return &PredictionHandler{
-		predictor:       ai.NewPredictor(openAIClient),
+		predictor:       ai.NewPredictor(aiClient),
 		serviceRepo:     serviceRepo,
 		healthCheckRepo: healthCheckRepo,
 		cfg:             cfg,

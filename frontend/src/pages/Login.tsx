@@ -525,7 +525,7 @@ export default function Login() {
                         <p className="text-gray-600 leading-relaxed text-sm max-w-[260px] mb-5">
                           Your data is protected with{" "}
                           <span className="font-semibold text-amber-600">
-                            enterprise-grade security
+                            secure infrastructure
                           </span>
                           . Built on AWS with role-based access control and
                           encrypted data storage.

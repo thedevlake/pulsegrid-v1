@@ -3,6 +3,9 @@ package api
 import (
 	"database/sql"
 	"log"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"pulsegrid/backend/internal/ai"
 	"pulsegrid/backend/internal/api/handlers"
@@ -66,21 +69,34 @@ func (s *Server) setupRoutes() {
 	// Initialize supporting services
 	notifierService := notifier.NewNotifierService(alertRepo)
 
-	// Initialize OpenAI client if configured
-	var openAIClient *ai.OpenAIClient
-	if s.cfg.OpenAI.Enabled {
-		openAIClient = ai.NewOpenAIClient(
+	// Initialize AI client (OpenAI or Ollama) if configured
+	var aiClient ai.AIClient
+	if s.cfg.Ollama.Enabled {
+		ollamaClient := ai.NewOllamaClient(
+			s.cfg.Ollama.BaseURL,
+			s.cfg.Ollama.Model,
+			s.cfg.Ollama.Timeout,
+		)
+		if ollamaClient != nil {
+			aiClient = ollamaClient
+			log.Printf("✅ Ollama client initialized for AI predictions (model: %s, baseURL: %s)", s.cfg.Ollama.Model, s.cfg.Ollama.BaseURL)
+		} else {
+			log.Println("⚠️ Ollama configuration found but client initialization failed")
+		}
+	} else if s.cfg.OpenAI.Enabled {
+		openAIClient := ai.NewOpenAIClient(
 			s.cfg.OpenAI.APIKey,
 			s.cfg.OpenAI.Model,
 			s.cfg.OpenAI.Timeout,
 		)
 		if openAIClient != nil {
+			aiClient = openAIClient
 			log.Println("✅ OpenAI client initialized for AI predictions")
 		} else {
 			log.Println("⚠️ OpenAI configuration found but client initialization failed")
 		}
 	} else {
-		log.Println("ℹ️ OpenAI not configured - predictions will use statistical analysis only")
+		log.Println("ℹ️ No AI provider configured - predictions will use statistical analysis only")
 	}
 
 	authHandler := handlers.NewAuthHandler(userRepo, orgRepo, s.cfg)
@@ -90,7 +106,7 @@ func (s *Server) setupRoutes() {
 	statsHandler := handlers.NewStatsHandler(serviceRepo, healthCheckRepo, s.cfg)
 	reportHandler := handlers.NewReportHandler(serviceRepo, healthCheckRepo, s.cfg)
 	adminHandler := handlers.NewAdminHandler(userRepo, orgRepo, serviceRepo, healthCheckRepo, alertRepo, s.cfg)
-	predictionHandler := handlers.NewPredictionHandler(serviceRepo, healthCheckRepo, s.cfg, openAIClient)
+	predictionHandler := handlers.NewPredictionHandler(serviceRepo, healthCheckRepo, s.cfg, aiClient)
 	metricsHandler := handlers.NewMetricsHandler(healthCheckRepo, s.cfg)
 
 	api := s.router.Group("/api/v1")
@@ -101,6 +117,69 @@ func (s *Server) setupRoutes() {
 		api.GET("/health/detailed", handlers.DetailedHealthCheck(s.db))
 		api.GET("/public/status", handlers.CheckPublicStatus)
 		api.GET("/public/info", handlers.GetPublicInfo)
+		// Serve OpenAPI specification with dynamic server URL
+		api.GET("/openapi.yaml", func(c *gin.Context) {
+			// Determine the server URL from request or environment
+			serverURL := getServerURL(c)
+			
+			// Try multiple possible paths relative to common working directories
+			paths := []string{
+				"./api/openapi.yaml",                    // From backend/ directory
+				"../api/openapi.yaml",                   // From backend/cmd/api/ directory
+				filepath.Join("backend", "api", "openapi.yaml"), // From project root
+			}
+			
+			var filePath string
+			for _, path := range paths {
+				if _, err := os.Stat(path); err == nil {
+					filePath = path
+					break
+				}
+			}
+			
+			if filePath == "" {
+				c.JSON(404, gin.H{"error": "OpenAPI specification not found"})
+				return
+			}
+			
+			// Read the file
+			content, err := os.ReadFile(filePath)
+			if err != nil {
+				c.JSON(500, gin.H{"error": "Failed to read OpenAPI specification"})
+				return
+			}
+			
+			// Replace server URL dynamically based on environment
+			contentStr := string(content)
+			
+			// Always replace the production URL placeholder with actual server URL
+			contentStr = strings.ReplaceAll(contentStr, 
+				"  - url: http://pulsegrid.duckdns.org:8080/api/v1",
+				"  - url: "+serverURL)
+			
+			// In production, remove localhost server entry entirely
+			if s.cfg.Server.Env == "production" {
+				// Remove localhost server and its description
+				lines := strings.Split(contentStr, "\n")
+				var newLines []string
+				skipNext := false
+				for _, line := range lines {
+					if skipNext {
+						skipNext = false
+						continue
+					}
+					if strings.Contains(line, "http://localhost:8080/api/v1") {
+						// Skip this line (server URL) and next line (description)
+						skipNext = true
+						continue
+					}
+					newLines = append(newLines, line)
+				}
+				contentStr = strings.Join(newLines, "\n")
+			}
+			
+			c.Data(200, "application/x-yaml", []byte(contentStr))
+		})
 	}
 
 	protected := api.Group("")
@@ -164,4 +243,35 @@ func (s *Server) setupRoutes() {
 
 func (s *Server) Start(addr string) error {
 	return s.router.Run(addr)
+}
+
+// getServerURL determines the server URL from request or environment
+func getServerURL(c *gin.Context) string {
+	// First, try BACKEND_URL environment variable (set in ECS)
+	if backendURL := os.Getenv("BACKEND_URL"); backendURL != "" {
+		return backendURL + "/api/v1"
+	}
+	
+	// Use the request's scheme and host
+	scheme := "http"
+	if c.GetHeader("X-Forwarded-Proto") == "https" || c.Request.TLS != nil {
+		scheme = "https"
+	}
+	
+	host := c.Request.Host
+	if host == "" {
+		host = c.GetHeader("Host")
+	}
+	if host == "" {
+		host = "localhost:8080"
+	}
+	
+	// Remove port if it's the default for the scheme
+	if scheme == "https" && strings.HasSuffix(host, ":443") {
+		host = strings.TrimSuffix(host, ":443")
+	} else if scheme == "http" && strings.HasSuffix(host, ":80") {
+		host = strings.TrimSuffix(host, ":80")
+	}
+	
+	return scheme + "://" + host + "/api/v1"
 }

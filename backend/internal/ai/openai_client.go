@@ -72,7 +72,7 @@ func (c *OpenAIClient) GeneratePredictionText(ctx context.Context, metrics Aggre
 	ctx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
 
-	prompt := c.buildPrompt(metrics)
+	prompt := buildPrompt(metrics)
 
 	req := openai.ChatCompletionRequest{
 		Model: c.model,
@@ -141,44 +141,6 @@ func contains(s, substr string) bool {
 }
 
 func (c *OpenAIClient) buildPrompt(metrics AggregatedMetrics) string {
-	return fmt.Sprintf(`Analyze the following service monitoring data and provide insights:
-
-Service: %s (%s)
-URL: %s
-Time Window: %s
-
-Metrics:
-- Total Health Checks: %d
-- Failure Rate: %.1f%%
-- Average Response Time: %.0f ms
-- Response Time Trend: %s
-- Status Breakdown: %v
-- Anomalies Detected: %d
-- Anomaly Details: %v
-
-Statistical Analysis:
-- Risk Level: %s
-- Confidence: %.0f%%
-
-Based on this data, provide a JSON response with exactly these three fields:
-1. "predicted_issue": A concise description (1-2 sentences) of the potential issue
-2. "reason": A brief explanation (2-3 sentences) of why this prediction was made based on the metrics
-3. "recommended_action": Specific, actionable steps (2-3 sentences) to address or prevent the issue
-
-Be specific, technical, and actionable. Focus on what the metrics indicate and what should be done.`,
-		metrics.ServiceName,
-		metrics.ServiceType,
-		metrics.ServiceURL,
-		metrics.TimeWindow,
-		metrics.TotalChecks,
-		metrics.FailureRate*100,
-		metrics.AverageResponseTime,
-		metrics.ResponseTimeTrend,
-		metrics.StatusBreakdown,
-		metrics.AnomalyCount,
-		metrics.AnomalyDetails,
-		metrics.RiskLevel,
-		metrics.Confidence*100,
-	)
+	return buildPrompt(metrics)
 }
 

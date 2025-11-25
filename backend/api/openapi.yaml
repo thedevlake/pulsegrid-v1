@@ -1,0 +1,1687 @@
+openapi: 3.0.3
+info:
+  title: PulseGrid API
+  description: |
+    Cloud-Native Infrastructure Monitoring Platform API
+    
+    A full-stack monitoring platform that tracks the health, uptime, latency, and performance 
+    of web and cloud services with AI-powered predictions and intelligent alerting.
+    
+    ## Features
+    - Service monitoring (HTTP, HTTPS, TCP, ICMP)
+    - Real-time health checks
+    - AI-powered incident predictions
+    - Multi-tenant architecture with RBAC
+    - Alert subscriptions (Email, SMS)
+    - Analytics and reporting
+    
+    ## Authentication
+    Most endpoints require JWT authentication. Include the token in the Authorization header:
+    ```
+    Authorization: Bearer <your-jwt-token>
+    ```
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: sofia.devx@gmail.com
+    url: https://github.com/thedevlake/PULSEGRID-V1
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://pulsegrid.duckdns.org:8080/api/v1
+    description: Production API server (DuckDNS fronted)
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+
+tags:
+  - name: Authentication
+    description: User authentication and registration
+  - name: Services
+    description: Service management endpoints
+  - name: Health Checks
+    description: Health check operations and history
+  - name: Alerts
+    description: Alert management and subscriptions
+  - name: Statistics
+    description: Service statistics and analytics
+  - name: Predictions
+    description: AI-powered incident predictions
+  - name: Reports
+    description: Export reports (CSV, PDF)
+  - name: Admin
+    description: Administrative operations (Admin/Super Admin only)
+  - name: Public
+    description: Public endpoints (no authentication required)
+  - name: System
+    description: System health and metrics
+
+security:
+  - BearerAuth: []
+
+paths:
+  # Authentication Endpoints
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Create a new user account with organization. The first user becomes a super_admin.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              email: user@example.com
+              password: securepassword123
+              name: John Doe
+              org_name: Acme Inc
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: User or organization already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      description: Authenticate user and receive JWT token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: user@example.com
+              password: securepassword123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get current user
+      description: Get authenticated user information
+      responses:
+        '200':
+          description: User information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # Service Endpoints
+  /services:
+    get:
+      tags:
+        - Services
+      summary: List all services
+      description: Get all services for the authenticated user's organization
+      responses:
+        '200':
+          description: List of services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Service'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - Services
+      summary: Create a new service
+      description: Register a new service to monitor (Admin/Super Admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateServiceRequest'
+            example:
+              name: API Server
+              url: https://api.example.com
+              type: http
+              check_interval: 60
+              timeout: 10
+              expected_status_code: 200
+              latency_threshold_ms: 500
+              tags:
+                - production
+                - api
+      responses:
+        '201':
+          description: Service created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Only Admin or Super Admin can create services
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /services/{id}:
+    get:
+      tags:
+        - Services
+      summary: Get service by ID
+      description: Get detailed information about a specific service
+      parameters:
+        - $ref: '#/components/parameters/ServiceID'
+      responses:
+        '200':
+          description: Service details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Services
+      summary: Update service
+      description: Update service configuration (Admin/Super Admin only)
+      parameters:
+        - $ref: '#/components/parameters/ServiceID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateServiceRequest'
+      responses:
+        '200':
+          description: Service updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Only Admin or Super Admin can update services
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Services
+      summary: Delete service
+      description: Delete a service (Admin/Super Admin only)
+      parameters:
+        - $ref: '#/components/parameters/ServiceID'
+      responses:
+        '200':
+          description: Service deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Service deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Only Admin or Super Admin can delete services
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # Health Check Endpoints
+  /services/{id}/health-checks:
+    get:
+      tags:
+        - Health Checks
+      summary: Get health check history
+      description: Get health check history for a service
+      parameters:
+        - $ref: '#/components/parameters/ServiceID'
+        - name: limit
+          in: query
+          description: Maximum number of results (1-1000, default 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+      responses:
+        '200':
+          description: List of health checks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HealthCheck'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /services/{id}/health-checks/trigger:
+    post:
+      tags:
+        - Health Checks
+      summary: Trigger manual health check
+      description: Manually trigger a health check for a service
+      parameters:
+        - $ref: '#/components/parameters/ServiceID'
+      responses:
+        '200':
+          description: Health check completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheck'
+        '400':
+          description: Invalid service ID or service not active
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # Statistics Endpoints
+  /services/{id}/stats:
+    get:
+      tags:
+        - Statistics
+      summary: Get service statistics
+      description: Get statistics for a specific service
+      parameters:
+        - $ref: '#/components/parameters/ServiceID'
+        - name: since
+          in: query
+          description: Start date for statistics (RFC3339 format, default 7 days ago)
+          schema:
+            type: string
+            format: date-time
+            example: 2024-01-01T00:00:00Z
+      responses:
+        '200':
+          description: Service statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceStats'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /stats/overview:
+    get:
+      tags:
+        - Statistics
+      summary: Get overview statistics
+      description: Get overview statistics for all services in the organization
+      responses:
+        '200':
+          description: Overview statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  average_uptime:
+                    type: number
+                    format: float
+                    description: Average uptime percentage across all services
+                  total_services:
+                    type: integer
+                    description: Total number of services
+                  services:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ServiceStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # Alert Endpoints
+  /alerts:
+    get:
+      tags:
+        - Alerts
+      summary: List alerts
+      description: Get all alerts for the organization
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of results (1-200, default 50)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+      responses:
+        '200':
+          description: List of alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Alert'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /alerts/{id}:
+    get:
+      tags:
+        - Alerts
+      summary: Get alert by ID
+      description: Get detailed information about a specific alert
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Alert ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Alert details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alert'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Alerts
+      summary: Resolve alert
+      description: Mark an alert as resolved
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Alert ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Alert resolved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Alert resolved successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /alerts/subscriptions:
+    get:
+      tags:
+        - Alerts
+      summary: List alert subscriptions
+      description: Get all alert subscriptions for the organization
+      responses:
+        '200':
+          description: List of subscriptions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AlertSubscription'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - Alerts
+      summary: Create alert subscription
+      description: Create a new alert subscription (email notifications)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSubscriptionRequest'
+            example:
+              service_id: 550e8400-e29b-41d4-a716-446655440000
+              destination: alerts@example.com
+      responses:
+        '201':
+          description: Subscription created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertSubscription'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /alerts/subscriptions/{id}:
+    delete:
+      tags:
+        - Alerts
+      summary: Delete alert subscription
+      description: Delete an alert subscription
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Subscription ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Subscription deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Subscription deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # Prediction Endpoints
+  /predictions:
+    get:
+      tags:
+        - Predictions
+      summary: Get all predictions
+      description: Get AI-powered predictions for all services in the organization
+      responses:
+        '200':
+          description: List of predictions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  predictions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Prediction'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /services/{id}/prediction:
+    get:
+      tags:
+        - Predictions
+      summary: Get service prediction
+      description: Get AI-powered prediction for a specific service
+      parameters:
+        - $ref: '#/components/parameters/ServiceID'
+      responses:
+        '200':
+          description: Service prediction
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  prediction:
+                    $ref: '#/components/schemas/Prediction'
+                  message:
+                    type: string
+                    description: Message if prediction unavailable
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # Report Endpoints
+  /services/{id}/reports/csv:
+    get:
+      tags:
+        - Reports
+      summary: Export CSV report
+      description: Export service statistics as CSV
+      parameters:
+        - $ref: '#/components/parameters/ServiceID'
+        - name: since
+          in: query
+          description: Start date for report (RFC3339 format, default 30 days ago)
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: CSV file
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /services/{id}/reports/pdf:
+    get:
+      tags:
+        - Reports
+      summary: Export PDF report
+      description: Export service statistics as PDF (Not yet implemented)
+      parameters:
+        - $ref: '#/components/parameters/ServiceID'
+      responses:
+        '501':
+          description: Not implemented
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: PDF export coming soon. Use CSV export for now.
+
+  # Admin Endpoints
+  /admin/metrics:
+    get:
+      tags:
+        - Admin
+      summary: Get system metrics
+      description: Get system-wide metrics (Admin/Super Admin only)
+      responses:
+        '200':
+          description: System metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemMetrics'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/users:
+    get:
+      tags:
+        - Admin
+      summary: List all users
+      description: Get all users (Admin/Super Admin only)
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - Admin
+      summary: Create user
+      description: Create a new user (Admin/Super Admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/users/{id}:
+    put:
+      tags:
+        - Admin
+      summary: Update user
+      description: Update user information (Admin/Super Admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Admin
+      summary: Delete user
+      description: Delete a user (Admin/Super Admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/organizations:
+    get:
+      tags:
+        - Admin
+      summary: List all organizations
+      description: Get all organizations (Admin/Super Admin only)
+      responses:
+        '200':
+          description: List of organizations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Organization'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/organizations/{id}:
+    put:
+      tags:
+        - Admin
+      summary: Update organization
+      description: Update organization information (Super Admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        '200':
+          description: Organization updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Super Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Admin
+      summary: Delete organization
+      description: Delete an organization (Super Admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Organization deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Organization deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Super Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/super/users/{id}/promote:
+    post:
+      tags:
+        - Admin
+      summary: Promote user to Super Admin
+      description: Promote a user to Super Admin role (Super Admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User promoted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Super Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/super/users/{id}/demote:
+    post:
+      tags:
+        - Admin
+      summary: Demote Super Admin
+      description: Demote a Super Admin to regular admin (Super Admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User demoted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Super Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # Public Endpoints
+  /public/status:
+    get:
+      tags:
+        - Public
+      summary: Check public service status
+      description: |
+        Public endpoint to check the status of any HTTP/HTTPS service.
+        Rate limited to 60 requests per minute per IP.
+      security: []
+      parameters:
+        - name: url
+          in: query
+          required: true
+          description: URL to check (must be HTTP or HTTPS)
+          schema:
+            type: string
+            format: uri
+            example: https://api.example.com
+      responses:
+        '200':
+          description: Service status
+          headers:
+            X-API-Usage-Policy:
+              description: API usage policy information
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                  status:
+                    type: string
+                    enum: [up, down, degraded]
+                  response_time_ms:
+                    type: integer
+                    nullable: true
+                  status_code:
+                    type: integer
+                    nullable: true
+                  checked_at:
+                    type: string
+                    format: date-time
+        '400':
+          description: Invalid URL or missing parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: IP address blocked due to API misuse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /public/info:
+    get:
+      tags:
+        - Public
+      summary: Get API information
+      description: Get public information about the API
+      security: []
+      responses:
+        '200':
+          description: API information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: PulseGrid API
+                  version:
+                    type: string
+                    example: 1.0.0
+                  description:
+                    type: string
+
+  # System Endpoints
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      description: Basic health check endpoint
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service:
+                    type: string
+                    example: pulsegrid-api
+                  status:
+                    type: string
+                    example: healthy
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /health/detailed:
+    get:
+      tags:
+        - System
+      summary: Detailed health check
+      description: Detailed health check including database connectivity
+      security: []
+      responses:
+        '200':
+          description: Detailed health information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service:
+                    type: string
+                  status:
+                    type: string
+                  database:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /metrics:
+    get:
+      tags:
+        - System
+      summary: Prometheus metrics
+      description: Export metrics in Prometheus format
+      security: []
+      responses:
+        '200':
+          description: Prometheus metrics
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /ws:
+    get:
+      tags:
+        - System
+      summary: WebSocket connection
+      description: Establish WebSocket connection for real-time updates
+      responses:
+        '101':
+          description: Switching protocols to WebSocket
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/login endpoint
+
+  parameters:
+    ServiceID:
+      name: id
+      in: path
+      required: true
+      description: Service ID (UUID)
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Unauthorized - Invalid or missing JWT token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      required:
+        - error
+
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - name
+        - org_name
+      properties:
+        email:
+          type: string
+          format: email
+          description: User email address
+        password:
+          type: string
+          minLength: 8
+          description: User password (minimum 8 characters)
+        name:
+          type: string
+          description: User full name
+        org_name:
+          type: string
+          description: Organization name
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT authentication token
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          type: string
+          enum: [user, admin, super_admin]
+        organization_id:
+          type: string
+          format: uuid
+          nullable: true
+        email_verified:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Organization:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Service:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organization_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        url:
+          type: string
+          format: uri
+        type:
+          type: string
+          enum: [http, https, tcp, ping]
+          description: Service type
+        check_interval:
+          type: integer
+          description: Check interval in seconds
+          minimum: 10
+        timeout:
+          type: integer
+          description: Timeout in seconds
+        expected_status_code:
+          type: integer
+          nullable: true
+          description: Expected HTTP status code (for HTTP/HTTPS services)
+        latency_threshold_ms:
+          type: integer
+          nullable: true
+          description: Latency threshold in milliseconds
+        tags:
+          type: array
+          items:
+            type: string
+          description: Service tags
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateServiceRequest:
+      type: object
+      required:
+        - name
+        - url
+        - type
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+          format: uri
+        type:
+          type: string
+          enum: [http, https, tcp, ping]
+        check_interval:
+          type: integer
+          minimum: 10
+        timeout:
+          type: integer
+        expected_status_code:
+          type: integer
+          nullable: true
+        latency_threshold_ms:
+          type: integer
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+
+    UpdateServiceRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+          format: uri
+        type:
+          type: string
+          enum: [http, https, tcp, ping]
+        check_interval:
+          type: integer
+          minimum: 10
+        timeout:
+          type: integer
+        expected_status_code:
+          type: integer
+          nullable: true
+        latency_threshold_ms:
+          type: integer
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+        is_active:
+          type: boolean
+
+    HealthCheck:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        service_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [up, down, degraded]
+        response_time_ms:
+          type: integer
+          nullable: true
+        status_code:
+          type: integer
+          nullable: true
+        error_message:
+          type: string
+          nullable: true
+        checked_at:
+          type: string
+          format: date-time
+
+    Alert:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        service_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [downtime, latency, threshold]
+        message:
+          type: string
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+        is_resolved:
+          type: boolean
+        resolved_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    AlertSubscription:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organization_id:
+          type: string
+          format: uuid
+        service_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: null for global subscriptions
+        channel:
+          type: string
+          enum: [email, sms, slack]
+        destination:
+          type: string
+          description: Email address, phone number, or Slack webhook URL
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    CreateSubscriptionRequest:
+      type: object
+      required:
+        - destination
+      properties:
+        service_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: null for global subscriptions
+        destination:
+          type: string
+          format: email
+          description: Email address for notifications
+
+    ServiceStats:
+      type: object
+      properties:
+        service_id:
+          type: string
+          format: uuid
+        service_name:
+          type: string
+        uptime_percent:
+          type: number
+          format: float
+          description: Uptime percentage (0-100)
+        avg_response_time_ms:
+          type: number
+          format: float
+          description: Average response time in milliseconds
+        total_checks:
+          type: integer
+        up_checks:
+          type: integer
+        down_checks:
+          type: integer
+        last_check:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+          enum: [up, down, degraded]
+
+    Prediction:
+      type: object
+      properties:
+        service_id:
+          type: string
+          format: uuid
+        service_name:
+          type: string
+        risk_level:
+          type: string
+          enum: [low, medium, high, critical]
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confidence score (0.0 to 1.0)
+        predicted_issue:
+          type: string
+        time_window:
+          type: string
+          description: e.g., "within 1 hour", "within 24 hours"
+        reason:
+          type: string
+        recommended_action:
+          type: string
+        predicted_at:
+          type: string
+          format: date-time
+
+    SystemMetrics:
+      type: object
+      properties:
+        total_users:
+          type: integer
+        total_organizations:
+          type: integer
+        total_services:
+          type: integer
+        active_services:
+          type: integer
+        total_health_checks:
+          type: integer
+        total_alerts:
+          type: integer
+        unresolved_alerts:
+          type: integer
+        system_uptime:
+          type: number
+          format: float
+          description: System uptime percentage
+
+    CreateUserRequest:
+      type: object
+      required:
+        - email
+        - password
+        - name
+        - role
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        name:
+          type: string
+        role:
+          type: string
+          enum: [user, admin]
+        org_id:
+          type: string
+          format: uuid
+          description: Organization ID (required for admin role)
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+          enum: [user, admin]
+        email:
+          type: string
+          format: email
+

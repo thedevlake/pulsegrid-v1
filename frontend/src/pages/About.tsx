@@ -20,13 +20,13 @@ export default function About() {
     },
     {
       icon: Shield,
-      title: "Enterprise Security",
+      title: "Security & Isolation",
       description: "Multi-tenant isolation with role-based access control and data encryption",
     },
     {
       icon: Zap,
       title: "Smart Alerts",
-      description: "Multi-channel notifications via email, SMS, and Slack integrations",
+      description: "Email notifications via AWS SES",
     },
   ];
 
@@ -115,30 +115,30 @@ export default function About() {
                 </div>
                 <div>
                   <h3 className="text-lg font-medium text-white mb-2">AI & Integrations</h3>
-                  <p>OpenAI API, AWS SES, AWS SNS, Slack Webhooks</p>
+                  <p>OpenAI API, AWS SES</p>
                 </div>
               </div>
             </section>
 
-            {/* Enterprise Solution */}
+            {/* Project Overview */}
             <section className="bg-blue-800/10 border border-blue-800/20 rounded-2xl p-6 md:p-8">
               <h2 className="text-2xl font-semibold text-white mb-4">
-                Enterprise-Grade Solution
+                Full-Stack Cloud Application
               </h2>
               <p className="text-white/70 leading-relaxed mb-4">
-                PulseGrid is a production-ready, full-stack cloud-native web application demonstrating enterprise-grade software engineering, modern web development practices, cloud architecture, and DevOps principles. It showcases:
+                PulseGrid is a full-stack cloud-native web application demonstrating software engineering, modern web development practices, cloud architecture, and DevOps principles. It showcases:
               </p>
               <ul className="space-y-2 text-white/70 list-disc list-inside">
                 <li>Full-stack development with React and Go</li>
-                <li>Cloud-native architecture on AWS</li>
+                <li>Cloud-native architecture deployed on AWS</li>
                 <li>Real-time monitoring and alerting systems</li>
-                <li>AI integration for predictive analytics</li>
-                <li>Multi-tenant SaaS architecture</li>
-                <li>DevOps and infrastructure as code</li>
+                <li>Statistical analysis with AI-enhanced natural language predictions</li>
+                <li>Multi-tenant SaaS architecture with role-based access control</li>
+                <li>DevOps and infrastructure as code with Terraform</li>
               </ul>
               <p className="text-white/70 leading-relaxed mt-4">
                 Developed by{" "}
-                <span className="text-white font-medium">Thedevlake</span> as a demonstration of production-ready software development skills.
+                <span className="text-white font-medium">Thedevlake</span> as a demonstration of full-stack software development and cloud deployment skills.
               </p>
             </section>
 

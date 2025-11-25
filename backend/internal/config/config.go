@@ -16,6 +16,7 @@ type Config struct {
 	HealthCheck HealthCheckConfig
 	CORS        CORSConfig
 	OpenAI      OpenAIConfig
+	Ollama      OllamaConfig
 }
 
 type ServerConfig struct {
@@ -69,6 +70,13 @@ type OpenAIConfig struct {
 	Timeout time.Duration
 }
 
+type OllamaConfig struct {
+	BaseURL string
+	Model   string
+	Enabled bool
+	Timeout time.Duration
+}
+
 func Load() (*Config, error) {
 	// Load .env file if it exists
 	_ = godotenv.Load()
@@ -112,6 +120,7 @@ func Load() (*Config, error) {
 			Origin: getEnv("CORS_ORIGIN", "http://localhost:3000"),
 		},
 		OpenAI: LoadOpenAIConfig(),
+		Ollama: LoadOllamaConfig(),
 	}
 
 	return cfg, nil
@@ -150,6 +159,27 @@ func LoadOpenAIConfig() OpenAIConfig {
 
 	return OpenAIConfig{
 		APIKey:  apiKey,
+		Model:   model,
+		Enabled: enabled,
+		Timeout: timeout,
+	}
+}
+
+// LoadOllamaConfig loads Ollama configuration from environment variables
+func LoadOllamaConfig() OllamaConfig {
+	baseURL := getEnv("OLLAMA_BASE_URL", "http://localhost:11434")
+	model := getEnv("OLLAMA_MODEL", "llama2")
+	timeoutStr := getEnv("OLLAMA_TIMEOUT", "30s")
+	
+	timeout, err := time.ParseDuration(timeoutStr)
+	if err != nil {
+		timeout = 30 * time.Second
+	}
+
+	enabled := getEnv("OLLAMA_ENABLED", "false") == "true" || getEnv("USE_OLLAMA", "false") == "true"
+
+	return OllamaConfig{
+		BaseURL: baseURL,
 		Model:   model,
 		Enabled: enabled,
 		Timeout: timeout,

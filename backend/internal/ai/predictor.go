@@ -24,12 +24,12 @@ type Prediction struct {
 }
 
 type Predictor struct {
-	openAIClient *OpenAIClient
+	aiClient AIClient
 }
 
-func NewPredictor(openAIClient *OpenAIClient) *Predictor {
+func NewPredictor(aiClient AIClient) *Predictor {
 	return &Predictor{
-		openAIClient: openAIClient,
+		aiClient: aiClient,
 	}
 }
 
@@ -208,26 +208,26 @@ func (p *Predictor) generatePrediction(
 		timeWindow = "within 12 hours"
 	}
 
-	// Try to use OpenAI for natural language generation if available
-	if p.openAIClient != nil && riskLevel != "low" {
-		// Aggregate metrics for OpenAI
+	// Try to use AI (OpenAI or Ollama) for natural language generation if available
+	if p.aiClient != nil && riskLevel != "low" {
+		// Aggregate metrics for AI
 		metrics := aggregateMetrics(service, recentChecks, 24*time.Hour)
 		metrics.RiskLevel = riskLevel
 		metrics.Confidence = confidence
 
-		// Call OpenAI to generate natural language descriptions
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		// Call AI to generate natural language descriptions
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
-		openAIResponse, err := p.openAIClient.GeneratePredictionText(ctx, metrics)
+		aiResponse, err := p.aiClient.GeneratePredictionText(ctx, metrics)
 		if err != nil {
 			// Log warning but fall back to default descriptions
-			log.Printf("Warning: OpenAI prediction generation failed: %v. Falling back to default descriptions.", err)
+			log.Printf("Warning: AI prediction generation failed: %v. Falling back to default descriptions.", err)
 		} else {
-			// Use OpenAI-generated descriptions
-			predictedIssue = openAIResponse.PredictedIssue
-			reason = openAIResponse.Reason
-			recommendedAction = openAIResponse.RecommendedAction
+			// Use AI-generated descriptions
+			predictedIssue = aiResponse.PredictedIssue
+			reason = aiResponse.Reason
+			recommendedAction = aiResponse.RecommendedAction
 		}
 	}
 

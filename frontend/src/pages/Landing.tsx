@@ -68,7 +68,9 @@ export default function Landing() {
       } catch (error) {
         // Only show degraded if we're not on localhost (production deployment issue)
         // On localhost, this is expected if backend isn't running
-        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const isLocalhost =
+          window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1";
         if (!isLocalhost) {
           setSystemStatus((prev) => ({ ...prev, api: "degraded" }));
         }
@@ -95,8 +97,7 @@ export default function Landing() {
     {
       icon: Bell,
       title: "Smart Alerts",
-      description:
-        "Instant notifications via email, SMS, or Slack when issues are detected.",
+      description: "Instant notifications via email when issues are detected.",
       color: "from-blue-400/20 to-indigo-600/20",
     },
     {
@@ -110,7 +111,7 @@ export default function Landing() {
       icon: Shield,
       title: "Multi-Tenant Security",
       description:
-        "Enterprise-grade data isolation ensures your organization's privacy.",
+        "Multi-tenant data isolation ensures your organization's privacy and security.",
       color: "from-blue-400/20 to-indigo-600/20",
     },
     {
@@ -123,8 +124,7 @@ export default function Landing() {
     {
       icon: Cloud,
       title: "Cloud-Native",
-      description:
-        "Built on AWS with auto-scaling for reliability and performance.",
+      description: "Built on AWS and deployed to production.",
       color: "from-blue-400/20 to-indigo-600/20",
     },
   ];
@@ -141,7 +141,7 @@ export default function Landing() {
     "Smart Alerts": {
       tag: "Signal Routing",
       accent: "from-blue-500/30 via-indigo-500/20 to-transparent",
-      bullets: ["Email • SMS • Slack", "Auto-escalation policies"],
+      bullets: ["Email", "Auto-escalation policies"],
     },
     "Analytics & Insights": {
       tag: "AI Insights",
@@ -161,7 +161,7 @@ export default function Landing() {
     "Cloud-Native": {
       tag: "AWS Backbone",
       accent: "from-blue-500/30 via-indigo-500/20 to-transparent",
-      bullets: ["Auto-scaling clusters", "Global edge caching"],
+      bullets: ["ECS Fargate containers", "S3 static hosting"],
     },
   };
 
@@ -513,7 +513,7 @@ export default function Landing() {
               const meta = featureDetails[feature.title] || {
                 tag: "PulseGrid",
                 accent: "from-blue-500/20 via-blue-400/10 to-transparent",
-                bullets: ["Enterprise ready", "Secure by default"],
+                bullets: ["Deployed to AWS", "Secure by default"],
               };
               return (
                 <div
@@ -782,7 +782,7 @@ export default function Landing() {
                   step: "03",
                   title: "Get Instant Alerts",
                   description:
-                    "Receive real-time notifications via email, SMS, or Slack when issues are detected.",
+                    "Receive real-time notifications via email when issues are detected.",
                 },
               ].map((item, index) => {
                 return (
