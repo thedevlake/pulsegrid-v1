@@ -71,8 +71,7 @@ A full-stack, cloud-native monitoring platform that tracks the health, uptime, l
 graph TB
     subgraph "Client Layer"
         A[Web Browser] --> B[React Frontend]
-        B --> C[CloudFront CDN]
-        C --> D[S3 Static Hosting]
+        B --> D[S3 Static Hosting]
     end
 
     subgraph "Application Layer"
@@ -120,7 +119,7 @@ graph TB
 - **Workers**: AWS Lambda (Go) for scheduled health checks
 - **Infrastructure**: Terraform for AWS deployment
 - **Notifications**: AWS SES (Email)
-- **AI Integration**: Statistical analysis with OpenAI for natural language prediction descriptions
+- **AI Integration**: Statistical analysis with OpenAI or Ollama for natural language prediction descriptions
 - **Containerization**: Docker + Docker Compose
 - **State Management**: Zustand
 - **Charts**: Recharts
@@ -128,25 +127,35 @@ graph TB
 
 ## 💻 Tech Stack & Key Skills
 
-## 🌐 Stable API Hostname
+## 🌐 API for Developers
 
-- **Public base URL**: `http://pulsegrid.duckdns.org:8080/api/v1`
-- Backed by DuckDNS dynamic DNS so the hostname stays valid even when the ECS task IP changes.
-- `deploy-frontend.sh` automatically updates the DuckDNS record whenever it detects a new backend IP. To enable this automation, export the following before deploying:
+**Base URL:** `http://pulsegrid.duckdns.org:8080/api/v1`
 
-```bash
-export DUCKDNS_DOMAIN=pulsegrid
-export DUCKDNS_TOKEN=<your-duckdns-token>
-./deploy-frontend.sh
-```
+### Quick Example (No Authentication Required)
 
-- Manual refresh (if needed):
+Check if a service is up:
 
 ```bash
-curl "https://www.duckdns.org/update?domains=pulsegrid&token=<your-duckdns-token>&ip=<current-backend-ip>"
+curl "http://pulsegrid.duckdns.org:8080/api/v1/public/status?url=https://api.paystack.com"
 ```
 
-- Share the DuckDNS hostname in docs/demos instead of the raw IP so external developers can consistently reach the public endpoints.
+### Full Documentation
+
+- **API Guide:** See [API_DEVELOPER_GUIDE.md](API_DEVELOPER_GUIDE.md) for complete examples
+- **OpenAPI Spec:** `http://pulsegrid.duckdns.org:8080/api/v1/openapi.yaml`
+- **Public Endpoints:** No authentication needed for `/public/status` and `/public/info`
+- **Full Features:** Register/login to access all endpoints
+
+### For Developers
+
+The API is designed for developers to:
+
+- Check external service health before making API calls
+- Monitor multiple services from one place
+- Get AI-powered predictions about service reliability
+- Integrate health checks into their applications
+
+See [API_DEVELOPER_GUIDE.md](API_DEVELOPER_GUIDE.md) for code examples in JavaScript, Python, Go, and more.
 
 ### Frontend Technologies
 
@@ -180,11 +189,12 @@ curl "https://www.duckdns.org/update?domains=pulsegrid&token=<your-duckdns-token
 - **AWS Services**:
   - ECS Fargate (Container orchestration)
   - RDS (Managed PostgreSQL)
-  - S3 + CloudFront (Static hosting & CDN)
+  - S3 (Static website hosting)
   - Lambda (Serverless functions)
   - EventBridge (Scheduled tasks)
   - SES (Email delivery)
   - SSM Parameter Store (Secrets management)
+  - CloudFront (Planned - currently commented out)
 - **GitHub Actions** - CI/CD pipeline automation
 
 ### Key Skills Demonstrated
@@ -205,7 +215,7 @@ curl "https://www.duckdns.org/update?domains=pulsegrid&token=<your-duckdns-token
 
 ## 📁 Project Structure
 
-```
+```text
 PULSEGRID-V1/
 ├── backend/          # Go API server
 │   ├── cmd/         # Application entry points
@@ -271,6 +281,7 @@ npm run dev
 
 ```bash
 cd infrastructure
+cp terraform.tfvars.example terraform.tfvars  # fill in secrets before applying
 terraform init
 terraform plan
 terraform apply
@@ -316,7 +327,7 @@ See [DOCKER_SETUP.md](./DOCKER_SETUP.md) for detailed Docker instructions.
 
 - PostgreSQL database instance
 - JWT secret key (generate a secure random string)
-- CORS origin (default: http://localhost:3000)
+- CORS origin (default: `http://localhost:3000`)
 - OpenAI API key (optional, for AI predictions)
 
 ### For AWS Deployment
@@ -325,53 +336,59 @@ See [DOCKER_SETUP.md](./DOCKER_SETUP.md) for detailed Docker instructions.
 - AWS Access Key ID and Secret Access Key
 - Verified email address in AWS SES (for email notifications)
 - Unique S3 bucket name for frontend
-- Domain name (optional, for custom CloudFront distribution)
+- Domain name (optional, for custom domain setup)
 
 ### Manual AWS Configuration Required
 
 1. **SES Email Verification**: Verify your email address in AWS SES Console
-2. **Domain Setup** (Optional): Configure custom domain for CloudFront
+2. **Domain Setup** (Optional): Configure custom domain (CloudFront currently commented out)
 3. **SSL Certificate** (Optional): Request ACM certificate for custom domain
 
 ## 📋 What Was Built
 
 ### Fully Implemented Features
 
-**User Authentication & Authorization**
+#### User Authentication & Authorization
 
 - JWT-based authentication
 - Role-based access control (Super Admin, Admin, User)
 - Multi-tenant organization isolation
-  **Service Monitoring**
+
+#### Service Monitoring
 
 - Service registration and management (CRUD operations)
 - Multi-protocol health checks (HTTP/HTTPS, TCP, ICMP ping)
 - Configurable check intervals and timeouts
 - Manual health check triggering
-  **Real-time Features**
+
+#### Real-time Features
 
 - WebSocket support for live updates
 - Real-time dashboard with interactive charts
 - Live service status updates
-  **Alerting System**
+
+#### Alerting System
 
 - Email notifications via AWS SES
 - Alert subscriptions (per-service or global)
 - Alert deduplication to prevent spam
 - Alert resolution tracking
-  **Analytics & Reporting**
+
+#### Analytics & Reporting
 
 - Service statistics (uptime, response times, failure rates)
 - Historical health check data
 - CSV report export
 - Overview statistics dashboard
-  **AI-Enhanced Predictions**
+
+#### AI-Enhanced Predictions
 
 - Statistical analysis of health check data (failure rates, response time trends, anomaly detection)
 - Risk level assessment with confidence scoring
-- OpenAI integration for natural language descriptions (optional - falls back to rule-based if unavailable)
+- OpenAI or Ollama integration for natural language descriptions (optional - falls back to rule-based if unavailable)
 - Human-readable predictions and recommendations
-  **Infrastructure & Deployment**
+
+#### Infrastructure & Deployment
 
 - Deployed to AWS (ECS Fargate, RDS PostgreSQL, S3 for frontend)
 - Infrastructure as Code with Terraform
@@ -401,16 +418,60 @@ The prediction system uses a two-stage approach:
    - Determines risk levels (low/medium/high/critical) and confidence scores
    - Identifies status change patterns
 
-2. **AI Enhancement** (Optional, if OpenAI API key is configured):
+2. **AI Enhancement** (Optional, if OpenAI API key or Ollama is configured):
    - Takes the statistical analysis results
-   - Sends aggregated metrics to OpenAI with a structured prompt
-   - OpenAI generates human-readable descriptions of:
+   - Sends aggregated metrics to the configured AI provider (OpenAI or Ollama) with a structured prompt
+   - AI generates human-readable descriptions of:
      - Predicted issue (what might go wrong)
      - Reason (why this prediction was made)
      - Recommended action (what to do about it)
-   - Falls back to rule-based descriptions if OpenAI is unavailable
+   - Falls back to rule-based descriptions if AI is unavailable
 
-**Note**: The system works without OpenAI - it performs statistical analysis and provides predictions. OpenAI is used to make the output more readable and actionable, not to perform the actual analysis.
+**Note**: The system works without AI - it performs statistical analysis and provides predictions. AI is used to make the output more readable and actionable, not to perform the actual analysis.
+
+### AI Provider Options
+
+PulseGrid supports two AI providers for natural language predictions:
+
+1. **Ollama** (Recommended): Self-hosted AI model running as a sidecar container in ECS
+
+   - No API costs
+   - Runs locally in your infrastructure
+   - Configured via `OLLAMA_ENABLED`, `OLLAMA_BASE_URL`, and `OLLAMA_MODEL` environment variables
+   - Model is automatically pulled on container startup
+
+2. **OpenAI** (Alternative): Cloud-based AI service
+   - Requires API key configuration
+   - Pay-per-use pricing
+   - Configured via `OPENAI_API_KEY` environment variable
+
+The system prioritizes Ollama if enabled, otherwise falls back to OpenAI. If neither is configured, predictions use statistical analysis with rule-based descriptions.
+
+### Configuring AI Providers
+
+#### Option 1: Ollama (Recommended)
+
+Ollama is configured via Terraform variables and runs as a sidecar container:
+
+1. Set `ollama_enabled = true` in `terraform.tfvars`
+2. Optionally set `ollama_model` (default: "llama2")
+3. Apply Terraform to deploy Ollama container alongside backend
+4. The model will be automatically pulled on first startup
+
+See [OLLAMA_SETUP.md](OLLAMA_SETUP.md) for detailed setup instructions.
+
+#### Option 2: OpenAI
+
+1. Copy `infrastructure/terraform.tfvars.example` to `infrastructure/terraform.tfvars` and add your real `openai_api_key` (keep this file out of version control).
+2. Apply Terraform so the key is written to SSM Parameter Store (`/pulsegrid/openai/api_key`).
+3. After rotating the key, update the parameter at any time with:
+
+```bash
+AWS_REGION=eu-north-1 ./scripts/update-openai-key.sh sk-your-key
+# Redeploy the backend task so the new key is injected
+```
+
+If the key is missing or invalid, the API logs will show `OpenAI prediction generation failed` and the system will fall back to the rule-based messages.
 
 ## ⚠️ Current Limitations
 
@@ -508,8 +569,8 @@ Found a bug or have a feature request? We'd love to hear from you!
 
 ### Reporting Issues
 
-1. **Check existing issues**: Search [open issues](https://github.com/yourusername/PULSEGRID-V1/issues) to see if your issue has already been reported
-2. **Create a new issue**: If it's a new issue, [open a new one](https://github.com/yourusername/PULSEGRID-V1/issues/new)
+1. **Check existing issues**: Search [open issues](https://github.com/thedevlake/PULSEGRID-V1/issues) to see if your issue has already been reported
+2. **Create a new issue**: If it's a new issue, [open a new one](https://github.com/thedevlake/PULSEGRID-V1/issues/new)
 3. **Provide details**:
    - Clear description of the issue
    - Steps to reproduce (for bugs)
@@ -543,8 +604,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Sofia Ali Salahudeen**
 
-- GitHub: (https://github.com/thedevlake)
-- LinkedIn: https://www.linkedin.com/in/sofia-salahudeen/
+- GitHub: [@thedevlake](https://github.com/thedevlake)
+- LinkedIn: [sofia-salahudeen](https://www.linkedin.com/in/sofia-salahudeen/)
 - Email: sofia.devx@gmail.com
 
 ## 🙏 Acknowledgments
