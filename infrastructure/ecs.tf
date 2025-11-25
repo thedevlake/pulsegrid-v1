@@ -22,13 +22,23 @@ resource "aws_cloudwatch_log_group" "ecs_backend" {
   }
 }
 
+# CloudWatch Log Group for Ollama
+resource "aws_cloudwatch_log_group" "ecs_ollama" {
+  name              = "/ecs/pulsegrid-ollama"
+  retention_in_days = 7
+
+  tags = {
+    Name = "pulsegrid-ollama-logs"
+  }
+}
+
 # ECS Task Definition for Backend
 resource "aws_ecs_task_definition" "backend" {
   family                   = "pulsegrid-backend"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
+  cpu                      = "1024"  # Increased for Ollama (256 for backend + 768 for Ollama)
+  memory                   = "2048"  # Increased for Ollama (512 for backend + 1536 for Ollama model)
   execution_role_arn       = local.ecs_task_role_arn
   task_role_arn            = local.ecs_task_role_arn
 
@@ -105,6 +115,22 @@ resource "aws_ecs_task_definition" "backend" {
         {
           name  = "FRONTEND_URL"
           value = var.frontend_url != "" ? var.frontend_url : "http://${aws_s3_bucket_website_configuration.frontend.website_endpoint}"
+        },
+        {
+          name  = "OLLAMA_ENABLED"
+          value = var.ollama_enabled ? "true" : "false"
+        },
+        {
+          name  = "OLLAMA_BASE_URL"
+          value = "http://localhost:11434"
+        },
+        {
+          name  = "OLLAMA_MODEL"
+          value = var.ollama_model
+        },
+        {
+          name  = "OLLAMA_TIMEOUT"
+          value = var.ollama_timeout
         }
       ]
 
@@ -142,6 +168,64 @@ resource "aws_ecs_task_definition" "backend" {
       }
 
       essential = true
+      
+      # Health check for backend container
+      healthCheck = {
+        command     = ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/health || exit 1"]
+        interval    = 30
+        timeout     = 5
+        retries     = 3
+        startPeriod = 60
+      }
+      
+      dependsOn = [
+        {
+          containerName = "pulsegrid-ollama"
+          condition     = "START"
+        }
+      ]
+    },
+    {
+      name  = "pulsegrid-ollama"
+      image = "ollama/ollama:latest"
+
+      portMappings = [
+        {
+          containerPort = 11434
+          protocol      = "tcp"
+        }
+      ]
+
+      environment = [
+        {
+          name  = "OLLAMA_MODELS"
+          value = var.ollama_model
+        }
+      ]
+
+      # Start Ollama server and pull model
+      entryPoint = ["/bin/sh", "-c"]
+      command = ["ollama serve & sleep 10 && ollama pull ${var.ollama_model} && wait"]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.ecs_ollama.name
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "ecs"
+        }
+      }
+
+      essential = false  # Make Ollama non-essential so backend can start even if Ollama fails
+      
+      # Health check to ensure Ollama is ready and model is available
+      healthCheck = {
+        command     = ["CMD-SHELL", "curl -f http://localhost:11434/api/tags || exit 1"]
+        interval    = 60
+        timeout     = 10
+        retries     = 3
+        startPeriod = 300  # Give Ollama 5 minutes to pull model
+      }
     }
   ])
 

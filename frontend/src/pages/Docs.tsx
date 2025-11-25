@@ -65,13 +65,13 @@ const sections = [
       "Real-time monitoring across HTTP, HTTPS, TCP, and ICMP protocols",
       "AI-enhanced predictions for proactive incident mitigation",
       "Multi-tenant isolation with granular role-based access control",
-      "Unified alerting through email, SMS, and Slack integrations",
-      "Enterprise-grade security with data encryption at rest and in transit",
-      "Cloud-native architecture built on AWS with auto-scaling capabilities",
+      "Email alerting via AWS SES",
+      "Security features including data isolation, authentication, and secure API access",
+      "Cloud-native architecture deployed on AWS",
     ],
     details: [
       "Monitor any website, API, or server by simply adding its URL. PulseGrid automatically checks it regularly and alerts you if something goes wrong.",
-      "Get instant notifications via email, SMS, or Slack when your services have issues, so you can fix problems before your users notice.",
+      "Get instant notifications via email when your services have issues, so you can fix problems before your users notice.",
       "View beautiful dashboards that show you at a glance which services are healthy and which need attention, with charts showing trends over time.",
       "AI-powered predictions analyze your service patterns and warn you about potential issues before they become real problems.",
       "All your data is securely stored and encrypted. Each organization's data is completely separate for privacy and security.",
@@ -94,7 +94,7 @@ const sections = [
     details: [
       "Sign up for an account and create your organization. This takes just a few minutes and you'll be ready to start monitoring.",
       "Add your first service by clicking 'Add Service' on the Services page. Enter a name and URL - that's it! PulseGrid will start monitoring immediately.",
-      "Set up alerts by going to Alert Subscriptions and adding your email, phone number, or Slack webhook. You'll get notified instantly when issues occur.",
+      "Set up alerts by going to Alert Subscriptions and adding your email address. You'll get notified instantly when issues occur.",
       "Test everything works by clicking the play button (▶️) next to your service to run a health check. You should see it show as 'up' if everything is working.",
       "Invite your team members from the Admin page (if you're an admin). They can help monitor services and respond to alerts.",
       "Start simple - add one or two critical services first to get familiar with how PulseGrid works, then add more as you get comfortable.",
@@ -119,7 +119,7 @@ const sections = [
       "Latency threshold lets you set a maximum acceptable response time. If your service responds slower than this, you'll get an alert even if it's technically 'up'.",
       "After adding a service, click the play button (▶️) to run an immediate health check and verify it's working correctly.",
       "View detailed health check history by clicking on any service name to see response times, status codes, and trends over time.",
-      "Export reports by visiting a service's detail page and using the export options to download CSV or PDF reports for your records.",
+      "Export reports by visiting a service's detail page and using the export options to download CSV reports for your records.",
     ],
   },
   {
@@ -133,7 +133,7 @@ const sections = [
       "Uptime percentage calculations and SLA tracking",
       "Response time percentiles (p50, p95, p99)",
       "Service health score based on multiple factors",
-      "Export reports in CSV or PDF format",
+      "Export reports in CSV format",
     ],
     details: [
       "The Dashboard page shows all your services at a glance with color-coded status indicators (green for up, red for down, yellow for issues).",
@@ -150,7 +150,7 @@ const sections = [
     summary:
       "Configure intelligent alerting with multi-channel notifications and smart deduplication.",
     bullets: [
-      "Multi-channel notifications: Email (AWS SES), SMS, and Slack webhooks",
+      "Email notifications via AWS SES",
       "Alert deduplication prevents notification spam during incidents",
       "Configurable alert subscriptions per service or organization-wide",
       "Alert resolution tracking with timestamp and resolution notes",
@@ -159,7 +159,7 @@ const sections = [
     ],
     details: [
       "Alerts are automatically created when a service goes down and resolved when it comes back up - no manual configuration needed.",
-      "To set up notifications, go to the Alert Subscriptions page and click 'Add Subscription'. Choose your service and notification channel (Email, SMS, or Slack).",
+      "To set up notifications, go to the Alert Subscriptions page and click 'Add Subscription'. Enter your email address and optionally select a specific service.",
       "For email alerts, enter your email address. You'll receive notifications whenever your subscribed services have issues.",
       "For Slack alerts, you'll need a Slack webhook URL. Get this from your Slack workspace by creating an incoming webhook in your channel settings.",
       "Alert deduplication means you won't get spammed - if a service is down for hours, you'll get one alert when it goes down and one when it recovers.",
@@ -171,7 +171,7 @@ const sections = [
     id: "security",
     title: "Security & Compliance",
     summary:
-      "Enterprise-grade security features ensuring data isolation, encryption, and access control.",
+      "Security features ensuring data isolation, authentication, and access control.",
     bullets: [
       "Multi-tenant data isolation at the database level",
       "JWT-based authentication with configurable expiration",
@@ -240,7 +240,7 @@ const sections = [
       "Export your monitoring data for analysis, compliance, or sharing with stakeholders.",
     bullets: [
       "Export service health data as CSV files for spreadsheet analysis",
-      "Generate PDF reports for presentations and documentation",
+      "Export CSV reports for analysis in spreadsheet applications",
       "Include historical data for any time period you choose",
       "Export individual service reports or organization-wide summaries",
       "Use reports for compliance audits and SLA tracking",
@@ -261,7 +261,8 @@ const sections = [
     summary:
       "Programmatically check service availability before integration. No authentication required.",
     bullets: [
-      "Single endpoint: GET /api/v1/public/status?url={target}",
+      "Base URL: http://pulsegrid.duckdns.org:8080/api/v1",
+      "Single endpoint: GET /public/status?url={target}",
       "Real-time status checks with response time metrics",
       "30-second caching for optimal performance",
       "60 requests/minute rate limit per IP",
@@ -269,9 +270,11 @@ const sections = [
     ],
     details: [
       "Check external service availability before making critical API calls. Perfect for payment gateway selection, third-party API validation, or dependency health checks.",
-      "Endpoint: GET /api/v1/public/status?url=https://api.example.com",
+      "Base URL: http://pulsegrid.duckdns.org:8080/api/v1",
+      "Endpoint: GET /public/status?url=https://api.example.com",
       "Returns JSON with status (up/down), response time (ms), HTTP status code, and error details.",
       "Use case: Filter available payment gateways before showing options to users, ensuring only working services are presented.",
+      "Get API information: GET /public/info - Returns API version, endpoints, and rate limits.",
     ],
   },
   {
@@ -294,7 +297,7 @@ const sections = [
       "Use clear, descriptive names for your services. Include the environment (like 'Production API' or 'Staging Database') so you know what you're looking at.",
       "Set latency thresholds based on what's normal for your service. If it usually responds in 200ms, set the threshold to 500ms to catch slowdowns.",
       "Review your dashboard weekly to spot trends. Are response times getting slower? Are there patterns in when services go down?",
-      "Set up alerts for all critical services, but use different channels: Email for non-urgent, SMS for critical, Slack for team coordination.",
+      "Set up email alerts for all critical services to stay informed about any issues.",
       "When you resolve an alert, add notes about what caused it and how you fixed it. This helps prevent the same issue in the future.",
       "Export reports monthly to track your uptime and have records for compliance or showing stakeholders your service reliability.",
       "Don't monitor everything at once - start with 3-5 critical services, get comfortable with the platform, then expand gradually.",
@@ -1097,7 +1100,7 @@ export default function Docs() {
                                     </p>
                                   </div>
                                   <CodeEditor
-                                    code={`curl "https://api.pulsegrid.com/api/v1/public/status?url=https://api.paystack.com"
+                                    code={`curl "http://pulsegrid.duckdns.org:8080/api/v1/public/status?url=https://api.paystack.com"
 
 # Response:
 {
@@ -1106,7 +1109,7 @@ export default function Docs() {
   "response_time_ms": 45,
   "status_code": 200,
   "error_message": null,
-  "checked_at": "2024-01-15T10:30:00Z",
+  "checked_at": "2025-11-25T21:46:04Z",
   "cached": false,
   "service": {
     "name": "PulseGrid",
@@ -1132,7 +1135,7 @@ export default function Docs() {
                                   </div>
                                   <CodeEditor
                                     code={`# Method 1: Check response headers
-curl -I "https://api.pulsegrid.com/api/v1/public/status?url=https://api.paystack.com"
+curl -I "http://pulsegrid.duckdns.org:8080/api/v1/public/status?url=https://api.paystack.com"
 
 # Response headers include:
 # X-Powered-By: PulseGrid
@@ -1141,7 +1144,7 @@ curl -I "https://api.pulsegrid.com/api/v1/public/status?url=https://api.paystack
 # X-API-Docs: https://pulsegrid.com/docs#api
 
 # Method 2: Check the /info endpoint
-curl "https://api.pulsegrid.com/api/v1/public/info"
+curl "http://pulsegrid.duckdns.org:8080/api/v1/public/info"
 
 # Response:
 {
@@ -1149,15 +1152,7 @@ curl "https://api.pulsegrid.com/api/v1/public/info"
   "description": "Cloud-Native Infrastructure Monitoring Platform",
   "api_version": "1.0.0",
   "docs": "https://pulsegrid.com/docs#api",
-  "website": "https://pulsegrid.com",
   "contact": "support@pulsegrid.com",
-  "features": [
-    "Service health monitoring",
-    "AI-powered predictions",
-    "Multi-protocol support (HTTP, TCP, ICMP)",
-    "Real-time alerts",
-    "Public status API"
-  ],
   "endpoints": {
     "public_status": "/api/v1/public/status",
     "public_info": "/api/v1/public/info"
@@ -1195,22 +1190,26 @@ curl "https://api.pulsegrid.com/api/v1/public/info"
                                   </div>
                                   <CodeEditor
                                     code={`// payment-options.js
-const PULSEGRID_API = 'https://api.pulsegrid.com/api/v1/public/status';
+const PULSEGRID_API = 'http://pulsegrid.duckdns.org:8080/api/v1/public/status';
+
+async function checkServiceStatus(url) {
+  const response = await fetch(
+    \`\${PULSEGRID_API}?url=\${encodeURIComponent(url)}\`
+  );
+  const data = await response.json();
+  return data;
+}
 
 async function getAvailablePaymentGateways() {
   const gateways = [
     { id: 'paystack', name: 'Paystack', url: 'https://api.paystack.com' },
-    { id: 'flutterwave', name: 'Flutterwave', url: 'https://api.flutterwave.com' },
-    { id: 'palmpay', name: 'PalmPay', url: 'https://api.palmpay.com' }
+    { id: 'flutterwave', name: 'Flutterwave', url: 'https://api.flutterwave.com' }
   ];
 
   const checks = await Promise.all(
     gateways.map(async (gateway) => {
       try {
-        const response = await fetch(
-          \`\${PULSEGRID_API}?url=\${encodeURIComponent(gateway.url)}\`
-        );
-        const data = await response.json();
+        const data = await checkServiceStatus(gateway.url);
         return {
           ...gateway,
           available: data.status === 'up',
@@ -1224,6 +1223,8 @@ async function getAvailablePaymentGateways() {
 
   return checks.filter(g => g.available);
 }
+
+// Usage
 async function showPaymentOptions(orderAmount) {
   const available = await getAvailablePaymentGateways();
   
@@ -1253,14 +1254,14 @@ async function showPaymentOptions(orderAmount) {
                                     code={`# api_client.py
 import requests
 
-PULSEGRID_API = "https://api.pulsegrid.com/api/v1/public/status"
+PULSEGRID_API = "http://pulsegrid.duckdns.org:8080/api/v1/public/status"
 
-def check_service_before_call(service_url):
+def check_service_status(url):
     """Check if service is up before making actual API call"""
     try:
         response = requests.get(
             PULSEGRID_API,
-            params={"url": service_url},
+            params={"url": url},
             timeout=3
         )
         data = response.json()
@@ -1268,12 +1269,23 @@ def check_service_before_call(service_url):
     except:
         return False
 
-# Usage in your API client
+# Usage: Pre-flight check before API calls
+async def processPayment():
+    # Before calling payment API, check if it's up
+    status = await check_service_status("https://api.paystack.com")
+    if status.status === "up":
+        # Proceed with payment
+        await processPayment()
+    else:
+        # Use fallback payment gateway
+        await processPaymentWithFallback()
+
+# Example: Check service before making critical API call
 def send_sms_via_aws_sns(phone, message):
     sns_endpoint = "https://sns.us-east-1.amazonaws.com"
     
     # Check if AWS SNS is up first
-    if not check_service_before_call(sns_endpoint):
+    if not check_service_status(sns_endpoint):
         raise Exception("SMS service is currently unavailable")
     
     # Proceed with actual API call
@@ -1296,6 +1308,16 @@ def send_sms_via_aws_sns(phone, message):
                                   </div>
                                   <CodeEditor
                                     code={`// status-dashboard.js
+const PULSEGRID_API = 'http://pulsegrid.duckdns.org:8080/api/v1/public/status';
+
+async function checkServiceStatus(url) {
+  const response = await fetch(
+    \`\${PULSEGRID_API}?url=\${encodeURIComponent(url)}\`
+  );
+  const data = await response.json();
+  return data;
+}
+
 const services = [
   { name: 'Main API', url: 'https://api.mycompany.com' },
   { name: 'Database', url: 'https://db.mycompany.com' },
@@ -1306,10 +1328,7 @@ const services = [
 async function buildStatusDashboard() {
   const statuses = await Promise.all(
     services.map(async (service) => {
-      const response = await fetch(
-        \`https://api.pulsegrid.com/api/v1/public/status?url=\${encodeURIComponent(service.url)}\`
-      );
-      const data = await response.json();
+      const data = await checkServiceStatus(service.url);
       
       return {
         name: service.name,
@@ -1325,6 +1344,7 @@ async function buildStatusDashboard() {
   });
 }
 
+// Health monitoring dashboard - check every 30 seconds
 setInterval(buildStatusDashboard, 30000);`}
                                     language="javascript"
                                     filename="status-dashboard.js"
@@ -1344,13 +1364,20 @@ setInterval(buildStatusDashboard, 30000);`}
                                   </div>
                                   <CodeEditor
                                     code={`// service-fallback.js
+const PULSEGRID_API = 'http://pulsegrid.duckdns.org:8080/api/v1/public/status';
+
+async function checkServiceStatus(url) {
+  const response = await fetch(
+    \`\${PULSEGRID_API}?url=\${encodeURIComponent(url)}\`
+  );
+  const data = await response.json();
+  return data;
+}
+
 async function getAvailableService(services) {
   const checks = await Promise.all(
     services.map(async (service) => {
-      const response = await fetch(
-        \`https://api.pulsegrid.com/api/v1/public/status?url=\${encodeURIComponent(service.url)}\`
-      );
-      const data = await response.json();
+      const data = await checkServiceStatus(service.url);
       return {
         ...service,
         available: data.status === 'up',
@@ -1365,6 +1392,8 @@ async function getAvailableService(services) {
 
   return available[0] || null;
 }
+
+// Example: Fallback service selection
 const emailServices = [
   { name: 'AWS SES', url: 'https://email.us-east-1.amazonaws.com' },
   { name: 'SMTP Server', url: 'https://smtp.example.com' }
@@ -1397,9 +1426,9 @@ if (bestService) {
 import requests
 import pytest
 
-PULSEGRID_API = "https://api.pulsegrid.com/api/v1/public/status"
+PULSEGRID_API = "http://pulsegrid.duckdns.org:8080/api/v1/public/status"
 
-def check_dependency(url):
+def check_service_status(url):
     """Check if external dependency is available"""
     try:
         response = requests.get(
@@ -1415,7 +1444,7 @@ def check_dependency(url):
 @pytest.fixture(scope="session")
 def payment_gateway_available():
     """Skip tests if payment gateway is down"""
-    if not check_dependency("https://api.paystack.com"):
+    if not check_service_status("https://api.paystack.com"):
         pytest.skip("Payment gateway is unavailable")
 
 def test_payment_processing(payment_gateway_available):
@@ -1423,6 +1452,50 @@ def test_payment_processing(payment_gateway_available):
     pass`}
                                     language="python"
                                     filename="test_setup.py"
+                                  />
+                                </div>
+
+                                {/* Full API Access */}
+                                <div className="space-y-2 sm:space-y-3">
+                                  <div>
+                                    <h4 className="text-xs sm:text-sm font-semibold text-white mb-1 flex items-center gap-1.5 sm:gap-2">
+                                      <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-blue-400"></span>
+                                      Full API Access (Authentication Required)
+                                    </h4>
+                                    <p className="text-white/50 text-[10px] sm:text-xs ml-3 sm:ml-4">
+                                      For full features (creating services, viewing predictions, managing alerts)
+                                    </p>
+                                  </div>
+                                  <CodeEditor
+                                    code={`# 1. Register an account
+curl -X POST http://pulsegrid.duckdns.org:8080/api/v1/auth/register \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "email": "developer@example.com",
+    "password": "securepassword123",
+    "name": "Developer Name",
+    "org_name": "My Organization"
+  }'
+
+# 2. Login to get a token
+curl -X POST http://pulsegrid.duckdns.org:8080/api/v1/auth/login \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "email": "developer@example.com",
+    "password": "securepassword123"
+  }'
+
+# Response includes JWT token:
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": { ... }
+}
+
+# 3. Use the token in requests
+curl http://pulsegrid.duckdns.org:8080/api/v1/services \\
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"`}
+                                    language="bash"
+                                    filename="full-api-access.sh"
                                   />
                                 </div>
 
@@ -1444,7 +1517,7 @@ def test_payment_processing(payment_gateway_available):
   "response_time_ms": 45,
   "status_code": 200,
   "error_message": null,
-  "checked_at": "2024-01-15T10:30:00Z",
+  "checked_at": "2025-11-25T21:46:04Z",
   "cached": false,
   "service": {
     "name": "PulseGrid",
@@ -1455,6 +1528,30 @@ def test_payment_processing(payment_gateway_available):
 }`}
                                     language="json"
                                     filename="response.json"
+                                  />
+                                </div>
+
+                                {/* API Documentation */}
+                                <div className="space-y-2 sm:space-y-3">
+                                  <div>
+                                    <h4 className="text-xs sm:text-sm font-semibold text-white mb-1 flex items-center gap-1.5 sm:gap-2">
+                                      <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-blue-400"></span>
+                                      Get Full API Documentation
+                                    </h4>
+                                    <p className="text-white/50 text-[10px] sm:text-xs ml-3 sm:ml-4">
+                                      OpenAPI 3.0 specification for all endpoints
+                                    </p>
+                                  </div>
+                                  <CodeEditor
+                                    code={`# Get full OpenAPI specification
+curl http://pulsegrid.duckdns.org:8080/api/v1/openapi.yaml
+
+# You can:
+# - Import into Postman
+# - View in Swagger UI: https://editor.swagger.io/
+# - Generate SDKs using OpenAPI Generator`}
+                                    language="bash"
+                                    filename="api-docs.sh"
                                   />
                                 </div>
                               </div>
