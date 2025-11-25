@@ -8,15 +8,14 @@
 ![AWS](https://img.shields.io/badge/AWS-Cloud-orange?logo=amazon-aws)
 ![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker)
 
-A full-stack, cloud-native monitoring platform that tracks the health, uptime, latency, and performance of web and cloud services with AI-powered predictions and intelligent alerting.
+A full-stack, cloud-native monitoring platform that tracks the health, uptime, latency, and performance of web and cloud services. Features statistical analysis with AI-enhanced natural language predictions and intelligent alerting.
 
 [![API Documentation](https://img.shields.io/badge/📚_API_Docs-View_Documentation-blue?style=for-the-badge)](https://your-api-docs-url.com)
-
-
 
 ## 🚀 Features
 
 ### Core Monitoring
+
 - **Service Monitoring**: Track uptime and performance of URLs, APIs, and IPs
 - **Multi-Protocol Support**: HTTP/HTTPS, TCP, and ICMP (ping) monitoring
 - **Intelligent Scheduling**: Per-service configurable check intervals (10 seconds to 24 hours)
@@ -24,33 +23,40 @@ A full-stack, cloud-native monitoring platform that tracks the health, uptime, l
 - **Response Time Tracking**: Monitor latency trends and performance degradation
 
 ### Alerting & Notifications
+
 - **Email Alerts**: AWS SES and SMTP support for email notifications
-- **SMS Notifications**: AWS SNS integration for SMS alerts
 - **Alert Subscriptions**: Per-service or global alert subscriptions
 - **Alert Deduplication**: State transition-based alerting to prevent spam
 - **Severity Levels**: Critical, High, Medium, and Low alert classifications
 
 ### Analytics & Insights
+
 - **Interactive Dashboards**: Real-time analytics with historical trend visualization
-- **AI-Powered Predictions**: OpenAI integration for proactive incident prediction
-- **Statistical Analysis**: Risk level assessment with confidence scoring
-- **Performance Reports**: Export weekly/monthly summaries as PDF or CSV
+- **AI-Enhanced Predictions**: Statistical analysis combined with OpenAI for natural language insights
+  - Performs statistical analysis (failure rates, response time trends, anomaly detection)
+  - Uses OpenAI to generate human-readable predictions and recommendations
+  - Falls back to rule-based predictions if OpenAI is unavailable
+- **Risk Assessment**: Calculates risk levels and confidence scores based on historical data
+- **Performance Reports**: Export service statistics as CSV (PDF export planned)
 - **Service Statistics**: Uptime percentage, average response time, failure rate tracking
 
 ### Multi-Tenant Architecture
+
 - **Organization Isolation**: Secure data isolation by organization
 - **Role-Based Access Control (RBAC)**: Three-tier system (Super Admin, Organization Admin, Standard User)
 - **User Management**: Admin panel for user and organization management
 - **Permission System**: Granular access control for service management
 
 ### Infrastructure & Deployment
-- **Cloud-Native**: Built on AWS with auto-scaling capabilities
+
+- **Cloud-Native**: Built on AWS and deployed to production
 - **Containerized**: Docker support for consistent deployments
 - **Infrastructure as Code**: Terraform for AWS resource management
-- **CI/CD Ready**: GitHub Actions integration support
+- **CI/CD**: GitHub Actions pipeline for automated deployments
 - **Public API**: Rate-limited public status check endpoint
 
 ### Additional Features
+
 - **WebSocket Support**: Real-time updates for dashboard and service status
 - **Prometheus Metrics**: Export metrics in Prometheus format
 - **Public Status API**: Rate-limited endpoint for checking any HTTP/HTTPS service
@@ -84,7 +90,7 @@ graph TB
 
     subgraph "Notification Layer"
         M[Alert Engine] --> N[AWS SES<br/>Email]
-        M --> O[AWS SNS<br/>SMS]
+        M --> O[AWS SES<br/>Email]
     end
 
     subgraph "Infrastructure"
@@ -113,14 +119,34 @@ graph TB
 - **Database**: PostgreSQL (RDS)
 - **Workers**: AWS Lambda (Go) for scheduled health checks
 - **Infrastructure**: Terraform for AWS deployment
-- **Notifications**: AWS SES (Email) + AWS SNS (SMS)
-- **AI Integration**: OpenAI API for predictive analytics
+- **Notifications**: AWS SES (Email)
+- **AI Integration**: Statistical analysis with OpenAI for natural language prediction descriptions
 - **Containerization**: Docker + Docker Compose
 - **State Management**: Zustand
 - **Charts**: Recharts
 - **WebSockets**: Real-time updates
 
 ## 💻 Tech Stack & Key Skills
+
+## 🌐 Stable API Hostname
+
+- **Public base URL**: `http://pulsegrid.duckdns.org:8080/api/v1`
+- Backed by DuckDNS dynamic DNS so the hostname stays valid even when the ECS task IP changes.
+- `deploy-frontend.sh` automatically updates the DuckDNS record whenever it detects a new backend IP. To enable this automation, export the following before deploying:
+
+```bash
+export DUCKDNS_DOMAIN=pulsegrid
+export DUCKDNS_TOKEN=<your-duckdns-token>
+./deploy-frontend.sh
+```
+
+- Manual refresh (if needed):
+
+```bash
+curl "https://www.duckdns.org/update?domains=pulsegrid&token=<your-duckdns-token>&ip=<current-backend-ip>"
+```
+
+- Share the DuckDNS hostname in docs/demos instead of the raw IP so external developers can consistently reach the public endpoints.
 
 ### Frontend Technologies
 
@@ -158,25 +184,24 @@ graph TB
   - Lambda (Serverless functions)
   - EventBridge (Scheduled tasks)
   - SES (Email delivery)
-  - SNS (SMS notifications)
   - SSM Parameter Store (Secrets management)
 - **GitHub Actions** - CI/CD pipeline automation
 
 ### Key Skills Demonstrated
 
-- ✅ Full-stack development (React + Go)
-- ✅ RESTful API design and implementation
-- ✅ Database design and optimization
-- ✅ Authentication & authorization (JWT)
-- ✅ Real-time updates (WebSockets)
-- ✅ Cloud architecture and deployment
-- ✅ Infrastructure as Code (Terraform)
-- ✅ Containerization and orchestration
-- ✅ CI/CD pipeline setup
-- ✅ Multi-tenant application architecture
-- ✅ Error handling and resilience patterns
-- ✅ Performance optimization
-- ✅ AI integration for predictive analytics
+- Full-stack development (React + Go)
+- RESTful API design and implementation
+- Database design and optimization
+- Authentication & authorization (JWT)
+- Real-time updates (WebSockets)
+- Cloud architecture and deployment
+- Infrastructure as Code (Terraform)
+- Containerization and orchestration
+- CI/CD pipeline setup
+- Multi-tenant application architecture
+- Error handling and resilience patterns
+- Performance optimization
+- Statistical analysis and AI-enhanced predictions
 
 ## 📁 Project Structure
 
@@ -299,71 +324,135 @@ See [DOCKER_SETUP.md](./DOCKER_SETUP.md) for detailed Docker instructions.
 - AWS Account with appropriate permissions
 - AWS Access Key ID and Secret Access Key
 - Verified email address in AWS SES (for email notifications)
-- SNS Topic ARN (for SMS notifications)
 - Unique S3 bucket name for frontend
 - Domain name (optional, for custom CloudFront distribution)
 
 ### Manual AWS Configuration Required
 
 1. **SES Email Verification**: Verify your email address in AWS SES Console
-2. **SNS Subscriptions**: Configure SMS subscriptions in SNS Console
-3. **Domain Setup** (Optional): Configure custom domain for CloudFront
-4. **SSL Certificate** (Optional): Request ACM certificate for custom domain
+2. **Domain Setup** (Optional): Configure custom domain for CloudFront
+3. **SSL Certificate** (Optional): Request ACM certificate for custom domain
 
-## 📋 Features Implemented
+## 📋 What Was Built
 
-✅ User authentication (JWT)  
-✅ Service registration and management  
-✅ Health checks (HTTP, TCP, Ping)  
-✅ Real-time dashboard with charts  
-✅ Alert system (Email, SMS)  
-✅ AI-powered incident predictions  
-✅ Multi-tenant data isolation  
-✅ Role-based access control (RBAC)  
-✅ CSV and PDF report export  
-✅ WebSocket real-time updates  
-✅ Public status check API  
-✅ Prometheus metrics export  
-✅ AWS infrastructure (Terraform)  
-✅ Docker containerization  
-✅ Health check scheduling  
-✅ Alert subscriptions  
-✅ Service statistics and analytics  
+### Fully Implemented Features
+
+**User Authentication & Authorization**
+
+- JWT-based authentication
+- Role-based access control (Super Admin, Admin, User)
+- Multi-tenant organization isolation
+  **Service Monitoring**
+
+- Service registration and management (CRUD operations)
+- Multi-protocol health checks (HTTP/HTTPS, TCP, ICMP ping)
+- Configurable check intervals and timeouts
+- Manual health check triggering
+  **Real-time Features**
+
+- WebSocket support for live updates
+- Real-time dashboard with interactive charts
+- Live service status updates
+  **Alerting System**
+
+- Email notifications via AWS SES
+- Alert subscriptions (per-service or global)
+- Alert deduplication to prevent spam
+- Alert resolution tracking
+  **Analytics & Reporting**
+
+- Service statistics (uptime, response times, failure rates)
+- Historical health check data
+- CSV report export
+- Overview statistics dashboard
+  **AI-Enhanced Predictions**
+
+- Statistical analysis of health check data (failure rates, response time trends, anomaly detection)
+- Risk level assessment with confidence scoring
+- OpenAI integration for natural language descriptions (optional - falls back to rule-based if unavailable)
+- Human-readable predictions and recommendations
+  **Infrastructure & Deployment**
+
+- Deployed to AWS (ECS Fargate, RDS PostgreSQL, S3 for frontend)
+- Infrastructure as Code with Terraform
+- Docker containerization
+- CI/CD pipeline with GitHub Actions
+- Automated health check scheduling via AWS EventBridge and Lambda
+
+  **Public API**
+
+- Rate-limited public status check endpoint
+- OpenAPI 3.0 specification documentation
+
+### Partially Implemented
+
+⚠️ **PDF Reports**: Endpoint exists but returns "not implemented" message (CSV export works)  
+⚠️ **Load Balancer**: Network Load Balancer configured but not actively routing traffic (system uses direct ECS task IPs)
+
+## 🤖 How AI Predictions Work
+
+The prediction system uses a two-stage approach:
+
+1. **Statistical Analysis** (Always performed):
+
+   - Calculates failure rates from historical health checks
+   - Analyzes response time trends (increasing/decreasing/stable)
+   - Detects anomalies using standard deviation analysis
+   - Determines risk levels (low/medium/high/critical) and confidence scores
+   - Identifies status change patterns
+
+2. **AI Enhancement** (Optional, if OpenAI API key is configured):
+   - Takes the statistical analysis results
+   - Sends aggregated metrics to OpenAI with a structured prompt
+   - OpenAI generates human-readable descriptions of:
+     - Predicted issue (what might go wrong)
+     - Reason (why this prediction was made)
+     - Recommended action (what to do about it)
+   - Falls back to rule-based descriptions if OpenAI is unavailable
+
+**Note**: The system works without OpenAI - it performs statistical analysis and provides predictions. OpenAI is used to make the output more readable and actionable, not to perform the actual analysis.
 
 ## ⚠️ Current Limitations
 
-PulseGrid is designed with a focus on core monitoring capabilities. The following limitations are intentional trade-offs to prioritize development efforts on the platform's primary features:
+PulseGrid is a functional monitoring platform with the following known limitations:
 
-- **Email Verification**: The authentication system currently allows sign-up with any email address without verification. This is a deliberate trade-off to focus development efforts on the core monitoring features. Email verification can be added in future iterations.
+- **Email Verification**: The authentication system currently allows sign-up without email verification. This was a deliberate trade-off to focus on core monitoring features.
 
-- **Rate Limiting**: API rate limiting is implemented for the public status endpoint, but comprehensive rate limiting across all endpoints is recommended for production deployments.
+- **Rate Limiting**: API rate limiting is implemented for the public status endpoint only. Comprehensive rate limiting across all endpoints is recommended for high-traffic deployments.
+
+- **Load Balancer**: The Network Load Balancer is configured but not currently routing traffic. The system uses direct ECS task IPs for connectivity.
+
+- **Test Coverage**: Limited automated test coverage. Manual testing has been performed, but comprehensive test suites are recommended.
+
+- **PDF Reports**: PDF export is planned but not yet implemented. CSV export is available.
 
 These limitations do not impact the core functionality of the monitoring platform and can be addressed as the platform evolves.
 
 ## 🚧 Future Enhancements
 
 - Enhanced email verification system
-- Additional notification channels
+- Comprehensive API rate limiting
+- PDF report export
+- Additional notification channels (SMS, Slack, webhooks) - code exists but not fully tested/configured
+- Enhanced test coverage
+- Load balancer configuration improvements
 - Advanced analytics and reporting
-- Native mobile app
-- GraphQL API support
-- Enhanced public status pages
-- Multi-cloud support
 - Custom alert rules and conditions
+- GraphQL API support (optional)
+- Multi-cloud support (optional)
 
 ## 🔒 Security
 
-### Security Features
+### Security Features Implemented
 
-- **JWT Authentication**: Secure token-based authentication with configurable expiration
+- **JWT Authentication**: Token-based authentication with configurable expiration
 - **Password Hashing**: Bcrypt with salt rounds for secure password storage
 - **CORS Protection**: Configurable CORS policies to prevent unauthorized access
 - **SQL Injection Prevention**: Parameterized queries using prepared statements
-- **Multi-tenant Isolation**: Row-level security ensuring data separation between organizations
-- **Environment Variables**: Sensitive configuration stored in environment variables, never committed
-- **HTTPS Enforcement**: All production deployments use HTTPS/TLS encryption
-- **Input Validation**: Server-side validation using Zod schemas and Go validators
+- **Multi-tenant Isolation**: Organization-based data separation at the application level
+- **Input Validation**: Server-side validation using Go validators and request binding
 - **AWS Secrets Management**: SSM Parameter Store for secure secret storage
+- **Environment Variables**: Sensitive configuration stored in environment variables, never committed to version control
 
 ### Security Best Practices
 
@@ -377,9 +466,7 @@ These limitations do not impact the core functionality of the monitoring platfor
 
 ### Reporting Security Issues
 
-If you discover a security vulnerability, please **do not** open a public issue. Instead, please email security concerns to: `security@yourdomain.com` (replace with your contact email)
-
-We take security seriously and will respond promptly to any security concerns.
+If you discover a security vulnerability, please email security concerns to: `sofia.devx@gmail.com`
 
 ## 🤝 Contributing
 
@@ -462,7 +549,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- Built as a production-ready, full-stack cloud-native web application demonstrating enterprise-grade software engineering, cloud architecture, and DevOps practices
+- Built as a full-stack cloud-native web application demonstrating software engineering, cloud architecture, and DevOps practices
+- Deployed to AWS and currently running in production
 - Inspired by modern monitoring platforms like UptimeRobot, Pingdom, and StatusCake
 - Thanks to the open-source community for the amazing tools and libraries
 
